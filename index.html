@@ -22,6 +22,32 @@
             gap: 20px;
             margin-top: 20px;
         }
+        .interactive-list {
+            list-style: none;
+            padding: 0;
+        }
+        .interactive-list li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .interactive-list li::before {
+            content: "\f080"; /* FontAwesome chart icon */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+        .interactive-list h3 {
+            font-size: 1.1rem;
+            margin: 0 0 0.2rem 0;
+        }
+        .interactive-list p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +63,7 @@
                     <li><a href="#research">Research</a></li>
                     <li><a href="#publications">Publications</a></li>
                     <li><a href="#teaching">Teaching</a></li>
-                    <li><a href="#widgets">Interactive Data</a></li>
+                    <li><a href="#interactives">Interactives</a></li>
                     <!-- Link to blog if Chirpy is restored later -->
                     <li><a href="/blog">Blog</a></li> 
                     <li><a href="#contact">Contact</a></li>
@@ -106,62 +132,45 @@
             <p>I teach a variety of courses in Economics at Saint Martin's University. (Course list to be updated)</p>
         </section>
 
-        <section id="widgets">
-            <h2>Interactive Data & Widgets</h2>
-            <p>Explore interactive economic models and data visualizations below. (Built with Python/Plotly)</p>
-            
-            <div class="widget-grid">
-                <!-- Example Widget 1: Plotly Graph -->
-                <div class="widget-card">
-                    <h3>Sample: Inequality Trends</h3>
-                    <p>Interactive visualization of inequality metrics over time.</p>
-                    <div id="plot-inequality" style="width:100%; height:300px;"></div>
-                </div>
-                
-                <!-- Example Widget 2: Cost Curve Simulation -->
-                <div class="widget-card">
-                    <h3>Cost Curve Simulation</h3>
-                    <p>Dynamic modeling of firm cost structures.</p>
-                    <div id="plot-costs" style="width:100%; height:300px;"></div>
-                </div>
-            </div>
+        <section id="interactives">
+            <h2>Microeconomic Interactives</h2>
+            <p>A collection of interactive models and simulations for Microeconomics students.</p>
 
-            <script>
-                // Example Plotly Graph 1: Inequality
-                var trace1 = {
-                    x: [2015, 2016, 2017, 2018, 2019, 2020],
-                    y: [0.35, 0.36, 0.38, 0.39, 0.41, 0.42],
-                    mode: 'lines+markers',
-                    name: 'Gini Coefficient',
-                    line: {color: '#2c3e50', width: 3}
-                };
-                
-                var layout1 = {
-                    title: 'Hypothetical Gini Coefficient Trend',
-                    xaxis: {title: 'Year'},
-                    yaxis: {title: 'Coefficient'},
-                    font: {family: "Helvetica Neue, sans-serif"}
-                };
-                
-                Plotly.newPlot('plot-inequality', [trace1], layout1, {responsive: true});
+            <h3>Unit 3: Consumer Choice</h3>
+            <ul class="interactive-list">
+                <li>
+                    <h3><a href="interactives/micro/ch3/optimal_choice_MRS.html" target="_blank">Optimal Choice & MRS</a></h3>
+                    <p>Visualize the optimal consumption bundle where the budget constraint is tangent to the indifference curve.</p>
+                </li>
+                <li>
+                    <h3><a href="interactives/micro/ch3/income_substitution.html" target="_blank">Income & Substitution Effects</a></h3>
+                    <p>Decompose the effect of a price change into income and substitution effects (Slutsky decomposition).</p>
+                </li>
+                <li>
+                    <h3><a href="interactives/micro/ch3/labor_supply_derivation.html" target="_blank">Labor Supply Derivation</a></h3>
+                    <p>Deriving the individual labor supply curve from the labor-leisure tradeoff model.</p>
+                </li>
+                <li>
+                    <h3><a href="interactives/micro/ch3/utility_3d.html" target="_blank">Utility Surface (3D)</a></h3>
+                    <p>Explore the 3D utility function surface to understand indifference curve mapping.</p>
+                </li>
+            </ul>
 
-                // Example Plotly Graph 2: Cost Curves
-                var q = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-                var mc = q.map(x => 2 * x); // MC = 2q
-                var ac = q.map(x => x + (10/x)); // AC = q + 10/q
-
-                var traceMC = { x: q, y: mc, name: 'Marginal Cost (MC)', line: {color: '#e74c3c'} };
-                var traceAC = { x: q, y: ac, name: 'Average Cost (AC)', line: {color: '#3498db'} };
-
-                var layout2 = {
-                    title: 'Firm Cost Structure',
-                    xaxis: {title: 'Quantity (q)'},
-                    yaxis: {title: 'Cost ($)'},
-                    font: {family: "Helvetica Neue, sans-serif"}
-                };
-
-                Plotly.newPlot('plot-costs', [traceMC, traceAC], layout2, {responsive: true});
-            </script>
+            <h3>Unit 8: Cost Curves & Market Structure</h3>
+            <ul class="interactive-list">
+                <li>
+                    <h3><a href="interactives/micro/cost_curves/cost_curves.html" target="_blank">Cost Curves Simulation</a></h3>
+                    <p>Interactive exploration of Marginal Cost, Average Cost, and Variable Cost relationships.</p>
+                </li>
+                <li>
+                    <h3><a href="interactives/micro/cost_curves/market_equilibrium.html" target="_blank">Market Equilibrium</a></h3>
+                    <p>Simulating market equilibrium interactions.</p>
+                </li>
+                 <li>
+                    <h3><a href="interactives/micro/cost_curves/market_equilibrium_with_n_firms.html" target="_blank">Market Equilibrium with N Firms</a></h3>
+                    <p>See how changing the number of firms affects market outcomes and individual firm behavior.</p>
+                </li>
+            </ul>
         </section>
 
         <section id="contact">
