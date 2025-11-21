@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income and Substitution Effects</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        #sidebar {
+            width: 320px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+        #plot-container {
+            flex-grow: 1;
+            padding: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        #plot {
+            width: 100%;
+            flex-grow: 1;
+        }
+        h2 { margin-top: 0; color: #333; font-size: 1.5rem; }
+        h3 { margin: 10px 0 5px; color: #555; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        label { font-weight: bold; color: #555; font-size: 0.9em; display: flex; justify-content: space-between; }
+        input[type=range] { width: 100%; cursor: pointer; }
+        .value-display { color: #007bff; font-family: monospace; }
+        
+        .info-panel {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .info-label { color: #666; }
+        .info-val { font-weight: bold; }
+
+        .legend-item { display: flex; align-items: center; font-size: 0.85em; margin-bottom: 4px; }
+        .color-box { width: 12px; height: 12px; margin-right: 8px; border-radius: 2px; }
+        
+        /* Toggle switch */
+        .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #007bff; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Income & Substitution</h2>
+    <p style="font-size: 0.9em; color: #666; margin-top: -10px;">
+        Utility: U(x,y) = x<sup>&alpha;</sup>y<sup>1-&alpha;</sup>
+    </p>
+
+    <h3>Parameters</h3>
+    <div class="control-group">
+        <label>Income (I): <span id="income-val" class="value-display">100</span></label>
+        <input type="range" id="income" min="50" max="200" step="10" value="100">
+    </div>
+    <div class="control-group">
+        <label>Preference (&alpha;): <span id="alpha-val" class="value-display">0.5</span></label>
+        <input type="range" id="alpha" min="0.1" max="0.9" step="0.1" value="0.5">
+    </div>
+    <div class="control-group">
+        <label>Price Y ($P_y$): <span id="py-val" class="value-display">10</span></label>
+        <input type="range" id="py" min="1" max="20" step="1" value="10">
+    </div>
+
+    <h3>Price Change (Good X)</h3>
+    <div class="control-group">
+        <label>Initial Price X ($P_{x1}$): <span id="px1-val" class="value-display">10</span></label>
+        <input type="range" id="px1" min="1" max="20" step="1" value="10">
+    </div>
+    <div class="control-group">
+        <label>New Price X ($P_{x2}$): <span id="px2-val" class="value-display">5</span></label>
+        <input type="range" id="px2" min="1" max="20" step="1" value="5">
+    </div>
+
+    <h3>Display Options</h3>
+    <div class="toggle-container">
+        <label class="switch">
+            <input type="checkbox" id="show-decomposition" checked>
+            <span class="slider"></span>
+        </label>
+        <span>Show Decomposition</span>
+    </div>
+
+    <div class="info-panel" id="results-panel">
+        <div class="info-row" style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 5px;">
+            <span>Effect on X</span>
+            <span>Value</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Total Effect (A&rarr;C):</span>
+            <span class="info-val" id="te-val">0</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label" style="color: purple">Substitution (A&rarr;B):</span>
+            <span class="info-val" id="se-val">0</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label" style="color: orange">Income (B&rarr;C):</span>
+            <span class="info-val" id="ie-val">0</span>
+        </div>
+    </div>
+    
+    <div class="info-panel">
+         <div class="legend-item"><div class="color-box" style="background: blue;"></div>Initial (A)</div>
+         <div class="legend-item"><div class="color-box" style="background: purple;"></div>Compensated (B)</div>
+         <div class="legend-item"><div class="color-box" style="background: red;"></div>Final (C)</div>
+    </div>
+</div>
+
+<div id="plot-container">
+    <div id="plot"></div>
+</div>
+
+<script>
+    // State
+    const state = {
+        I: 100,
+        alpha: 0.5,
+        Py: 10,
+        Px1: 10,
+        Px2: 5,
+        showDecomposition: true
+    };
+
+    // DOM Elements
+    const inputs = {
+        I: document.getElementById('income'),
+        alpha: document.getElementById('alpha'),
+        Py: document.getElementById('py'),
+        Px1: document.getElementById('px1'),
+        Px2: document.getElementById('px2'),
+        showDecomposition: document.getElementById('show-decomposition')
+    };
+
+    const displays = {
+        I: document.getElementById('income-val'),
+        alpha: document.getElementById('alpha-val'),
+        Py: document.getElementById('py-val'),
+        Px1: document.getElementById('px1-val'),
+        Px2: document.getElementById('px2-val'),
+        te: document.getElementById('te-val'),
+        se: document.getElementById('se-val'),
+        ie: document.getElementById('ie-val')
+    };
+
+    // Cobb-Douglas Demand Functions
+    // x* = (alpha * I) / Px
+    // y* = ((1-alpha) * I) / Py
+    // U(x,y) = x^alpha * y^(1-alpha)
+    
+    // Expenditure function E(Px, Py, U) = U * (Px/alpha)^alpha * (Py/(1-alpha))^(1-alpha)
+    // Hicksian demand h_x = dE/dPx = ... (or solve dual)
+    // For CD: h_x = U * ( (alpha/(1-alpha)) * (Py/Px) )^(1-alpha)
+    
+    function calculateBundle(Px, Py, I, alpha) {
+        const x = (alpha * I) / Px;
+        const y = ((1 - alpha) * I) / Py;
+        const u = Math.pow(x, alpha) * Math.pow(y, 1 - alpha);
+        return { x, y, u };
+    }
+
+    function solveCompensated(Px_new, Py, U_target, alpha) {
+        // We need bundle where U = U_target and MRS = Px_new / Py
+        // MRS = (alpha * y) / ((1-alpha) * x)
+        // (alpha * y) / ((1-alpha) * x) = Px_new / Py
+        // y = (Px_new / Py) * ((1-alpha) / alpha) * x
+        
+        // Sub into U:
+        // U_target = x^alpha * [ (Px_new/Py)*((1-alpha)/alpha)*x ]^(1-alpha)
+        // U_target = x^alpha * x^(1-alpha) * [ (Px_new/Py)*((1-alpha)/alpha) ]^(1-alpha)
+        // U_target = x * K^(1-alpha)
+        
+        const K = (Px_new / Py) * ((1 - alpha) / alpha);
+        const x = U_target / Math.pow(K, 1 - alpha);
+        const y = K * x;
+        
+        // Theoretical Income needed to buy this bundle at new prices
+        const I_comp = Px_new * x + Py * y;
+        
+        return { x, y, I_comp };
+    }
+
+    function updateState() {
+        state.I = parseFloat(inputs.I.value);
+        state.alpha = parseFloat(inputs.alpha.value);
+        state.Py = parseFloat(inputs.Py.value);
+        state.Px1 = parseFloat(inputs.Px1.value);
+        state.Px2 = parseFloat(inputs.Px2.value);
+        state.showDecomposition = inputs.showDecomposition.checked;
+
+        // Update displays
+        displays.I.textContent = state.I;
+        displays.alpha.textContent = state.alpha;
+        displays.Py.textContent = state.Py;
+        displays.Px1.textContent = state.Px1;
+        displays.Px2.textContent = state.Px2;
+
+        drawPlot();
+    }
+
+    function generateIndifferenceCurve(U, alpha, max_x, color, name, dash='solid', showLabel=false) {
+        // y = (U / x^alpha)^(1/(1-alpha))
+        const x = [];
+        const y = [];
+        // Avoid x=0
+        for(let i = 0.1; i <= max_x; i += 0.1) {
+            const y_val = Math.pow(U / Math.pow(i, state.alpha), 1/(1-state.alpha));
+            if(y_val <= max_x * 2) { // limit y to reasonable range
+                x.push(i);
+                y.push(y_val);
+            }
+        }
+        
+        const trace = {
+            x: x,
+            y: y,
+            mode: 'lines',
+            name: name,
+            line: { color: color, width: 1, dash: dash },
+            showlegend: false,
+            hoverinfo: 'name'
+        };
+
+        // Add label if requested
+        if (showLabel && x.length > 0) {
+             // Find a good spot for the label - maybe at the right edge of the plot or curve end
+             const idx = Math.floor(x.length * 0.85); 
+             // Add an annotation trace later or handle here? 
+             // Easier to return a separate trace or just modify this one?
+             // Modifying this one to lines+text repeats text on every point or requires array.
+             // We will handle labels via annotations in layout to be cleaner.
+        }
+        
+        return trace;
+    }
+
+    function generateBudgetLine(Px, Py, I, max_x, color, name, dash='solid') {
+        // y = (I - Px*x) / Py
+        const x_intercept = I / Px;
+        const y_intercept = I / Py;
+        
+        return {
+            x: [0, x_intercept],
+            y: [y_intercept, 0],
+            mode: 'lines',
+            name: name,
+            line: { color: color, width: 2, dash: dash },
+            hoverinfo: 'name'
+        };
+    }
+
+    function drawPlot() {
+        // 1. Calculate A (Initial)
+        const A = calculateBundle(state.Px1, state.Py, state.I, state.alpha);
+        
+        // 2. Calculate C (Final)
+        const C = calculateBundle(state.Px2, state.Py, state.I, state.alpha);
+        
+        // 3. Calculate B (Compensated) - at New Prices, but Old Utility
+        const B = solveCompensated(state.Px2, state.Py, A.u, state.alpha);
+
+        // Update Numerical Results
+        const se = B.x - A.x;
+        const ie = C.x - B.x;
+        const te = C.x - A.x;
+        
+        displays.se.textContent = se.toFixed(2);
+        displays.ie.textContent = ie.toFixed(2);
+        displays.te.textContent = te.toFixed(2);
+
+        // Plot limits
+        const maxX = Math.max(state.I/state.Px1, state.I/state.Px2) * 1.2;
+        const maxY = (state.I/state.Py) * 1.2;
+
+        const traces = [];
+
+        // Background Indifference Curves (Faint)
+        // Determine range of Utility to show
+        // Max possible U given current params roughly? 
+        // Just pick some levels. 
+        const maxPossibleU = Math.pow(maxX/2, state.alpha) * Math.pow(maxY/2, 1-state.alpha); // heuristic
+        const steps = 5;
+        for(let i=1; i<=steps; i++) {
+            const uLevel = (maxPossibleU / steps) * i;
+            // Don't draw if it's too close to A or C? No, draw anyway.
+            traces.push(generateIndifferenceCurve(uLevel, state.alpha, maxX, '#e0e0e0', `U=${uLevel.toFixed(1)}`));
+        }
+
+        // Budget Lines
+        traces.push(generateBudgetLine(state.Px1, state.Py, state.I, maxX, 'blue', 'Initial Budget (BL1)'));
+        traces.push(generateBudgetLine(state.Px2, state.Py, state.I, maxX, 'red', 'New Budget (BL2)'));
+
+        // Indifference Curves
+        traces.push(generateIndifferenceCurve(A.u, state.alpha, maxX, 'blue', 'IC1', 'dot'));
+        traces.push(generateIndifferenceCurve(C.u, state.alpha, maxX, 'red', 'IC2', 'dot'));
+
+        // Compensated Budget Line (Ghost Line)
+        if(state.showDecomposition) {
+            traces.push(generateBudgetLine(state.Px2, state.Py, B.I_comp, maxX, 'purple', 'Compensated Budget', 'dash'));
+        }
+
+        // Points
+        const pointsTrace = {
+            x: [A.x, C.x],
+            y: [A.y, C.y],
+            mode: 'markers+text',
+            type: 'scatter',
+            text: ['A', 'C'],
+            textposition: 'top right',
+            marker: { size: 10, color: ['blue', 'red'] },
+            name: 'Bundles',
+            hovertext: [`A: (${A.x.toFixed(1)}, ${A.y.toFixed(1)})`, `C: (${C.x.toFixed(1)}, ${C.y.toFixed(1)})`],
+            hoverinfo: 'text'
+        };
+        
+        if(state.showDecomposition) {
+            pointsTrace.x.push(B.x);
+            pointsTrace.y.push(B.y);
+            pointsTrace.text.push('B');
+            pointsTrace.marker.color.push('purple');
+            pointsTrace.hovertext.push(`B: (${B.x.toFixed(1)}, ${B.y.toFixed(1)})`);
+        }
+        
+        traces.push(pointsTrace);
+
+        // Annotations for effects
+        const annotations = [];
+        if(state.showDecomposition) {
+            // Substitution Effect Arrow (A -> B along X axis, plotted slightly below)
+            const yLevel = -maxY * 0.05; // Below axis
+            
+            // SE Arrow
+            annotations.push({
+                x: (A.x + B.x)/2,
+                y: yLevel,
+                xref: 'x', yref: 'y',
+                text: 'SE',
+                showarrow: false,
+                font: {color: 'purple'}
+            });
+            // Draw line/arrow for SE
+            annotations.push({
+                x: B.x, y: yLevel,
+                ax: A.x, ay: yLevel,
+                xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+                showarrow: true,
+                arrowhead: 2,
+                arrowcolor: 'purple'
+            });
+
+            // IE Arrow
+            const yLevel2 = -maxY * 0.1;
+            annotations.push({
+                x: (B.x + C.x)/2,
+                y: yLevel2,
+                xref: 'x', yref: 'y',
+                text: 'IE',
+                showarrow: false,
+                font: {color: 'orange'}
+            });
+            annotations.push({
+                x: C.x, y: yLevel2,
+                ax: B.x, ay: yLevel2,
+                xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+                showarrow: true,
+                arrowhead: 2,
+                arrowcolor: 'orange'
+            });
+        }
+
+        // Utility Labels Annotations
+        // Calculate position for labels (e.g. at x = maxX * 0.8 or end of curve)
+        function getLabelPos(U, x_limit) {
+            // Find y for a specific x
+            let x_target = x_limit * 0.8;
+            // Ensure x_target is within budget set ballpark or visible area
+            // U = x^a * y^(1-a) => y = (U / x^a)^(1/(1-a))
+            let y_target = Math.pow(U / Math.pow(x_target, state.alpha), 1/(1-state.alpha));
+            
+            // If y is too high (off screen), find x for max Y
+            const max_y_visible = maxY * 0.9;
+            if (y_target > max_y_visible) {
+                 y_target = max_y_visible;
+                 // x = (U / y^(1-a))^(1/a)
+                 x_target = Math.pow(U / Math.pow(y_target, 1-state.alpha), 1/state.alpha);
+            }
+            return {x: x_target, y: y_target};
+        }
+
+        const labelA = getLabelPos(A.u, maxX);
+        const labelC = getLabelPos(C.u, maxX);
+        
+        // Format utility number: distinct and rounded
+        function formatU(u) {
+            return Math.abs(u % 1) < 0.1 ? u.toFixed(0) : u.toFixed(1);
+        }
+
+        annotations.push({
+            x: labelA.x, y: labelA.y,
+            xref: 'x', yref: 'y',
+            text: `U = ${formatU(A.u)}`,
+            showarrow: true,
+            arrowhead: 0,
+            ax: 20, ay: -20,
+            font: {color: 'blue', size: 10},
+            bgcolor: 'rgba(255,255,255,0.7)'
+        });
+        annotations.push({
+             x: labelC.x, y: labelC.y,
+             xref: 'x', yref: 'y',
+             text: `U = ${formatU(C.u)}`,
+             showarrow: true,
+             arrowhead: 0,
+             ax: 20, ay: -20,
+             font: {color: 'red', size: 10},
+             bgcolor: 'rgba(255,255,255,0.7)'
+        });
+
+        const layout = {
+            title: 'Income and Substitution Effects',
+            xaxis: { 
+                title: 'Quantity of X', 
+                range: [0, maxX],
+                zeroline: true,
+                // fixedrange: true  <-- Removed to allow dynamic feel if user wants interaction, 
+                // but 'range' is still set per frame to fit data.
+            },
+            yaxis: { 
+                title: 'Quantity of Y', 
+                range: [-maxY*0.15, maxY], // Make room for arrows below
+                zeroline: true,
+                // fixedrange: true
+            },
+            margin: { t: 40, r: 20, b: 40, l: 50 },
+            showlegend: true,
+            legend: { x: 1, xanchor: 'right', y: 1 },
+            hovermode: 'closest',
+            annotations: annotations
+        };
+
+        const config = { responsive: true, displayModeBar: false };
+
+        Plotly.newPlot('plot', traces, layout, config);
+    }
+
+    // Listeners
+    Object.values(inputs).forEach(input => {
+        input.addEventListener('input', updateState);
+    });
+
+    // Initial Draw
+    drawPlot();
+
+</script>
+</body>
+</html>
+

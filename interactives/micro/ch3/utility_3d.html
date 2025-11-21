@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility Function Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        #sidebar {
+            width: 300px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #plot-container {
+            flex-grow: 1;
+            padding: 10px;
+            position: relative;
+        }
+        #plot {
+            width: 100%;
+            height: 100%;
+        }
+        h2 { margin-top: 0; color: #333; }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label { font-weight: bold; color: #555; font-size: 0.9em; }
+        input[type=range] { width: 100%; }
+        input[type=number] { padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover { background-color: #0056b3; }
+        button.secondary { background-color: #6c757d; }
+        button.secondary:hover { background-color: #5a6268; }
+        .level-tag {
+            display: inline-flex;
+            align-items: center;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            font-size: 0.85em;
+        }
+        .level-tag span { margin-left: 5px; cursor: pointer; color: #dc3545; font-weight: bold; }
+        #levels-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .equation {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            font-size: 1.2em;
+            text-align: center;
+            margin: 10px 0;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Settings</h2>
+    
+    <div class="equation">
+        U(x,y) = x<sup>&alpha;</sup> · y<sup>&beta;</sup>
+    </div>
+
+    <div class="control-group">
+        <label for="alpha">Parameter &alpha; (Exponent of X): <span id="alpha-val">0.5</span></label>
+        <input type="range" id="alpha" min="0.1" max="2.0" step="0.1" value="0.5">
+    </div>
+
+    <div class="control-group">
+        <label for="beta">Parameter &beta; (Exponent of Y): <span id="beta-val">0.5</span></label>
+        <input type="range" id="beta" min="0.1" max="2.0" step="0.1" value="0.5">
+    </div>
+
+    <hr style="width: 100%; border-top: 1px solid #eee;">
+
+    <div class="control-group">
+        <label>View Mode</label>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-3d" class="active">3D Surface</button>
+            <button id="btn-2d" class="secondary">2D Indifference</button>
+        </div>
+    </div>
+
+    <hr style="width: 100%; border-top: 1px solid #eee;">
+
+    <div class="control-group">
+        <label>Indifference Curve Levels</label>
+        <div style="display: flex; gap: 5px;">
+            <input type="number" id="new-level" placeholder="Utility Level" style="flex-grow: 1;">
+            <button id="add-level">Add</button>
+        </div>
+        <div id="levels-container">
+            <!-- Tags go here -->
+        </div>
+        <button id="clear-levels" class="secondary" style="margin-top: 5px; font-size: 0.8em;">Clear Custom Levels</button>
+    </div>
+
+    <hr style="width: 100%; border-top: 1px solid #eee;">
+
+    <div class="control-group">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" id="show-budget" style="width: auto;">
+            Show Budget Constraint
+        </label>
+        <div id="budget-controls" style="display: none; flex-direction: column; gap: 5px; margin-top: 5px;">
+            <label for="income">Income (I): <span id="income-val">100</span></label>
+            <input type="range" id="income" min="10" max="200" step="5" value="100">
+
+            <label for="px">Price X (Px): <span id="px-val">5</span></label>
+            <input type="range" id="px" min="1" max="20" step="0.5" value="5">
+
+            <label for="py">Price Y (Py): <span id="py-val">5</span></label>
+            <input type="range" id="py" min="1" max="20" step="0.5" value="5">
+        </div>
+    </div>
+</div>
+
+<div id="plot-container">
+    <div id="plot"></div>
+</div>
+
+<script>
+    // State
+    const state = {
+        alpha: 0.5,
+        beta: 0.5,
+        customLevels: [2, 4, 6, 8, 10],
+        is2D: false,
+        xRange: 20,
+        yRange: 20,
+        showBudget: false,
+        income: 100,
+        px: 5,
+        py: 5
+    };
+
+    // DOM Elements
+    const alphaInput = document.getElementById('alpha');
+    const betaInput = document.getElementById('beta');
+    const alphaDisplay = document.getElementById('alpha-val');
+    const betaDisplay = document.getElementById('beta-val');
+    const btn3D = document.getElementById('btn-3d');
+    const btn2D = document.getElementById('btn-2d');
+    const newLevelInput = document.getElementById('new-level');
+    const addLevelBtn = document.getElementById('add-level');
+    const levelsContainer = document.getElementById('levels-container');
+    const clearLevelsBtn = document.getElementById('clear-levels');
+    const showBudgetCheck = document.getElementById('show-budget');
+    const budgetControls = document.getElementById('budget-controls');
+    const incomeInput = document.getElementById('income');
+    const pxInput = document.getElementById('px');
+    const pyInput = document.getElementById('py');
+    const incomeDisplay = document.getElementById('income-val');
+    const pxDisplay = document.getElementById('px-val');
+    const pyDisplay = document.getElementById('py-val');
+
+    // Helper: Generate Data
+    function generateData() {
+        const size = 100; // Resolution
+        const x = [];
+        const y = [];
+        const z = [];
+
+        // Generate grid
+        for (let i = 0; i <= size; i++) {
+            const xVal = (i / size) * state.xRange;
+            x.push(xVal);
+        }
+        for (let i = 0; i <= size; i++) {
+            const yVal = (i / size) * state.yRange;
+            y.push(yVal);
+        }
+
+        // Calculate Z
+        for (let j = 0; j < y.length; j++) {
+            const row = [];
+            for (let i = 0; i < x.length; i++) {
+                // Cobb-Douglas: U = x^a * y^b
+                // Avoid 0^0 issues if any
+                const u = Math.pow(x[i], state.alpha) * Math.pow(y[j], state.beta);
+                row.push(u);
+            }
+            z.push(row);
+        }
+
+        return { x, y, z };
+    }
+
+    // Helper: Get Contours Config
+    function getContours() {
+        // Combine automatic levels with custom ones? 
+        // Plotly supports 'start', 'end', 'size' OR specific values if we use 'constraint' type traces, 
+        // but for 'surface' contours, it's mostly ranges.
+        // However, for 2D Contour plots, we can be more specific.
+        
+        // To show SPECIFIC levels on a 3D surface is tricky with standard contours which prefer intervals.
+        // We will assume standard intervals + highlight specific ones if possible, 
+        // or just manage the visualization via the 2D view better.
+        
+        // For this implementation:
+        // 3D View: Standard contours.
+        // 2D View: Contour plot with specific levels.
+
+        // Sort levels for Plotly
+        const levels = [...state.customLevels].sort((a, b) => a - b);
+        
+        // Construct contour object
+        return {
+            z: {
+                show: true,
+                usecolormap: true,
+                highlightcolor: "#42f462",
+                project: { z: true } // Project onto floor
+            }
+        };
+    }
+
+    function drawPlot() {
+        const data = generateData();
+
+        let traces = [];
+
+        if (state.is2D) {
+            // 2D Contour Plot
+            traces.push({
+                z: data.z,
+                x: data.x,
+                y: data.y,
+                type: 'contour',
+                colorscale: 'Viridis',
+                contours: {
+                    coloring: 'heatmap',
+                    start: 0,
+                    end: Math.max(...state.customLevels, 20), // Ensure range covers custom levels
+                    size: 0 // Let Plotly handle auto, or we override below
+                },
+                autocontour: true
+            });
+
+            // Add specific contour lines for custom levels
+            state.customLevels.forEach(level => {
+                const lineX = [];
+                const lineY = [];
+                for(let i=0.1; i<=state.xRange; i+=0.1) {
+                    // U = x^a * y^b => y = (U / x^a)^(1/b)
+                    const yVal = Math.pow(level / Math.pow(i, state.alpha), 1/state.beta);
+                    if(yVal >= 0 && yVal <= state.yRange) {
+                        lineX.push(i);
+                        lineY.push(yVal);
+                    }
+                }
+                traces.push({
+                    x: lineX,
+                    y: lineY,
+                    mode: 'lines',
+                    line: { color: 'white', width: 2, dash: 'solid' },
+                    name: `U = ${level}`,
+                    showlegend: true,
+                    hoverinfo: 'name+x+y'
+                });
+            });
+
+        } else {
+            // 3D Surface Plot
+            traces.push({
+                z: data.z,
+                x: data.x,
+                y: data.y,
+                type: 'surface',
+                colorscale: 'Viridis',
+                contours: {
+                    z: {
+                        show: true,
+                        usecolormap: true,
+                        project: { z: true }
+                    }
+                }
+            });
+
+            // Add 3D indifference curves (Scatter3D lines)
+            state.customLevels.forEach(level => {
+                const lineX = [];
+                const lineY = [];
+                const lineZ = []; // Z is constant (U level)
+                
+                for(let i=0.1; i<=state.xRange; i+=0.1) {
+                    const yVal = Math.pow(level / Math.pow(i, state.alpha), 1/state.beta);
+                    if(yVal >= 0 && yVal <= state.yRange) {
+                        lineX.push(i);
+                        lineY.push(yVal);
+                        lineZ.push(level);
+                    }
+                }
+                traces.push({
+                    type: 'scatter3d',
+                    mode: 'lines',
+                    x: lineX,
+                    y: lineY,
+                    z: lineZ,
+                    line: { color: 'white', width: 5 },
+                    name: `U = ${level}`,
+                    showlegend: true
+                });
+            });
+        }
+
+        // Budget Constraint Visualization
+        if (state.showBudget) {
+            const xIntercept = state.income / state.px;
+            const yIntercept = state.income / state.py;
+            
+            // Create line points
+            const budgetX = [0, xIntercept];
+            const budgetY = [yIntercept, 0];
+            
+            if (state.is2D) {
+                traces.push({
+                    x: budgetX,
+                    y: budgetY,
+                    mode: 'lines',
+                    line: { color: 'red', width: 3, dash: 'dash' },
+                    name: 'Budget Constraint',
+                    showlegend: true
+                });
+            } else {
+                // In 3D, draw vertical plane for Budget Constraint
+                // The 'mesh3d' approach needs correct vertex ordering or i,j,k indices.
+                // Let's use a simpler approach for a vertical wall: two triangles or simply plot it properly.
+                
+                const maxZ = Math.max(...data.z.flat()) || 20;
+                
+                // Coordinates for the rectangular vertical plane along the budget line
+                // Top edge: (0, yInt, maxZ) to (xInt, 0, maxZ)
+                // Bottom edge: (0, yInt, 0) to (xInt, 0, 0)
+                
+                const xPts = [0, xIntercept, xIntercept, 0];
+                const yPts = [yIntercept, 0, 0, yIntercept];
+                const zPts = [0, 0, maxZ, maxZ];
+                
+                // We can use 'scatter3d' with fill='toself' to create polygons but it's not always reliable for vertical 3D planes in all viewers.
+                // 'mesh3d' is better. We need to define triangles (i, j, k indices of vertices).
+                // Vertices: 0:(0, yInt, 0), 1:(xInt, 0, 0), 2:(xInt, 0, maxZ), 3:(0, yInt, maxZ)
+                
+                traces.push({
+                    type: 'mesh3d',
+                    x: xPts,
+                    y: yPts,
+                    z: zPts,
+                    i: [0, 0],
+                    j: [1, 2],
+                    k: [2, 3],
+                    color: 'red',
+                    opacity: 0.3,
+                    name: 'Budget Constraint Plane',
+                    showlegend: true,
+                    hoverinfo: 'none'
+                });
+
+                // Also keep the floor line for clarity
+                traces.push({
+                    type: 'scatter3d',
+                    mode: 'lines',
+                    x: budgetX,
+                    y: budgetY,
+                    z: [0, 0],
+                    line: { color: 'red', width: 5, dash: 'solid' },
+                    name: 'Budget Line (Floor)',
+                    showlegend: false
+                });
+            }
+        }
+
+        const layout = {
+            title: state.is2D ? 'Indifference Curves (2D)' : 'Utility Surface (3D)',
+            autosize: true,
+            margin: { l: 50, r: 20, b: 50, t: 50 },
+            scene: {
+                xaxis: { title: 'Good X' },
+                yaxis: { title: 'Good Y' },
+                zaxis: { title: 'Utility' },
+                camera: {
+                    eye: { x: -1.5, y: -1.5, z: 1.25 }
+                }
+            },
+            xaxis: { title: 'Good X', range: [0, state.xRange] }, // For 2D
+            yaxis: { title: 'Good Y', range: [0, state.yRange] }, // For 2D
+            hovermode: 'closest'
+        };
+
+        const config = { responsive: true };
+
+        Plotly.react('plot', traces, layout, config);
+    }
+
+    // UI Updates
+    function renderLevels() {
+        levelsContainer.innerHTML = '';
+        state.customLevels.sort((a,b)=>a-b).forEach(lvl => {
+            const tag = document.createElement('div');
+            tag.className = 'level-tag';
+            tag.innerHTML = `U=${lvl} <span onclick="removeLevel(${lvl})">&times;</span>`;
+            levelsContainer.appendChild(tag);
+        });
+        drawPlot(); // Redraw when levels change
+    }
+
+    window.removeLevel = function(lvl) {
+        state.customLevels = state.customLevels.filter(l => l !== lvl);
+        renderLevels();
+    };
+
+    // Event Listeners
+    alphaInput.addEventListener('input', (e) => {
+        state.alpha = parseFloat(e.target.value);
+        alphaDisplay.textContent = state.alpha;
+        drawPlot();
+    });
+
+    betaInput.addEventListener('input', (e) => {
+        state.beta = parseFloat(e.target.value);
+        betaDisplay.textContent = state.beta;
+        drawPlot();
+    });
+
+    btn3D.addEventListener('click', () => {
+        state.is2D = false;
+        btn3D.classList.add('active');
+        btn3D.style.backgroundColor = '#007bff';
+        btn2D.classList.remove('active');
+        btn2D.style.backgroundColor = '#6c757d';
+        drawPlot();
+    });
+
+    btn2D.addEventListener('click', () => {
+        state.is2D = true;
+        btn2D.classList.add('active');
+        btn2D.style.backgroundColor = '#007bff';
+        btn3D.classList.remove('active');
+        btn3D.style.backgroundColor = '#6c757d';
+        drawPlot();
+    });
+
+    addLevelBtn.addEventListener('click', () => {
+        const val = parseFloat(newLevelInput.value);
+        if (!isNaN(val) && !state.customLevels.includes(val)) {
+            state.customLevels.push(val);
+            newLevelInput.value = '';
+            renderLevels();
+        }
+    });
+
+    clearLevelsBtn.addEventListener('click', () => {
+        state.customLevels = [];
+        renderLevels();
+    });
+
+    showBudgetCheck.addEventListener('change', (e) => {
+        state.showBudget = e.target.checked;
+        budgetControls.style.display = state.showBudget ? 'flex' : 'none';
+        drawPlot();
+    });
+
+    incomeInput.addEventListener('input', (e) => {
+        state.income = parseFloat(e.target.value);
+        incomeDisplay.textContent = state.income;
+        drawPlot();
+    });
+
+    pxInput.addEventListener('input', (e) => {
+        state.px = parseFloat(e.target.value);
+        pxDisplay.textContent = state.px;
+        drawPlot();
+    });
+
+    pyInput.addEventListener('input', (e) => {
+        state.py = parseFloat(e.target.value);
+        pyDisplay.textContent = state.py;
+        drawPlot();
+    });
+
+    // Initial Render
+    renderLevels(); // Calls drawPlot
+</script>
+
+</body>
+</html>
+

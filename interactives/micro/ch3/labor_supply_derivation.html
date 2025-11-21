@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labor Supply Derivation</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        #sidebar {
+            width: 300px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 10px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .plot-wrapper {
+            flex: 1;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+            min-height: 0; /* Important for flex nested scrolling */
+        }
+        #plot-choice { height: 100%; width: 100%; }
+        #plot-supply { height: 100%; width: 100%; }
+        
+        h2 { margin-top: 0; color: #333; font-size: 1.4rem; }
+        h3 { margin: 10px 0 5px; color: #555; font-size: 1.0rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label { font-weight: bold; color: #555; font-size: 0.9em; display: flex; justify-content: space-between; }
+        input[type=range] { width: 100%; cursor: pointer; }
+        .value-display { color: #007bff; font-family: monospace; }
+        
+        .info-panel {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        
+        button {
+            padding: 8px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #218838; }
+        button.clear { background-color: #dc3545; }
+        button.clear:hover { background-color: #c82333; }
+
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Labor Supply</h2>
+    
+    <div class="control-group" style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+        <label>Utility Model:</label>
+        <select id="model-select" style="width: 100%; padding: 5px; border-radius: 4px;">
+            <option value="ces">Standard (CES/Cobb-Douglas)</option>
+            <option value="ql">Quasi-Linear (Upward Sloping)</option>
+        </select>
+    </div>
+
+    <div id="model-desc-ces">
+        <p style="font-size: 0.85em; color: #666; margin-top: -5px;">
+            $U = (\alpha C^\rho + (1-\alpha)R^\rho)^{1/\rho}$<br>
+            $\sigma > 1$ (Substitutes): Upward Sloping.<br>
+            $\sigma < 1$ (Complements): Backward Bending.
+        </p>
+    </div>
+    <div id="model-desc-ql" style="display:none;">
+        <p style="font-size: 0.85em; color: #666; margin-top: -5px;">
+            $U = A \ln(R) + C$<br>
+            No Income Effect on Labor. Strictly Upward Sloping.
+        </p>
+    </div>
+
+    <h3>Parameters</h3>
+    <div class="control-group">
+        <label>Hourly Wage ($w$): <span id="wage-val" class="value-display">10</span></label>
+        <input type="range" id="wage" min="1" max="50" step="1" value="10">
+    </div>
+    
+    <div class="control-group">
+        <label>Non-Labor Income ($V$): <span id="nonlabor-val" class="value-display">0</span></label>
+        <input type="range" id="nonlabor" min="0" max="100" step="10" value="0">
+    </div>
+
+    <!-- CES Controls -->
+    <div id="controls-ces">
+        <div class="control-group">
+            <label>Share Parameter ($\alpha$): <span id="alpha-val" class="value-display">0.5</span></label>
+            <input type="range" id="alpha" min="0.1" max="0.9" step="0.05" value="0.5">
+        </div>
+
+        <div class="control-group">
+            <label>Elasticity ($\sigma$): <span id="sigma-val" class="value-display">1.5</span></label>
+            <input type="range" id="sigma" min="0.1" max="3.0" step="0.1" value="1.5">
+        </div>
+    </div>
+
+    <!-- QL Controls -->
+    <div id="controls-ql" style="display:none;">
+        <div class="control-group">
+            <label>Pref. for Leisure ($A$): <span id="aval-val" class="value-display">100</span></label>
+            <input type="range" id="aval" min="10" max="300" step="10" value="100">
+            <div style="font-size: 0.8em; color: #888; margin-top: 2px;">Higher A &rarr; More Leisure</div>
+        </div>
+    </div>
+
+    <h3>Track Points</h3>
+    <div class="control-group">
+        <button id="record-btn">Record Current Point</button>
+        <button id="clear-btn" class="clear">Clear History</button>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-row"><span>Optimal Leisure ($R^*$):</span> <span id="r-opt" style="font-weight:bold">0</span></div>
+        <div class="info-row"><span>Labor Supply ($L^*$):</span> <span id="l-opt" style="font-weight:bold">0</span></div>
+        <div class="info-row"><span>Consumption ($C^*$):</span> <span id="c-opt" style="font-weight:bold">0</span></div>
+        <div class="info-row"><span>Utility ($U$):</span> <span id="u-val" style="font-weight:bold">0</span></div>
+    </div>
+</div>
+
+<div id="main-content">
+    <div class="plot-wrapper">
+        <div id="plot-choice"></div>
+    </div>
+    <div class="plot-wrapper">
+        <div id="plot-supply"></div>
+    </div>
+</div>
+
+<script>
+    // State
+    const state = {
+        model: 'ces', // 'ces' or 'ql'
+        w: 10,
+        V: 0,
+        alpha: 0.5,
+        sigma: 1.5,
+        A: 100,
+        history: [] // Array of {w, L}
+    };
+
+    // DOM
+    const modelSelect = document.getElementById('model-select');
+    const inputs = {
+        w: document.getElementById('wage'),
+        V: document.getElementById('nonlabor'),
+        alpha: document.getElementById('alpha'),
+        sigma: document.getElementById('sigma'),
+        A: document.getElementById('aval')
+    };
+    const displays = {
+        w: document.getElementById('wage-val'),
+        V: document.getElementById('nonlabor-val'),
+        alpha: document.getElementById('alpha-val'),
+        sigma: document.getElementById('sigma-val'),
+        A: document.getElementById('aval-val'),
+        R: document.getElementById('r-opt'),
+        L: document.getElementById('l-opt'),
+        C: document.getElementById('c-opt'),
+        U: document.getElementById('u-val')
+    };
+
+    // Model switching logic
+    modelSelect.addEventListener('change', (e) => {
+        state.model = e.target.value;
+        state.history = []; // Clear history on model change
+        
+        const cesControls = document.getElementById('controls-ces');
+        const qlControls = document.getElementById('controls-ql');
+        const cesDesc = document.getElementById('model-desc-ces');
+        const qlDesc = document.getElementById('model-desc-ql');
+
+        if (state.model === 'ces') {
+            cesControls.style.display = 'block';
+            qlControls.style.display = 'none';
+            cesDesc.style.display = 'block';
+            qlDesc.style.display = 'none';
+        } else {
+            cesControls.style.display = 'none';
+            qlControls.style.display = 'block';
+            cesDesc.style.display = 'none';
+            qlDesc.style.display = 'block';
+        }
+        update();
+    });
+
+    // Calculations
+    
+    function solveCES(w, V, alpha, sigma) {
+        const T = 24;
+        // ... (Previous CES Logic) ...
+        if (Math.abs(sigma - 1.0) < 0.01) {
+             // CD
+            const Ifull = w * T + V;
+            let R = (1 - alpha) * Ifull / w;
+            R = Math.max(0, Math.min(24, R));
+            const L = 24 - R;
+            const C = w * L + V;
+            const U = Math.pow(C, alpha) * Math.pow(R, 1 - alpha);
+            return { R, L, C, U };
+        }
+        
+        const rho = (sigma - 1) / sigma;
+        const ratio = alpha / (1 - alpha);
+        const A_param = Math.pow(ratio, sigma); // A in CES formula derivation
+        
+        const num = w * T + V;
+        const den = w + A_param * Math.pow(w, sigma);
+        let R = num / den;
+        R = Math.max(0, Math.min(24, R));
+        
+        const L = 24 - R;
+        const C = w * L + V;
+        
+        let U = 0;
+        if (R > 0 && C > 0) {
+             const inner = alpha * Math.pow(C, rho) + (1 - alpha) * Math.pow(R, rho);
+             U = Math.pow(inner, 1 / rho);
+        }
+        return { R, L, C, U };
+    }
+
+    function solveQL(w, V, A) {
+        // U = A * ln(R) + C
+        // MRS = MU_R / MU_C = (A/R) / 1 = A/R
+        // MRS = w => A/R = w => R = A/w
+        
+        let R = A / w;
+        
+        // Corner solutions
+        if (R > 24) R = 24;
+        if (R < 0) R = 0;
+        
+        const L = 24 - R;
+        const C = w * L + V;
+        
+        // Utility
+        // Handle R=0 case for log
+        const U = (R > 0) ? (A * Math.log(R) + C) : -Infinity;
+        
+        return { R, L, C, U };
+    }
+
+    function calculate() {
+        if (state.model === 'ces') {
+            return solveCES(state.w, state.V, state.alpha, state.sigma);
+        } else {
+            return solveQL(state.w, state.V, state.A);
+        }
+    }
+
+    function update() {
+        state.w = parseFloat(inputs.w.value);
+        state.V = parseFloat(inputs.V.value);
+        state.alpha = parseFloat(inputs.alpha.value);
+        state.sigma = parseFloat(inputs.sigma.value);
+        state.A = parseFloat(inputs.A.value);
+        
+        displays.w.textContent = state.w;
+        displays.V.textContent = state.V;
+        displays.alpha.textContent = state.alpha;
+        displays.sigma.textContent = state.sigma;
+        displays.A.textContent = state.A;
+        
+        const res = calculate();
+        displays.R.textContent = res.R.toFixed(2);
+        displays.L.textContent = res.L.toFixed(2);
+        displays.C.textContent = res.C.toFixed(2);
+        displays.U.textContent = (res.U === -Infinity) ? '-Inf' : res.U.toFixed(2);
+        
+        drawPlots(res);
+    }
+
+    function drawPlots(current) {
+        const { w, V, alpha, sigma, A } = state;
+        const T = 24;
+        
+        // --- Plot 1: Leisure-Consumption Choice ---
+        
+        const maxC = 24 * 50 + 100; 
+        const currentMaxC = 24 * w + V;
+        
+        const budgetX = [0, 24];
+        const budgetY = [24 * w + V, V];
+        
+        // Helper to get coords for a given utility level
+        function getICPoints(U_level, model, params) {
+            const ptsX = [];
+            const ptsY = [];
+            const rho = (params.sigma - 1) / params.sigma;
+            const isCD = Math.abs(params.sigma - 1) < 0.01;
+
+            for(let r=0.1; r<=24.9; r+=0.2) {
+                let c_val = NaN;
+                
+                if(model === 'ces') {
+                    if(isCD) {
+                         c_val = Math.pow(U_level / Math.pow(r, 1-params.alpha), 1/params.alpha);
+                    } else {
+                         try {
+                             const term1 = Math.pow(U_level, rho);
+                             const term2 = (1 - params.alpha) * Math.pow(r, rho);
+                             const diff = (term1 - term2) / params.alpha;
+                             if (diff > 0) c_val = Math.pow(diff, 1/rho);
+                         } catch(e) {}
+                    }
+                } else {
+                    // QL
+                     c_val = U_level - params.A * Math.log(r);
+                }
+
+                if(!isNaN(c_val) && c_val >= -50 && c_val <= currentMaxC * 1.5) {
+                    ptsX.push(r);
+                    ptsY.push(c_val);
+                }
+            }
+            return { x: ptsX, y: ptsY };
+        }
+
+        // --- Static Background Map Logic ---
+        // We want the background map to be constant with respect to w and V (which move the budget line),
+        // but it must update if preferences (alpha, sigma, A) change.
+        
+        // 1. Calculate reference Range for U with current preferences
+        // Max possible params: w=50, V=100
+        let refSol;
+        if(state.model === 'ces') refSol = solveCES(50, 100, alpha, sigma);
+        else refSol = solveQL(50, 100, A);
+        const maxPossibleU = refSol.U;
+        
+        // 2. Generate fixed levels
+        const numLevels = 10;
+        const levels = [];
+        for(let i=1; i<=numLevels; i++) {
+            levels.push(maxPossibleU * (i / numLevels));
+        }
+        
+        // 3. Color scale (Light Yellow to Dark Red)
+        function getUColor(u) {
+            const t = Math.min(1, Math.max(0, u / maxPossibleU));
+            const palette = ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'];
+            const idx = Math.floor(t * (palette.length - 1));
+            return palette[idx];
+        }
+
+        const backgroundTraces = [];
+        levels.forEach(u_lev => {
+             const pts = getICPoints(u_lev, state.model, state);
+             if(pts.x.length > 0) {
+                 const color = getUColor(u_lev);
+                 // Trace
+                 backgroundTraces.push({
+                    x: pts.x, y: pts.y,
+                    mode: 'lines',
+                    line: { color: color, width: 1.5 }, // Fixed width
+                    hoverinfo: 'none',
+                    showlegend: false
+                 });
+                 
+                 // Label ON the curve (near the end)
+                 const lblIdx = Math.floor(pts.x.length * 0.9); 
+                 if(lblIdx > 0 && lblIdx < pts.x.length) {
+                     backgroundTraces.push({
+                        x: [pts.x[lblIdx]], y: [pts.y[lblIdx]],
+                        mode: 'text',
+                        text: [`<b>U=${u_lev.toFixed(0)}</b>`], // Bold text
+                        textposition: 'top center',
+                        textfont: { size: 11, color: color, family: 'Arial, sans-serif' },
+                        showlegend: false,
+                        hoverinfo: 'none'
+                     });
+                 }
+             }
+        });
+
+        // 4. Current IC (Active)
+        const mainIC = getICPoints(current.U, state.model, state);
+        
+        const traceIC = {
+            x: mainIC.x, y: mainIC.y,
+            mode: 'lines', name: `Current U=${current.U.toFixed(1)}`,
+            line: { color: 'black', width: 3 } 
+        };
+
+        const traceBudget = {
+            x: budgetX, y: budgetY,
+            mode: 'lines', name: 'Budget',
+            line: { color: '#1f77b4', width: 2 }
+        };
+        
+        const tracePoint = {
+            x: [current.R], y: [current.C],
+            mode: 'markers', name: 'Optimum',
+            marker: { size: 12, color: '#d62728' } // Red
+        };
+        
+        const traceEndow = {
+            x: [24, 24], y: [0, currentMaxC*1.1],
+            mode: 'lines', name: 'Time Limit',
+            line: { color: 'grey', dash: 'dash' },
+            showlegend: false
+        };
+
+        const layoutChoice = {
+            title: 'Leisure-Consumption Choice',
+            xaxis: { title: 'Hours of Leisure (R)', range: [0, 25] },
+            yaxis: { title: 'Consumption ($)', range: [0, Math.max(currentMaxC*1.2, 500)] },
+            margin: { t: 30, b: 30, l: 50, r: 20 },
+            showlegend: true,
+            annotations: [{
+                x: current.R, y: current.C,
+                text: `R*=${current.R.toFixed(1)}`,
+                ax: 0, ay: -25,
+                showarrow: true,
+                font: { color: 'black', size: 12, weight: 'bold' }
+            }]
+        };
+        
+        // Combine traces: Background Map first, then Budget, then Main IC, then Point
+        const allTraces = [...backgroundTraces, traceBudget, traceIC, tracePoint, traceEndow];
+        
+        Plotly.react('plot-choice', allTraces, layoutChoice, {responsive: true, displayModeBar: false});
+
+        // --- Plot 2: Labor Supply Curve ---
+        
+        const currentL = 24 - current.R;
+        const supplyPoint = {
+            x: [currentL], y: [w],
+            mode: 'markers', name: 'Current',
+            marker: { size: 10, color: 'red' }
+        };
+        
+        const historyX = state.history.map(h => h.L);
+        const historyY = state.history.map(h => h.w);
+        
+        const traceHistory = {
+            x: historyX, y: historyY,
+            mode: 'lines+markers', name: 'Traced',
+            line: { color: 'green', width: 2 },
+            marker: { size: 6, color: 'green' }
+        };
+        
+        // Theoretical Supply Curve
+        const theoryW = [];
+        const theoryL = [];
+        for(let testW=1; testW<=50; testW+=1) {
+            let sol;
+            if(state.model === 'ces') sol = solveCES(testW, V, alpha, sigma);
+            else sol = solveQL(testW, V, state.A);
+            
+            theoryW.push(testW);
+            theoryL.push(sol.L);
+        }
+        
+        const traceTheory = {
+            x: theoryL, y: theoryW,
+            mode: 'lines', name: 'Supply Curve',
+            line: { color: 'rgba(0, 128, 0, 0.3)', width: 4 },
+            hoverinfo: 'none'
+        };
+
+        const layoutSupply = {
+            title: 'Labor Supply Curve',
+            xaxis: { title: 'Hours of Labor (L)', range: [0, 25] },
+            yaxis: { title: 'Wage ($/hr)', range: [0, 52] },
+            margin: { t: 30, b: 30, l: 50, r: 20 },
+            showlegend: true
+        };
+        
+        Plotly.react('plot-supply', [traceTheory, traceHistory, supplyPoint], layoutSupply, {responsive: true, displayModeBar: false});
+    }
+
+    // Event Listeners
+    inputs.w.addEventListener('input', update);
+    inputs.V.addEventListener('input', update);
+    inputs.alpha.addEventListener('input', update);
+    inputs.sigma.addEventListener('input', update);
+
+    inputs.A.addEventListener('input', update);
+
+    document.getElementById('record-btn').addEventListener('click', () => {
+        const res = calculate();
+        state.history.push({ w: state.w, L: res.L });
+        state.history.sort((a,b) => a.w - b.w);
+        update();
+    });
+    
+    document.getElementById('clear-btn').addEventListener('click', () => {
+        state.history = [];
+        update();
+    });
+
+    // Init
+    update();
+
+</script>
+
+</body>
+</html>

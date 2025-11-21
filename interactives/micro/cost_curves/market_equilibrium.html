@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Equilibrium and Firm Profit</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+        }
+
+        canvas {
+            width: 100%;
+            height: 300px; /* Fixed height for aspect ratio control */
+            display: block;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        .status-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid #ccc;
+            transition: all 0.3s ease;
+        }
+
+        .status-panel.profit {
+            border-left-color: #34c759;
+            background-color: #e8f8ed;
+        }
+
+        .status-panel.loss {
+            border-left-color: #ffcc00;
+            background-color: #fff9e6;
+        }
+
+        .status-panel.shutdown {
+            border-left-color: #ff3b30;
+            background-color: #ffecec;
+        }
+
+        .status-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            padding-top: 15px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric.full-width {
+            grid-column: 1 / -1;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .line-sample {
+            width: 20px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Market Equilibrium & Firm Profit</h1>
+    <p class="instructions">Drag the <strong>Supply Curve (S)</strong> on the left graph to change the market price.</p>
+
+    <div class="charts-container">
+        <div class="canvas-wrapper">
+            <div class="chart-title">Market (Industry)</div>
+            <canvas id="marketCanvas"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+            <div class="chart-title">Representative Firm</div>
+            <canvas id="firmCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><span class="line-sample" style="background: #007aff;"></span> Demand</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff9500;"></span> Supply</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff3b30;"></span> MC</div>
+        <div class="legend-item"><span class="line-sample" style="background: #34c759;"></span> ATC</div>
+        <div class="legend-item"><span class="line-sample" style="background: #af52de;"></span> AVC</div>
+    </div>
+
+    <div id="statusPanel" class="status-panel">
+        <span id="statusTitle" class="status-title">Equilibrium</span>
+        <div id="statusText">Adjust supply to see how the firm reacts.</div>
+        
+        <div class="metrics-grid">
+            <div class="metric">
+                <div class="metric-label">Price (P)</div>
+                <div id="valPrice" class="metric-value">$0.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Quantity (q)</div>
+                <div id="valQ" class="metric-value">0.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Total Revenue</div>
+                <div id="valTR" class="metric-value">$0.00</div>
+            </div>
+            
+            <div class="metric">
+                <div class="metric-label">Fixed Cost</div>
+                <div id="valFC" class="metric-value">$20.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Variable Cost</div>
+                <div id="valVC" class="metric-value">$0.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Total Cost</div>
+                <div id="valTC" class="metric-value">$0.00</div>
+            </div>
+
+            <div class="metric full-width">
+                <div class="metric-label">Profit (TR - TC)</div>
+                <div id="valProfit" class="metric-value">$0.00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Configuration & State ---
+    const marketConfig = {
+        demandIntercept: 20,
+        demandSlope: 1,    // P = 20 - 1Q
+        supplySlope: 1,    // P = c + 1Q
+        supplyIntercept: 2, // Initial c
+        maxQ: 20,
+        maxP: 22
+    };
+
+    // Cost Function: TC = F + aq^3 + bq^2 + cq
+    // Parameters tuned for visuals
+    const firmConfig = {
+        fixedCost: 20,
+        a: 0.08,
+        b: -1.6,
+        c: 12,
+        maxQ: 18,
+        maxP: 22
+    };
+
+    let state = {
+        isDragging: false,
+        supplyIntercept: 2
+    };
+
+    // --- DOM Elements ---
+    const marketCanvas = document.getElementById('marketCanvas');
+    const firmCanvas = document.getElementById('firmCanvas');
+    const ctxMarket = marketCanvas.getContext('2d');
+    const ctxFirm = firmCanvas.getContext('2d');
+    
+    const statusPanel = document.getElementById('statusPanel');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusText = document.getElementById('statusText');
+    const valPrice = document.getElementById('valPrice');
+    const valQ = document.getElementById('valQ');
+    const valProfit = document.getElementById('valProfit');
+    const valTR = document.getElementById('valTR');
+    const valFC = document.getElementById('valFC');
+    const valVC = document.getElementById('valVC');
+    const valTC = document.getElementById('valTC');
+
+    // --- Resize Logic ---
+    function resize() {
+        // Get display size
+        const marketRect = marketCanvas.parentElement.getBoundingClientRect();
+        const firmRect = firmCanvas.parentElement.getBoundingClientRect();
+        
+        // Set canvas size (considering pixel ratio for sharpness)
+        const dpr = window.devicePixelRatio || 1;
+        
+        [marketCanvas, firmCanvas].forEach(canvas => {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.style.width = (rect.width - 22) + 'px'; // minus padding
+            canvas.style.height = '300px';
+            canvas.width = (rect.width - 22) * dpr;
+            canvas.height = 300 * dpr;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+        });
+
+        draw();
+    }
+    window.addEventListener('resize', resize);
+
+    // --- Economics Functions ---
+
+    // Market
+    function getMarketEquilibrium() {
+        // Demand: P = A - B*Q
+        // Supply: P = C + D*Q
+        // A - B*Q = C + D*Q => A - C = (B+D)Q => Q = (A-C)/(B+D)
+        const A = marketConfig.demandIntercept;
+        const B = marketConfig.demandSlope;
+        const C = state.supplyIntercept;
+        const D = marketConfig.supplySlope;
+
+        const Q = Math.max(0, (A - C) / (B + D));
+        const P = A - B * Q;
+        return { P, Q };
+    }
+
+    // Firm Costs
+    function TC(q) {
+        if (q <= 0) return firmConfig.fixedCost;
+        return firmConfig.fixedCost + firmConfig.a * Math.pow(q, 3) + firmConfig.b * Math.pow(q, 2) + firmConfig.c * q;
+    }
+
+    function MC(q) {
+        // dTC/dq = 3aq^2 + 2bq + c
+        return 3 * firmConfig.a * Math.pow(q, 2) + 2 * firmConfig.b * q + firmConfig.c;
+    }
+
+    function ATC(q) {
+        if (q <= 0.01) return TC(0.01) / 0.01; // Avoid div by zero
+        return TC(q) / q;
+    }
+
+    function AVC(q) {
+        // VC = aq^3 + bq^2 + cq
+        // AVC = aq^2 + bq + c
+        return firmConfig.a * Math.pow(q, 2) + firmConfig.b * q + firmConfig.c;
+    }
+
+    function getFirmOptimalQ(price) {
+        // MC = P. MC is quadratic: 3aq^2 + 2bq + c = P
+        // 3aq^2 + 2bq + (c - P) = 0
+        const A = 3 * firmConfig.a;
+        const B = 2 * firmConfig.b;
+        const C = firmConfig.c - price;
+        
+        const discrim = B*B - 4*A*C;
+        if (discrim < 0) return 0; // No solution
+
+        // Two solutions, we want the one on the rising part of MC curve
+        const q1 = (-B + Math.sqrt(discrim)) / (2 * A);
+        const q2 = (-B - Math.sqrt(discrim)) / (2 * A);
+
+        // The minimum of MC is at q = -2b / 2(3a) = -b/3a
+        // We want the q > min_MC_q usually.
+        // Or simply the larger Q if both are positive, as MC cuts MR from below for stability
+        return Math.max(0, Math.max(q1, q2));
+    }
+
+    // --- Drawing ---
+
+    function getScales(canvas, config) {
+        const w = parseFloat(canvas.style.width);
+        const h = parseFloat(canvas.style.height);
+        const padding = { top: 20, right: 30, bottom: 30, left: 40 };
+        
+        return {
+            x: (val) => padding.left + (val / config.maxQ) * (w - padding.left - padding.right),
+            y: (val) => h - padding.bottom - (val / config.maxP) * (h - padding.top - padding.bottom),
+            invX: (px) => ((px - padding.left) / (w - padding.left - padding.right)) * config.maxQ,
+            invY: (py) => config.maxP * (1 - (py - padding.top) / (h - padding.top - padding.bottom)), // Approx
+            w, h, padding
+        };
+    }
+
+    function drawAxes(ctx, scales, labelX, labelY) {
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        
+        // Y axis
+        ctx.moveTo(scales.x(0), scales.y(0));
+        ctx.lineTo(scales.x(0), scales.y(marketConfig.maxP));
+        
+        // X axis
+        ctx.moveTo(scales.x(0), scales.y(0));
+        ctx.lineTo(scales.x(marketConfig.maxQ), scales.y(0));
+        ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = '#666';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(labelX, scales.x(marketConfig.maxQ/2), scales.h - 5);
+        
+        ctx.save();
+        ctx.translate(15, scales.h/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.textAlign = 'center';
+        ctx.fillText(labelY, 0, 0);
+        ctx.restore();
+    }
+
+    function drawLine(ctx, scales, x1, y1, x2, y2, color, width=2, dash=[]) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.setLineDash(dash);
+        ctx.moveTo(scales.x(x1), scales.y(y1));
+        ctx.lineTo(scales.x(x2), scales.y(y2));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function drawCurve(ctx, fn, scales, rangeMax, color, width=2) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        let started = false;
+        for(let q=0; q<=rangeMax; q+=0.2) {
+            const val = fn(q);
+            if(val > scales.invY(scales.padding.top) * 1.5) continue; // optimization
+            if (!started) {
+                ctx.moveTo(scales.x(q), scales.y(val));
+                started = true;
+            } else {
+                ctx.lineTo(scales.x(q), scales.y(val));
+            }
+        }
+        ctx.stroke();
+    }
+
+    function draw() {
+        const eq = getMarketEquilibrium();
+        const firmQ = getFirmOptimalQ(eq.P);
+        
+        // --- Market Canvas ---
+        const mScales = getScales(marketCanvas, marketConfig);
+        ctxMarket.clearRect(0, 0, mScales.w, mScales.h);
+        
+        drawAxes(ctxMarket, mScales, "Quantity (Q)", "Price ($)");
+        
+        // Demand
+        drawLine(ctxMarket, mScales, 0, marketConfig.demandIntercept, 
+                 marketConfig.maxQ, marketConfig.demandIntercept - marketConfig.demandSlope * marketConfig.maxQ, 
+                 '#007aff', 3);
+
+        // Supply
+        const supplyY2 = state.supplyIntercept + marketConfig.supplySlope * marketConfig.maxQ;
+        drawLine(ctxMarket, mScales, 0, state.supplyIntercept, 
+                 marketConfig.maxQ, supplyY2, 
+                 '#ff9500', 3);
+                 
+        // Equilibrium Point
+        ctxMarket.beginPath();
+        ctxMarket.fillStyle = '#333';
+        ctxMarket.arc(mScales.x(eq.Q), mScales.y(eq.P), 5, 0, Math.PI*2);
+        ctxMarket.fill();
+        
+        // Dashed Line to Price
+        ctxMarket.setLineDash([4,4]);
+        ctxMarket.strokeStyle = '#999';
+        ctxMarket.beginPath();
+        ctxMarket.moveTo(mScales.x(eq.Q), mScales.y(eq.P));
+        ctxMarket.lineTo(mScales.x(0), mScales.y(eq.P)); // To Y axis
+        ctxMarket.stroke();
+        ctxMarket.setLineDash([]);
+        
+        ctxMarket.fillStyle = '#333';
+        ctxMarket.textAlign = 'right';
+        ctxMarket.fillText(`$${eq.P.toFixed(2)}`, mScales.x(0) - 5, mScales.y(eq.P) + 4);
+
+
+        // --- Firm Canvas ---
+        const fScales = getScales(firmCanvas, firmConfig);
+        ctxFirm.clearRect(0, 0, fScales.w, fScales.h);
+        
+        drawAxes(ctxFirm, fScales, "Quantity (q)", "Cost/Price ($)");
+
+        // Curves
+        drawCurve(ctxFirm, MC, fScales, firmConfig.maxQ, '#ff3b30', 3);
+        drawCurve(ctxFirm, ATC, fScales, firmConfig.maxQ, '#34c759', 3);
+        drawCurve(ctxFirm, AVC, fScales, firmConfig.maxQ, '#af52de', 2);
+
+        // Price Line (MR)
+        drawLine(ctxFirm, fScales, 0, eq.P, firmConfig.maxQ, eq.P, '#999', 2, [5,5]);
+        ctxFirm.fillStyle = '#666';
+        ctxFirm.fillText("MR = P", fScales.x(firmConfig.maxQ - 2), fScales.y(eq.P) - 5);
+
+        // Optimal Q Logic
+        // Identify Shutdown Point (Min AVC)
+        // Min AVC is at vertex of parabola aq^2 + bq + c
+        const qMinAVC = -firmConfig.b / (2 * firmConfig.a);
+        const minAVC = AVC(qMinAVC);
+        
+        const shouldShutdown = eq.P < minAVC - 0.05; // small epsilon for floating point stability
+        const actualQ = shouldShutdown ? 0 : firmQ;
+
+        // Profit/Loss Area
+        if (actualQ > 0) {
+            const atcVal = ATC(actualQ);
+            const profit = (eq.P - atcVal) * actualQ;
+            
+            ctxFirm.fillStyle = profit >= 0 ? 'rgba(52, 199, 89, 0.2)' : 'rgba(255, 59, 48, 0.2)';
+            ctxFirm.fillRect(
+                fScales.x(0), 
+                fScales.y(Math.max(eq.P, atcVal)), 
+                fScales.x(actualQ) - fScales.x(0), 
+                Math.abs(fScales.y(eq.P) - fScales.y(atcVal))
+            );
+            
+            // Vertical line up to ATC
+            ctxFirm.setLineDash([2,2]);
+            ctxFirm.strokeStyle = '#666';
+            ctxFirm.beginPath();
+            ctxFirm.moveTo(fScales.x(actualQ), fScales.y(0));
+            ctxFirm.lineTo(fScales.x(actualQ), fScales.y(atcVal)); // Go up to ATC even if P is lower
+            ctxFirm.lineTo(fScales.x(actualQ), fScales.y(eq.P));   // Or P
+            ctxFirm.stroke();
+            ctxFirm.setLineDash([]);
+
+            // Point on ATC
+            ctxFirm.beginPath();
+            ctxFirm.fillStyle = '#34c759';
+            ctxFirm.arc(fScales.x(actualQ), fScales.y(atcVal), 4, 0, Math.PI*2);
+            ctxFirm.fill();
+
+            // Point on Equilibrium
+            ctxFirm.beginPath();
+            ctxFirm.fillStyle = '#333';
+            ctxFirm.arc(fScales.x(actualQ), fScales.y(eq.P), 4, 0, Math.PI*2);
+            ctxFirm.fill();
+            
+            // Label q
+            ctxFirm.fillStyle = '#333';
+            ctxFirm.textAlign = 'center';
+            ctxFirm.fillText(`q*`, fScales.x(actualQ), fScales.y(0) + 15);
+        }
+
+        // --- Update UI Text ---
+        const atcAtQ = actualQ > 0 ? ATC(actualQ) : 0;
+        const TR = eq.P * actualQ;
+        const FC = firmConfig.fixedCost;
+        // TC = FC + VC. So VC = TC - FC.
+        const totalCost = actualQ > 0 ? TC(actualQ) : FC; // If producing 0, still have FC in short run? Actually if shutdown, usually pay FC.
+        // But if Q=0, TC(0) = FC.
+        const VC = totalCost - FC;
+        const profitVal = TR - totalCost;
+        
+        valPrice.textContent = `$${eq.P.toFixed(2)}`;
+        valQ.textContent = actualQ.toFixed(2);
+        valTR.textContent = `$${TR.toFixed(2)}`;
+        valFC.textContent = `$${FC.toFixed(2)}`;
+        valVC.textContent = `$${VC.toFixed(2)}`;
+        valTC.textContent = `$${totalCost.toFixed(2)}`;
+        valProfit.textContent = `$${profitVal.toFixed(2)}`;
+        valProfit.style.color = profitVal >= 0 ? '#28cd41' : '#ff3b30';
+
+        statusPanel.className = 'status-panel';
+        if (shouldShutdown) {
+            statusPanel.classList.add('shutdown');
+            statusTitle.textContent = "Shut Down";
+            statusText.innerHTML = `Price ($${eq.P.toFixed(2)}) is below minimum AVC ($${minAVC.toFixed(2)}). <br>
+                The firm cannot even cover its variable costs. <br>
+                <strong>Short Run:</strong> Shut down (Q=0). Revenue = $0. Loss = Fixed Costs ($${FC.toFixed(2)}). <br>
+                <strong>Long Run:</strong> Exit industry.`;
+        } else if (profitVal > 0.01) {
+            statusPanel.classList.add('profit');
+            statusTitle.textContent = "Economic Profit";
+            statusText.innerHTML = `Price ($${eq.P.toFixed(2)}) > ATC ($${atcAtQ.toFixed(2)}). <br>
+                The firm is making a profit of <strong>$${profitVal.toFixed(2)}</strong>. <br>
+                <strong>Response:</strong> New firms will enter the market, shifting Supply right, lowering Price until P = min(ATC).`;
+        } else if (profitVal < -0.01) {
+            statusPanel.classList.add('loss');
+            statusTitle.textContent = "Economic Loss (Operate)";
+            statusText.innerHTML = `Price ($${eq.P.toFixed(2)}) < ATC ($${atcAtQ.toFixed(2)}) but > AVC. <br>
+                Total Revenue ($${TR.toFixed(2)}) covers all Variable Costs ($${VC.toFixed(2)}) and contributes <strong>$${(TR-VC).toFixed(2)}</strong> towards Fixed Costs. <br>
+                <strong>Short Run:</strong> Continue producing to minimize loss (Loss $${Math.abs(profitVal).toFixed(2)} < Fixed Cost $${FC.toFixed(2)}). <br>
+                <strong>Long Run:</strong> Firms will exit, shifting Supply left, raising Price.`;
+        } else {
+            statusTitle.textContent = "Normal Profit (Break-even)";
+            statusText.innerHTML = `Price = ATC. The firm is earning normal profit (zero economic profit). <br>
+                Total Revenue covers exactly Total Costs (including opportunity costs). <br>
+                There is no incentive for entry or exit. This is Long Run Equilibrium.`;
+        }
+    }
+
+    // --- Interaction ---
+    function handleStart(e) {
+        const rect = marketCanvas.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        // Check if near Supply curve
+        // We can just allow dragging anywhere on the canvas to shift supply for simplicity
+        // or check distance. Let's assume global drag on that canvas shifts intercept.
+        if (clientX && clientY && e.target === marketCanvas) {
+            state.isDragging = true;
+            handleMove(e);
+        }
+    }
+
+    // Helper to find Q for min ATC
+    function getMinATCQ() {
+        // Solve 2aq^3 + bq^2 - F = 0
+        // Use Newton's method or simple iteration
+        let q = 10; // Initial guess
+        for(let i=0; i<10; i++) {
+            let f = 2*firmConfig.a*Math.pow(q,3) + firmConfig.b*Math.pow(q,2) - firmConfig.fixedCost;
+            let df = 6*firmConfig.a*Math.pow(q,2) + 2*firmConfig.b*q;
+            if (Math.abs(df) < 1e-6) break;
+            q = q - f/df;
+        }
+        return Math.max(0.1, q);
+    }
+
+    function handleMove(e) {
+        if (!state.isDragging) return;
+        e.preventDefault();
+        
+        const rect = marketCanvas.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        if (!clientX) return;
+
+        // Logic: Move supply curve so it passes through the mouse pointer (roughly)
+        // Supply: P = c + dQ. 
+        // We have mouse (x,y) -> (Q_mouse, P_mouse)
+        // c = P_mouse - d * Q_mouse
+        
+        const mScales = getScales(marketCanvas, marketConfig);
+        const Q_mouse = mScales.invX(clientX - rect.left);
+        const P_mouse = mScales.invY(clientY - rect.top); // Approx inversion
+
+        // Constrain P_mouse and Q_mouse to be reasonable
+        // Calculate new intercept c
+        let newC = P_mouse - marketConfig.supplySlope * Q_mouse;
+        
+        // --- Snapping Logic ---
+        const qMinAVC = -firmConfig.b / (2 * firmConfig.a);
+        const minAVC = AVC(qMinAVC);
+        
+        const qMinATC = getMinATCQ();
+        const minATC = ATC(qMinATC);
+
+        // Calculate C that produces P = minATC and P = minAVC
+        // P = (AD + BC) / (B+D)  =>  C = (P(B+D) - AD) / B
+        const A = marketConfig.demandIntercept;
+        const B = marketConfig.demandSlope;
+        const D = marketConfig.supplySlope;
+        
+        const cForMinATC = (minATC * (B + D) - A * D) / B;
+        const cForMinAVC = (minAVC * (B + D) - A * D) / B;
+        
+        // Snap distance (in intercept units)
+        const snapDist = 1.5; 
+        
+        if (Math.abs(newC - cForMinATC) < snapDist) {
+            newC = cForMinATC;
+        } else if (Math.abs(newC - cForMinAVC) < snapDist) {
+            newC = cForMinAVC;
+        }
+        
+        // Clamp c to keep it visible/sensible
+        // Extended range to allow for shutdown price (which is around 4, requiring C ~ -12)
+        newC = Math.max(-25, Math.min(newC, 25));
+        
+        state.supplyIntercept = newC;
+        draw();
+    }
+
+    function handleEnd() {
+        state.isDragging = false;
+    }
+
+    marketCanvas.addEventListener('mousedown', handleStart);
+    marketCanvas.addEventListener('touchstart', handleStart, {passive: false});
+    
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove, {passive: false});
+    
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchend', handleEnd);
+
+    // Init
+    setTimeout(resize, 100);
+
+</script>
+</body>
+</html>
+

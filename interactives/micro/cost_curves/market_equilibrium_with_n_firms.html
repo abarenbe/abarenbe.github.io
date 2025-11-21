@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Equilibrium with N Firms</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+        }
+
+        canvas {
+            width: 100%;
+            height: 300px; /* Fixed height for aspect ratio control */
+            display: block;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        .status-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid #ccc;
+            transition: all 0.3s ease;
+        }
+
+        .status-panel.profit {
+            border-left-color: #34c759;
+            background-color: #e8f8ed;
+        }
+
+        .status-panel.loss {
+            border-left-color: #ffcc00;
+            background-color: #fff9e6;
+        }
+
+        .status-panel.shutdown {
+            border-left-color: #ff3b30;
+            background-color: #ffecec;
+        }
+
+        .status-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            padding-top: 15px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric.full-width {
+            grid-column: 1 / -1;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .line-sample {
+            width: 20px;
+            height: 3px;
+            border-radius: 1px;
+        }
+
+        /* Slider Styles */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 15px;
+            background: #f0f2f5;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .slider-label {
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        input[type=range] {
+            width: 200px;
+            accent-color: #007aff;
+        }
+
+        .slider-value {
+            font-weight: bold;
+            color: #007aff;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        .number-input {
+            width: 70px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #007aff;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .adjust-btn {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            color: #007aff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.2s;
+        }
+        
+        .adjust-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .adjust-btn:active {
+            background: #e0e0e0;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Market Equilibrium & Number of Firms</h1>
+    <p class="instructions">Adjust the <strong>Number of Firms</strong> to shift the Market Supply curve.</p>
+
+    <div class="slider-container">
+        <label class="slider-label" for="nFirms">Number of Firms:</label>
+        <button class="adjust-btn" onclick="adjustN(-1)" aria-label="Decrease firms">−</button>
+        <input type="range" id="nFirms" min="20" max="1000" value="200" step="1" oninput="updateN(this.value)">
+        <button class="adjust-btn" onclick="adjustN(1)" aria-label="Increase firms">+</button>
+        <input type="number" id="nInput" class="number-input" min="20" max="1000" value="200" oninput="updateN(this.value)" onchange="finalizeN()">
+    </div>
+
+    <div class="charts-container">
+        <div class="canvas-wrapper">
+            <div class="chart-title">Market (Industry)</div>
+            <canvas id="marketCanvas"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+            <div class="chart-title">Representative Firm</div>
+            <canvas id="firmCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><span class="line-sample" style="background: #007aff;"></span> Demand</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff9500;"></span> Supply (ΣMC)</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff3b30;"></span> MC</div>
+        <div class="legend-item"><span class="line-sample" style="background: #34c759;"></span> ATC</div>
+        <div class="legend-item"><span class="line-sample" style="background: #af52de;"></span> AVC</div>
+    </div>
+
+    <div id="statusPanel" class="status-panel">
+        <span id="statusTitle" class="status-title">Equilibrium</span>
+        <div id="statusText">Adjust supply to see how the firm reacts.</div>
+        
+        <div class="metrics-grid">
+            <div class="metric">
+                <div class="metric-label">Price (P)</div>
+                <div id="valPrice" class="metric-value">$0.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Firm Q</div>
+                <div id="valQ" class="metric-value">0.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Total Revenue</div>
+                <div id="valTR" class="metric-value">$0.00</div>
+            </div>
+            
+            <div class="metric">
+                <div class="metric-label">Fixed Cost</div>
+                <div id="valFC" class="metric-value">$20.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Variable Cost</div>
+                <div id="valVC" class="metric-value">$0.00</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Total Cost</div>
+                <div id="valTC" class="metric-value">$0.00</div>
+            </div>
+
+            <div class="metric full-width">
+                <div class="metric-label">Profit (TR - TC)</div>
+                <div id="valProfit" class="metric-value">$0.00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Configuration & State ---
+    const marketConfig = {
+        demandIntercept: 22,
+        demandSlope: 18 / 7000, // Ensures P=4 at Q=7000 with Intercept 22
+        maxQ: 8000,           // Adjusted for 1000 firms * ~8q
+        maxP: 22
+    };
+
+    // Cost Function: TC = F + aq^3 + bq^2 + cq
+    // Parameters tuned for visuals
+    const firmConfig = {
+        fixedCost: 20,
+        a: 0.08,
+        b: -1.6,
+        c: 12,
+        maxQ: 18,
+        maxP: 22
+    };
+
+    let state = {
+        nFirms: 200
+    };
+
+    // --- DOM Elements ---
+    const marketCanvas = document.getElementById('marketCanvas');
+    const firmCanvas = document.getElementById('firmCanvas');
+    const ctxMarket = marketCanvas.getContext('2d');
+    const ctxFirm = firmCanvas.getContext('2d');
+    
+    const statusPanel = document.getElementById('statusPanel');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusText = document.getElementById('statusText');
+    const valPrice = document.getElementById('valPrice');
+    const valQ = document.getElementById('valQ');
+    const valProfit = document.getElementById('valProfit');
+    const valTR = document.getElementById('valTR');
+    const valFC = document.getElementById('valFC');
+    const valVC = document.getElementById('valVC');
+    const valTC = document.getElementById('valTC');
+    const nInput = document.getElementById('nInput');
+    const nSlider = document.getElementById('nFirms');
+    // Removed nValueSpan
+
+    // --- Resize Logic ---
+    function resize() {
+        // Get display size
+        const dpr = window.devicePixelRatio || 1;
+        
+        [marketCanvas, firmCanvas].forEach(canvas => {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.style.width = (rect.width - 22) + 'px'; 
+            canvas.style.height = '300px';
+            canvas.width = (rect.width - 22) * dpr;
+            canvas.height = 300 * dpr;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+        });
+
+        draw();
+    }
+    window.addEventListener('resize', resize);
+
+    // --- Economics Functions ---
+
+    // Firm Costs
+    function TC(q) {
+        if (q <= 0) return firmConfig.fixedCost;
+        return firmConfig.fixedCost + firmConfig.a * Math.pow(q, 3) + firmConfig.b * Math.pow(q, 2) + firmConfig.c * q;
+    }
+
+    function MC(q) {
+        // dTC/dq = 3aq^2 + 2bq + c
+        return 3 * firmConfig.a * Math.pow(q, 2) + 2 * firmConfig.b * q + firmConfig.c;
+    }
+
+    function ATC(q) {
+        if (q <= 0.01) return TC(0.01) / 0.01;
+        return TC(q) / q;
+    }
+
+    function AVC(q) {
+        return firmConfig.a * Math.pow(q, 2) + firmConfig.b * q + firmConfig.c;
+    }
+
+    // Inverse MC: Given P, find q where MC(q) = P
+    function getFirmOptimalQ(price, ignoreShutdown = false) {
+        // MC = 3aq^2 + 2bq + c = P
+        const A = 3 * firmConfig.a;
+        const B = 2 * firmConfig.b;
+        const C = firmConfig.c - price;
+        
+        const discrim = B*B - 4*A*C;
+        if (discrim < 0) return 0; 
+
+        const q1 = (-B + Math.sqrt(discrim)) / (2 * A);
+        const q2 = (-B - Math.sqrt(discrim)) / (2 * A);
+        
+        // We generally want the larger q where MC is rising
+        let bestQ = Math.max(q1, q2);
+        if (bestQ < 0) bestQ = 0;
+
+        if (!ignoreShutdown) {
+            // Check shutdown condition: P < min AVC
+            const qMinAVC = -firmConfig.b / (2 * firmConfig.a);
+            const minAVC = AVC(qMinAVC);
+        
+            if (price < minAVC) return 0;
+        }
+
+        return bestQ;
+    }
+
+    // Market Supply: Q_m = N * q_f(P)
+    function getMarketSupplyQ(price, ignoreShutdown = false) {
+        if (price < 0) return 0;
+        return state.nFirms * getFirmOptimalQ(price, ignoreShutdown);
+    }
+
+    // Market Demand: P = A - B*Q  => Q = (A-P)/B
+    function getMarketDemandQ(price) {
+        return (marketConfig.demandIntercept - price) / marketConfig.demandSlope;
+    }
+
+    // Solve Equilibrium numerically
+    function getMarketEquilibrium() {
+        // Find P where DemandQ(P) - SupplyQ(P) = 0
+        // We use the "Hypothetical" supply (ignoring shutdown) to determine 
+        // the market pressure/price even if it's below shutdown point.
+        let low = 0, high = marketConfig.maxP;
+        let P = 0;
+        
+        for(let i=0; i<20; i++) {
+            P = (low + high) / 2;
+            const Qd = getMarketDemandQ(P);
+            const Qs = getMarketSupplyQ(P, true); // true = ignore shutdown for equilibrium finding
+            
+            if (Qs > Qd) {
+                high = P;
+            } else {
+                low = P;
+            }
+        }
+        // Return Q based on this P and hypothetical supply
+        return { P: P, Q: getMarketSupplyQ(P, true) };
+    }
+
+
+    // --- Drawing ---
+
+    function getScales(canvas, config) {
+        const w = parseFloat(canvas.style.width);
+        const h = parseFloat(canvas.style.height);
+        const padding = { top: 20, right: 30, bottom: 30, left: 40 };
+        
+        return {
+            x: (val) => padding.left + (val / config.maxQ) * (w - padding.left - padding.right),
+            y: (val) => h - padding.bottom - (val / config.maxP) * (h - padding.top - padding.bottom),
+            invX: (px) => ((px - padding.left) / (w - padding.left - padding.right)) * config.maxQ,
+            invY: (py) => config.maxP * (1 - (py - padding.top) / (h - padding.top - padding.bottom)),
+            w, h, padding
+        };
+    }
+
+    function drawAxes(ctx, scales, labelX, labelY, maxX, maxP) {
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        
+        // Y axis
+        ctx.moveTo(scales.x(0), scales.y(0));
+        ctx.lineTo(scales.x(0), scales.y(maxP));
+        
+        // X axis
+        ctx.moveTo(scales.x(0), scales.y(0));
+        ctx.lineTo(scales.x(maxX), scales.y(0));
+        ctx.stroke();
+
+        // X Axis Ticks & Numbers
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        
+        // Dynamic step size based on magnitude
+        let xStep;
+        if (maxX <= 20) xStep = 2;
+        else if (maxX <= 100) xStep = 10;
+        else if (maxX <= 1000) xStep = 100;
+        else xStep = 1000;
+        
+        for(let x=0; x<=maxX; x+=xStep) {
+            if(x===0) continue; // Skip origin
+            const xPos = scales.x(x);
+            // Tick
+            ctx.beginPath();
+            ctx.moveTo(xPos, scales.y(0));
+            ctx.lineTo(xPos, scales.y(0) + 5);
+            ctx.stroke();
+            // Label
+            ctx.font = '11px sans-serif';
+            ctx.fillText(x, xPos, scales.y(0) + 8);
+        }
+
+        // Labels
+        ctx.fillStyle = '#666';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(labelX, scales.x(maxX/2), scales.h - 5);
+        
+        ctx.save();
+        ctx.translate(15, scales.h/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.textAlign = 'center';
+        ctx.fillText(labelY, 0, 0);
+        ctx.restore();
+    }
+
+    function drawLine(ctx, scales, x1, y1, x2, y2, color, width=2, dash=[]) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.setLineDash(dash);
+        ctx.moveTo(scales.x(x1), scales.y(y1));
+        ctx.lineTo(scales.x(x2), scales.y(y2));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function drawCurve(ctx, fn, scales, rangeMax, color, width=2) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        let started = false;
+        for(let q=0; q<=rangeMax; q+=0.2) {
+            const val = fn(q);
+            if(val > scales.invY(scales.padding.top) * 1.5) continue; 
+            if (!started) {
+                ctx.moveTo(scales.x(q), scales.y(val));
+                started = true;
+            } else {
+                ctx.lineTo(scales.x(q), scales.y(val));
+            }
+        }
+        ctx.stroke();
+    }
+
+    function drawMarketSupply(ctx, scales) {
+        // Calculate minAVC cutoff
+        const qMinAVC = -firmConfig.b / (2 * firmConfig.a);
+        const minAVC = AVC(qMinAVC);
+
+        // Helper to plot a segment
+        function plotSegment(pStart, pEnd, isDashed) {
+            ctx.beginPath();
+            ctx.strokeStyle = isDashed ? '#ff9500' : '#ff9500'; // Same color
+            ctx.lineWidth = 3;
+            if (isDashed) {
+                ctx.setLineDash([5, 5]);
+                // Make dashed part slightly more transparent?
+                ctx.globalAlpha = 0.5;
+            } else {
+                ctx.setLineDash([]);
+                ctx.globalAlpha = 1.0;
+            }
+
+            let started = false;
+            // Resolution of 0.2 for smoother curves
+            for(let p = pStart; p <= pEnd; p += 0.2) {
+                // Use hypothetical Q (ignore shutdown) to show the full MC sum curve
+                const Qs = getMarketSupplyQ(p, true);
+                
+                if(Qs > marketConfig.maxQ) {
+                    if (!started) {
+                         ctx.moveTo(scales.x(Qs), scales.y(p));
+                         started = true;
+                    } else {
+                         ctx.lineTo(scales.x(Qs), scales.y(p));
+                    }
+                    break;
+                }
+                
+                if (!started) {
+                    ctx.moveTo(scales.x(Qs), scales.y(p));
+                    started = true;
+                } else {
+                    ctx.lineTo(scales.x(Qs), scales.y(p));
+                }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 1.0;
+        }
+
+        // 1. Draw Dashed Part (Below minAVC)
+        plotSegment(0, minAVC, true);
+
+        // 2. Draw Solid Part (Above minAVC)
+        plotSegment(minAVC, marketConfig.maxP, false);
+    }
+
+    function draw() {
+        const eq = getMarketEquilibrium();
+        // Calculate firm behavior including hypothetical
+        const qMinAVC = -firmConfig.b / (2 * firmConfig.a);
+        const minAVC = AVC(qMinAVC);
+        const shouldShutdown = eq.P < minAVC - 0.05; // Tolerance
+        
+        // Calculate q* (operating point) regardless of shutdown
+        const firmQ = getFirmOptimalQ(eq.P, true);
+        
+        // Actual Q for totals (0 if shutdown)
+        const actualQ = shouldShutdown ? 0 : firmQ;
+
+        // --- Market Canvas ---
+        const mScales = getScales(marketCanvas, marketConfig);
+        ctxMarket.clearRect(0, 0, mScales.w, mScales.h);
+        
+        drawAxes(ctxMarket, mScales, "Quantity (Q)", "Price ($)", marketConfig.maxQ, marketConfig.maxP);
+        
+        // Demand
+        const demandQIntercept = marketConfig.demandIntercept / marketConfig.demandSlope;
+        drawLine(ctxMarket, mScales, 0, marketConfig.demandIntercept, 
+                 Math.min(marketConfig.maxQ, demandQIntercept), 
+                 Math.max(0, marketConfig.demandIntercept - marketConfig.demandSlope * marketConfig.maxQ), 
+                 '#007aff', 3);
+
+        // Supply
+        drawMarketSupply(ctxMarket, mScales);
+                 
+        // Equilibrium Point
+        ctxMarket.beginPath();
+        ctxMarket.fillStyle = '#333';
+        // Eq Q might be hypothetical if P < minAVC
+        const marketQ = eq.Q; 
+        ctxMarket.arc(mScales.x(marketQ), mScales.y(eq.P), 5, 0, Math.PI*2);
+        ctxMarket.fill();
+        
+        // Dashed Line to Price
+        ctxMarket.setLineDash([4,4]);
+        ctxMarket.strokeStyle = '#999';
+        ctxMarket.beginPath();
+        ctxMarket.moveTo(mScales.x(marketQ), mScales.y(eq.P));
+        ctxMarket.lineTo(mScales.x(0), mScales.y(eq.P)); // To Y axis
+        ctxMarket.stroke();
+        ctxMarket.setLineDash([]);
+        
+        ctxMarket.fillStyle = '#333';
+        ctxMarket.textAlign = 'right';
+        ctxMarket.fillText(`$${eq.P.toFixed(2)}`, mScales.x(0) - 5, mScales.y(eq.P) + 4);
+
+
+        // --- Firm Canvas ---
+        const fScales = getScales(firmCanvas, firmConfig);
+        ctxFirm.clearRect(0, 0, fScales.w, fScales.h);
+        
+        drawAxes(ctxFirm, fScales, "Quantity (q)", "Cost/Price ($)", firmConfig.maxQ, firmConfig.maxP);
+
+        // Curves
+        drawCurve(ctxFirm, MC, fScales, firmConfig.maxQ, '#ff3b30', 3);
+        drawCurve(ctxFirm, ATC, fScales, firmConfig.maxQ, '#34c759', 3);
+        drawCurve(ctxFirm, AVC, fScales, firmConfig.maxQ, '#af52de', 2);
+
+        // Price Line (MR)
+        drawLine(ctxFirm, fScales, 0, eq.P, firmConfig.maxQ, eq.P, '#999', 2, [5,5]);
+        ctxFirm.fillStyle = '#666';
+        ctxFirm.fillText("MR = P", fScales.x(firmConfig.maxQ - 2), fScales.y(eq.P) - 5);
+
+        // Draw Logic
+        
+        if (shouldShutdown) {
+             // --- SHUTDOWN VISUALIZATION ---
+             // Use firmQ (the hypothetical operating point where MC=P) to show why they shut down
+             const opQ = firmQ;
+             if (opQ > 0) {
+                const atcVal = ATC(opQ);
+                const avcVal = AVC(opQ);
+                
+                // 1. Variable Loss Rectangle (P to AVC)
+                // Cost of operating: You lose (AVC - P) on every unit
+                ctxFirm.fillStyle = 'rgba(255, 59, 48, 0.4)'; // Darker red
+                ctxFirm.fillRect(
+                    fScales.x(0),
+                    fScales.y(avcVal),
+                    fScales.x(opQ) - fScales.x(0),
+                    fScales.y(eq.P) - fScales.y(avcVal)
+                );
+                
+                // 2. Fixed Cost Rectangle (AVC to ATC) - or approximate area
+                // This is the loss you would take ANYWAY (FC)
+                // Note: ATC - AVC = AFC. So area is AFC * Q = FC.
+                ctxFirm.fillStyle = 'rgba(255, 204, 0, 0.3)'; // Orange/Yellow for FC
+                ctxFirm.fillRect(
+                    fScales.x(0),
+                    fScales.y(atcVal),
+                    fScales.x(opQ) - fScales.x(0),
+                    fScales.y(avcVal) - fScales.y(atcVal)
+                );
+                
+                // Vertical guidelines
+                ctxFirm.setLineDash([2,2]);
+                ctxFirm.strokeStyle = '#666';
+                ctxFirm.beginPath();
+                ctxFirm.moveTo(fScales.x(opQ), fScales.y(0));
+                ctxFirm.lineTo(fScales.x(opQ), fScales.y(atcVal));
+                ctxFirm.stroke();
+                ctxFirm.setLineDash([]);
+                
+                // Labels
+                ctxFirm.fillStyle = '#d32f2f';
+                ctxFirm.textAlign = 'center';
+                // Label Variable Loss
+                const midY_Var = (eq.P + avcVal) / 2;
+                if (avcVal - eq.P > 1) {
+                     ctxFirm.fillText("Operating Loss", fScales.x(opQ/2), fScales.y(midY_Var));
+                     ctxFirm.fillText("(P < AVC)", fScales.x(opQ/2), fScales.y(midY_Var) + 12);
+                }
+                
+                // Label Fixed Loss
+                ctxFirm.fillStyle = '#b7950b';
+                const midY_Fix = (avcVal + atcVal) / 2;
+                if (atcVal - avcVal > 1) {
+                     ctxFirm.fillText("Fixed Costs", fScales.x(opQ/2), fScales.y(midY_Fix));
+                }
+             }
+
+        } else {
+            // --- NORMAL / PROFIT / LOSS VISUALIZATION ---
+            const actualQ = firmQ;
+            if (actualQ > 0) {
+                const atcVal = ATC(actualQ);
+                const profit = (eq.P - atcVal) * actualQ;
+                
+                ctxFirm.fillStyle = profit >= 0 ? 'rgba(52, 199, 89, 0.2)' : 'rgba(255, 59, 48, 0.2)';
+                ctxFirm.fillRect(
+                    fScales.x(0), 
+                    fScales.y(Math.max(eq.P, atcVal)), 
+                    fScales.x(actualQ) - fScales.x(0), 
+                    Math.abs(fScales.y(eq.P) - fScales.y(atcVal))
+                );
+                
+                // Vertical line up to ATC
+                ctxFirm.setLineDash([2,2]);
+                ctxFirm.strokeStyle = '#666';
+                ctxFirm.beginPath();
+                ctxFirm.moveTo(fScales.x(actualQ), fScales.y(0));
+                ctxFirm.lineTo(fScales.x(actualQ), fScales.y(atcVal)); 
+                ctxFirm.lineTo(fScales.x(actualQ), fScales.y(eq.P));   
+                ctxFirm.stroke();
+                ctxFirm.setLineDash([]);
+
+                // Point on ATC
+                ctxFirm.beginPath();
+                ctxFirm.fillStyle = '#34c759';
+                ctxFirm.arc(fScales.x(actualQ), fScales.y(atcVal), 4, 0, Math.PI*2);
+                ctxFirm.fill();
+
+                // Point on Equilibrium
+                ctxFirm.beginPath();
+                ctxFirm.fillStyle = '#333';
+                ctxFirm.arc(fScales.x(actualQ), fScales.y(eq.P), 4, 0, Math.PI*2);
+                ctxFirm.fill();
+                
+                // Label q
+                ctxFirm.fillStyle = '#333';
+                ctxFirm.textAlign = 'center';
+                ctxFirm.fillText(`q*`, fScales.x(actualQ), fScales.y(0) + 15);
+            }
+        }
+
+
+        // --- Update UI Text ---
+        // Show hypotheticals if shutdown
+        const opQ = firmQ; // Optimal q if operating
+        const opATC = ATC(opQ);
+        const opAVC = AVC(opQ);
+        
+        // Values if operating
+        const opTR = eq.P * opQ;
+        const opTC = TC(opQ);
+        const opVC = opTC - firmConfig.fixedCost;
+        const opProfit = opTR - opTC;
+        const opLoss = -opProfit;
+        
+        // Values if shutdown
+        const sdTR = 0;
+        const sdTC = firmConfig.fixedCost;
+        const sdProfit = -sdTC;
+        const sdLoss = sdTC;
+        
+        // For the metrics grid, show Actual values (which are shutdown values if shutdown)
+        const dTR = shouldShutdown ? sdTR : opTR;
+        const dTC = shouldShutdown ? sdTC : opTC;
+        const dVC = shouldShutdown ? 0 : opVC;
+        const dProfit = shouldShutdown ? sdProfit : opProfit;
+        const dQ = shouldShutdown ? 0 : opQ;
+
+        valPrice.textContent = `$${eq.P.toFixed(2)}`;
+        valQ.textContent = dQ.toFixed(2);
+        valTR.textContent = `$${dTR.toFixed(2)}`;
+        valFC.textContent = `$${firmConfig.fixedCost.toFixed(2)}`;
+        valVC.textContent = `$${dVC.toFixed(2)}`;
+        valTC.textContent = `$${dTC.toFixed(2)}`;
+        valProfit.textContent = `$${dProfit.toFixed(2)}`;
+        valProfit.style.color = dProfit >= 0 ? '#28cd41' : '#ff3b30';
+
+        statusPanel.className = 'status-panel';
+        if (shouldShutdown) {
+            statusPanel.classList.add('shutdown');
+            statusTitle.textContent = "Shut Down Decision";
+            statusText.innerHTML = `
+                Price ($${eq.P.toFixed(2)}) < Min AVC ($${minAVC.toFixed(2)}). <br>
+                <div style="margin-top: 8px; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 4px;">
+                    <strong>Option A: Operate (q=${opQ.toFixed(2)})</strong><br>
+                    Rev ($${opTR.toFixed(2)}) - Cost ($${opTC.toFixed(2)}) = <span style="color:#d32f2f">Loss $${opLoss.toFixed(2)}</span>
+                </div>
+                <div style="margin-top: 5px; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 4px;">
+                    <strong>Option B: Shut Down (q=0)</strong><br>
+                    Rev ($0) - Fixed Cost ($${firmConfig.fixedCost.toFixed(2)}) = <span style="color:#b7950b">Loss $${sdLoss.toFixed(2)}</span>
+                </div>
+                <div style="margin-top: 8px;">
+                    Since Operating Loss > Shutdown Loss, the firm minimizes loss by shutting down.
+                </div>
+            `;
+        } else if (dProfit > 0.01) {
+            statusPanel.classList.add('profit');
+            statusTitle.textContent = "Economic Profit";
+            statusText.innerHTML = `Price ($${eq.P.toFixed(2)}) > ATC ($${opATC.toFixed(2)}). <br>
+                The firm is making a profit of <strong>$${dProfit.toFixed(2)}</strong>. <br>
+                <strong>Response:</strong> New firms will enter the market, shifting Supply right, lowering Price until P = min(ATC).`;
+        } else if (dProfit < -0.01) {
+            statusPanel.classList.add('loss');
+            statusTitle.textContent = "Economic Loss (Operate)";
+            statusText.innerHTML = `Price ($${eq.P.toFixed(2)}) < ATC ($${opATC.toFixed(2)}) but > AVC. <br>
+                Total Revenue ($${dTR.toFixed(2)}) covers all Variable Costs ($${opVC.toFixed(2)}) and contributes <strong>$${(dTR-opVC).toFixed(2)}</strong> towards Fixed Costs. <br>
+                <strong>Short Run:</strong> Continue producing to minimize loss (Loss $${Math.abs(dProfit).toFixed(2)} < Fixed Cost $${firmConfig.fixedCost.toFixed(2)}). <br>
+                <strong>Long Run:</strong> Firms will exit, shifting Supply left, raising Price.`;
+        } else {
+            statusTitle.textContent = "Normal Profit (Break-even)";
+            statusText.innerHTML = `Price = ATC. The firm is earning normal profit (zero economic profit). <br>
+                Total Revenue covers exactly Total Costs (including opportunity costs). <br>
+                There is no incentive for entry or exit. This is Long Run Equilibrium.`;
+        }
+    }
+
+    // --- Interaction ---
+    window.updateN = function(val) {
+        let n = parseInt(val);
+        if (isNaN(n)) return; // Allow typing
+
+        // Clamping for internal state and other controls
+        let clampedN = n;
+        if (clampedN < 20) clampedN = 20;
+        if (clampedN > 1000) clampedN = 1000;
+
+        state.nFirms = clampedN;
+        
+        // Sync Slider if not active
+        if (document.activeElement !== nSlider) {
+            nSlider.value = clampedN;
+        }
+        
+        // Sync Input if not active (allows typing invalid/partial numbers without interference)
+        if (document.activeElement !== nInput) {
+            nInput.value = clampedN;
+        }
+
+        draw();
+    }
+    
+    // Called on blur/enter to ensure input shows the valid value
+    window.finalizeN = function() {
+        if (nInput) {
+            nInput.value = state.nFirms;
+        }
+    }
+
+    window.adjustN = function(delta) {
+        let newVal = state.nFirms + delta;
+        // Clamp immediately for buttons
+        if (newVal < 20) newVal = 20;
+        if (newVal > 1000) newVal = 1000;
+        
+        state.nFirms = newVal;
+        
+        // Update all controls
+        nSlider.value = newVal;
+        nInput.value = newVal;
+        
+        draw();
+    }
+
+    // Init
+    setTimeout(resize, 100);
+
+</script>
+</body>
+</html>
+

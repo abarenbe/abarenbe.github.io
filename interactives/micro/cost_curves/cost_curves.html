@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Cost Curves</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 16px;
+            font-weight: normal;
+            text-align: center;
+            color: #666;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .explanation-box {
+            background: #f8f9fa;
+            border-left: 4px solid #007aff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .explanation-box.mc-mode {
+            border-left-color: #ff3b30;
+        }
+
+        .explanation-box.avc-mode {
+            border-left-color: #34c759;
+        }
+
+        .explanation-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            color: #333;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #555;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+            border-color: #ccc;
+        }
+
+        button.active {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+            box-shadow: 0 2px 4px rgba(0,122,255,0.3);
+        }
+        
+        button.active#btn-mc {
+            background: #ff3b30;
+            border-color: #ff3b30;
+            box-shadow: 0 2px 4px rgba(255,59,48,0.3);
+        }
+
+        button.active#btn-avc {
+            background: #2db84c;
+            border-color: #2db84c;
+            box-shadow: 0 2px 4px rgba(45,184,76,0.3);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            width: 100%;
+            display: block;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            cursor: crosshair;
+            touch-action: none; 
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .highlight-box {
+            position: absolute;
+            background: rgba(255, 255, 0, 0.9);
+            border: 1px solid #e6b800;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 10;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Cost Curve Geometry</h1>
+    <h2>Drag across the graphs to explore the relationship</h2>
+
+    <div class="controls">
+        <button id="btn-atc" class="active" onclick="setMode('atc')">Explore ATC</button>
+        <button id="btn-avc" onclick="setMode('avc')">Explore AVC</button>
+        <button id="btn-mc" onclick="setMode('mc')">Explore MC</button>
+    </div>
+
+    <div id="explanation" class="explanation-box">
+        <span class="explanation-title">Average Total Cost (ATC)</span>
+        ATC is the cost per unit of output: <strong>ATC = TC / Q</strong>. <br>
+        Geometrically, this is the slope of a ray from the origin to the point on the TC curve. <br>
+        Slope = Rise / Run = TC / Q.
+    </div>
+
+    <div class="canvas-wrapper">
+        <canvas id="tcCanvas"></canvas>
+    </div>
+
+    <div class="canvas-wrapper">
+        <canvas id="marginalCanvas"></canvas>
+        <div id="min-point-tooltip" class="highlight-box">Minimum ATC: MC = ATC</div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item"><span class="dot" style="background: #000;"></span> Total Cost (TC)</div>
+        <div class="legend-item"><span class="dot" style="background: #007aff;"></span> ATC</div>
+        <div class="legend-item"><span class="dot" style="background: #34c759;"></span> AVC</div>
+        <div class="legend-item"><span class="dot" style="background: #ff3b30;"></span> MC</div>
+    </div>
+</div>
+
+<script>
+    // Configuration
+    const config = {
+        // Cubic TC: TC = aq^3 + bq^2 + cq + d
+        a: 0.1,
+        b: -2.5,
+        c: 40,
+        d: 100,
+        qMax: 22
+    };
+
+    // State
+    let state = {
+        mode: 'atc', // 'atc' or 'mc'
+        mouseX: -1,
+        q: 6 // Initial q position
+    };
+
+    // DOM Elements
+    const tcCanvas = document.getElementById('tcCanvas');
+    const mcCanvas = document.getElementById('marginalCanvas');
+    const ctxTC = tcCanvas.getContext('2d');
+    const ctxMC = mcCanvas.getContext('2d');
+    const explanationEl = document.getElementById('explanation');
+    const minTooltip = document.getElementById('min-point-tooltip');
+
+    // Resize Handler
+    function resize() {
+        const containerWidth = tcCanvas.parentElement.clientWidth;
+        // Aspect ratio 2.2:1
+        const width = containerWidth;
+        const height = width * 0.45; 
+        
+        // Set display size (css pixels)
+        tcCanvas.style.width = width + 'px';
+        tcCanvas.style.height = height + 'px';
+        mcCanvas.style.width = width + 'px';
+        mcCanvas.style.height = height + 'px';
+
+        // Set actual size in memory
+        const scale = window.devicePixelRatio || 1;
+        tcCanvas.width = Math.floor(width * scale);
+        tcCanvas.height = Math.floor(height * scale);
+        mcCanvas.width = Math.floor(width * scale);
+        mcCanvas.height = Math.floor(height * scale);
+
+        // Normalize coordinate system to use css pixels
+        ctxTC.scale(scale, scale);
+        ctxMC.scale(scale, scale);
+        
+        draw();
+    }
+
+    window.addEventListener('resize', resize);
+
+    // Math Functions
+    function TC(q) {
+        return config.a * Math.pow(q, 3) + config.b * Math.pow(q, 2) + config.c * q + config.d;
+    }
+    
+    function VC(q) {
+         return config.a * Math.pow(q, 3) + config.b * Math.pow(q, 2) + config.c * q;
+    }
+
+    function ATC(q) {
+        if (q === 0) return TC(0.01) / 0.01; 
+        return TC(q) / q;
+    }
+    
+    function AVC(q) {
+        return VC(q) / q;
+    }
+
+    function MC(q) {
+        // Derivative: 3aq^2 + 2bq + c
+        return 3 * config.a * Math.pow(q, 2) + 2 * config.b * q + config.c;
+    }
+
+    // Coordinate Mapping
+    function getScales(width, height) {
+        const padding = { top: 30, right: 40, bottom: 30, left: 50 };
+        const plotWidth = width - padding.left - padding.right;
+        const plotHeight = height - padding.top - padding.bottom;
+
+        // Calculate max Y for TC
+        let maxTC = TC(config.qMax) * 1.1;
+        
+        // Calculate max Y for MC/ATC
+        let maxMC = 0;
+        for(let q=1; q<=config.qMax; q+=0.1) {
+            maxMC = Math.max(maxMC, ATC(q), MC(q), AVC(q));
+        }
+        maxMC *= 1.2;  
+
+        const xScale = (q) => padding.left + (q / config.qMax) * plotWidth;
+        const xInv = (x) => ((x - padding.left) / plotWidth) * config.qMax;
+        
+        const yScaleTC = (y) => padding.top + plotHeight - (y / maxTC) * plotHeight;
+        const yScaleMC = (y) => padding.top + plotHeight - (y / maxMC) * plotHeight;
+
+        return { xScale, xInv, yScaleTC, yScaleMC, padding, plotWidth, plotHeight, maxTC, maxMC };
+    }
+
+    // Drawing Helpers
+    function drawGrid(ctx, scales, w, h) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#f0f0f0';
+        ctx.lineWidth = 1;
+        
+        for (let q = 0; q <= config.qMax; q += 2) {
+            const x = scales.xScale(q);
+            ctx.moveTo(x, scales.padding.top);
+            ctx.lineTo(x, h - scales.padding.bottom);
+        }
+        for (let i = 0; i <= 5; i++) {
+            const y = scales.padding.top + (i/5) * scales.plotHeight;
+            ctx.moveTo(scales.padding.left, y);
+            ctx.lineTo(w - scales.padding.right, y);
+        }
+        ctx.stroke();
+    }
+
+    function drawAxes(ctx, scales, labelX, labelY, w, h) {
+        const { padding, maxTC, maxMC } = scales;
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 1;
+        
+        // Y Axis
+        ctx.moveTo(padding.left, padding.top);
+        ctx.lineTo(padding.left, h - padding.bottom);
+        
+        // X Axis
+        ctx.moveTo(padding.left, h - padding.bottom);
+        ctx.lineTo(w - padding.right, h - padding.bottom);
+        
+        ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = '#666';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(labelX, padding.left + scales.plotWidth / 2, h + 5); // Moved down from h - 5
+        
+        ctx.save();
+        ctx.translate(15, padding.top + scales.plotHeight / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(labelY, 0, 0);
+        ctx.restore();
+
+        // Numeric Ticks
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#888';
+        
+        const maxY = labelY.includes('Total') ? maxTC : maxMC;
+        const numTicksY = 5;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        
+        for(let i=0; i<=numTicksY; i++) {
+            const val = (i / numTicksY) * maxY;
+            if (i === 0) continue; 
+
+            const y = scales.padding.top + scales.plotHeight - (val/maxY) * scales.plotHeight;
+            
+            ctx.beginPath();
+            ctx.moveTo(padding.left - 5, y);
+            ctx.lineTo(padding.left, y);
+            ctx.stroke();
+            
+            ctx.fillText(Math.round(val), padding.left - 8, y);
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const qStep = 2; 
+        for(let q=0; q<=config.qMax; q+=qStep) {
+             if (q === 0) continue;
+             const x = scales.xScale(q);
+             
+             ctx.beginPath();
+             ctx.moveTo(x, h - padding.bottom);
+             ctx.lineTo(x, h - padding.bottom + 5);
+             ctx.stroke();
+             
+             ctx.fillText(q, x, h - padding.bottom + 8);
+        }
+        
+        ctx.textAlign = 'right';
+        ctx.fillText('0', padding.left - 5, h - padding.bottom + 8);
+    }
+
+    function drawCurve(ctx, fn, scales, yScaleFn, color, dash = [], width = 2) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.setLineDash(dash);
+
+        let startQ = 0;
+        if (fn === ATC) startQ = 0.5; 
+
+        for (let q = startQ; q <= config.qMax; q += 0.1) {
+            const x = scales.xScale(q);
+            const y = yScaleFn(fn(q));
+            if (q === startQ) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function drawPoint(ctx, x, y, color, radius=5) {
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // Main Draw Function
+    function draw() {
+        const w = parseFloat(tcCanvas.style.width);
+        const h = parseFloat(tcCanvas.style.height);
+        const scales = getScales(w, h);
+
+        ctxTC.clearRect(0, 0, w, h);
+        ctxMC.clearRect(0, 0, w, h);
+
+        drawGrid(ctxTC, scales, w, h);
+        drawGrid(ctxMC, scales, w, h);
+
+        // Charts
+        drawAxes(ctxTC, scales, 'Quantity (q)', 'Total Cost ($)', w, h);
+        
+        // Fixed Cost Line
+        const yFC = scales.yScaleTC(config.d);
+        ctxTC.beginPath();
+        ctxTC.strokeStyle = '#999';
+        ctxTC.lineWidth = 1;
+        ctxTC.setLineDash([4, 4]);
+        ctxTC.moveTo(scales.padding.left, yFC);
+        ctxTC.lineTo(w - scales.padding.right, yFC);
+        ctxTC.stroke();
+        ctxTC.setLineDash([]);
+        drawLabel(ctxTC, 'FC', w - scales.padding.right - 10, yFC - 10, '#999', true);
+
+        drawCurve(ctxTC, TC, scales, scales.yScaleTC, '#333', [], 2.5);
+
+        drawAxes(ctxMC, scales, 'Quantity (q)', 'Cost per Unit ($)', w, h);
+        
+        const atcColor = '#007aff';
+        const atcDash = state.mode === 'atc' ? [] : [5, 5];
+        const atcWidth = state.mode === 'atc' ? 3 : 1.5;
+        const atcAlpha = state.mode === 'atc' ? 1.0 : 0.6;
+        
+        ctxMC.globalAlpha = atcAlpha;
+        drawCurve(ctxMC, ATC, scales, scales.yScaleMC, atcColor, atcDash, atcWidth);
+        ctxMC.globalAlpha = 1.0;
+        
+        const avcColor = '#34c759';
+        const avcDash = state.mode === 'avc' ? [] : [5, 5];
+        const avcWidth = state.mode === 'avc' ? 3 : 1.5;
+        const avcAlpha = state.mode === 'avc' ? 1.0 : 0.6;
+
+        ctxMC.globalAlpha = avcAlpha;
+        drawCurve(ctxMC, AVC, scales, scales.yScaleMC, avcColor, avcDash, avcWidth);
+        ctxMC.globalAlpha = 1.0;
+
+        const mcColor = '#ff3b30';
+        const mcDash = state.mode === 'mc' ? [] : [5, 5];
+        const mcWidth = state.mode === 'mc' ? 3 : 1.5;
+        const mcAlpha = state.mode === 'mc' ? 1.0 : 0.6;
+
+        ctxMC.globalAlpha = mcAlpha;
+        drawCurve(ctxMC, MC, scales, scales.yScaleMC, mcColor, mcDash, mcWidth);
+        ctxMC.globalAlpha = 1.0;
+
+        // Interaction
+        let q = state.q;
+        q = Math.max(0.1, Math.min(q, config.qMax));
+        
+        const x = scales.xScale(q);
+        const tcVal = TC(q);
+        const yTC = scales.yScaleTC(tcVal);
+        const yATC = scales.yScaleMC(ATC(q));
+        const yAVC = scales.yScaleMC(AVC(q));
+        const yMC = scales.yScaleMC(MC(q));
+
+        // Connector
+        ctxTC.beginPath();
+        ctxTC.setLineDash([4, 4]);
+        ctxTC.strokeStyle = '#aaa';
+        ctxTC.moveTo(x, scales.padding.top);
+        ctxTC.lineTo(x, h - scales.padding.bottom);
+        ctxTC.stroke();
+
+        ctxMC.beginPath();
+        ctxMC.setLineDash([4, 4]);
+        ctxMC.strokeStyle = '#aaa';
+        ctxMC.moveTo(x, scales.padding.top);
+        ctxMC.lineTo(x, h - scales.padding.bottom);
+        ctxMC.stroke();
+        ctxMC.setLineDash([]);
+
+        // Point on TC (Standard mode drawing, override in specific modes if needed)
+        // In AVC mode, we draw this manually with specific size, so skip here if AVC mode
+        if (state.mode !== 'avc') {
+            drawPoint(ctxTC, x, yTC, 'black', 6);
+        }
+        
+        // Find Min ATC q for comparison
+        // Min ATC occurs where MC = ATC or derivative of ATC is 0. 
+        // For cubic TC = aq^3 + bq^2 + cq + d
+        // ATC = aq^2 + bq + c + d/q
+        // d(ATC)/dq = 2aq + b - d/q^2 = 0 => 2aq^3 + bq^2 - d = 0
+        
+        let minATC_q = 10; // guess
+        let minATC_val = 1000;
+        for(let tq=1; tq<=config.qMax; tq+=0.01) {
+            let val = ATC(tq);
+            if(val < minATC_val) {
+                minATC_val = val;
+                minATC_q = tq;
+            }
+        }
+        
+        const isMinATC = Math.abs(q - minATC_q) < 0.3;
+        if (isMinATC && state.mode !== 'avc') { // Only show min ATC tooltip if not in AVC mode
+             // Show tooltip
+             minTooltip.style.display = 'block';
+             // Position tooltip near the intersection point on bottom graph
+             const tipX = x; 
+             const tipY = yATC; // using MC canvas coords
+             minTooltip.style.left = (tipX + 10) + 'px';
+             minTooltip.style.top = (h + tipY - 40) + 'px'; // h offset for second canvas + relative Y
+        } else {
+            minTooltip.style.display = 'none';
+        }
+
+        if (state.mode === 'atc') {
+            const slope = ATC(q);
+            const originX = scales.xScale(0);
+            const originY = scales.yScaleTC(0);
+            
+            // --- Secondary Intersection Logic ---
+            const A_q = config.a;
+            const B_q = config.a * q + config.b;
+            const C_q = -config.d / q;
+            let q2 = -1;
+            const discrim = B_q*B_q - 4*A_q*C_q;
+            if(discrim >= 0) {
+                const sqrtD = Math.sqrt(discrim);
+                const r1 = (-B_q + sqrtD) / (2*A_q);
+                const r2 = (-B_q - sqrtD) / (2*A_q);
+                const tol = 0.1;
+                if (r1 > 0 && Math.abs(r1 - q) > tol) q2 = r1;
+                else if (r2 > 0 && Math.abs(r2 - q) > tol) q2 = r2;
+            }
+
+            // Ray
+            ctxTC.beginPath();
+            ctxTC.strokeStyle = '#007aff';
+            ctxTC.lineWidth = 2;
+            ctxTC.moveTo(originX, originY);
+            let drawToQ = Math.max(q, (q2 > 0 && q2 <= config.qMax) ? q2 : 0);
+            drawToQ = Math.min(config.qMax, drawToQ * 1.1);
+            const endX = scales.xScale(drawToQ);
+            const endY = scales.yScaleTC(slope * drawToQ);
+            ctxTC.lineTo(endX, endY);
+            ctxTC.stroke();
+
+            // Secondary Points
+            if (q2 > 0 && q2 <= config.qMax) {
+                const x2 = scales.xScale(q2);
+                const yTC2 = scales.yScaleTC(TC(q2));
+                const yATC2 = scales.yScaleMC(ATC(q2));
+                
+                // Draw dashed line connecting the two points on ATC
+                ctxMC.beginPath(); 
+                ctxMC.setLineDash([4, 4]); 
+                ctxMC.strokeStyle = '#80bfff'; // Light blue
+                ctxMC.lineWidth = 2;
+                ctxMC.moveTo(x, yATC); 
+                ctxMC.lineTo(x2, yATC2); 
+                ctxMC.stroke();
+                ctxMC.setLineDash([]);
+
+                drawPoint(ctxTC, x2, yTC2, 'black', 4);
+                
+                ctxTC.beginPath(); ctxTC.setLineDash([4, 4]); ctxTC.strokeStyle = '#ccc';
+                ctxTC.moveTo(x2, scales.padding.top); ctxTC.lineTo(x2, h - scales.padding.bottom); ctxTC.stroke();
+                
+                ctxMC.beginPath(); ctxMC.setLineDash([4, 4]); ctxMC.strokeStyle = '#ccc';
+                ctxMC.moveTo(x2, scales.padding.top); ctxMC.lineTo(x2, h - scales.padding.bottom); ctxMC.stroke();
+                
+                drawPoint(ctxMC, x2, yATC2, '#007aff', 4);
+            }
+
+            drawPoint(ctxMC, x, yATC, '#007aff', 6);
+
+            // Labels with Calculation
+            // TC / Q = Slope
+            // Simplify label on top graph to just the value as requested
+            drawLabel(ctxTC, `Slope = ${slope.toFixed(2)}`, x + 15, yTC - 15, '#007aff');
+            
+            // Show calculation in a separate box or subtler if needed, 
+            // but for now let's just keep the main number clear.
+            // Maybe add (Q, TC) coordinates too?
+            // drawLabel(ctxTC, `(${q.toFixed(1)}, ${tcVal.toFixed(0)})`, x + 15, yTC + 20, '#666');
+
+            drawLabel(ctxMC, `ATC = ${slope.toFixed(2)}`, x + 10, yATC - 25, '#007aff');
+            
+            // Special note for Min ATC
+            if(isMinATC) {
+                 drawLabel(ctxMC, "Min ATC (MC=ATC)", x, yATC + 25, '#333', true);
+            }
+
+        } else if (state.mode === 'avc') {
+            const avc = AVC(q);
+            const afc = config.d / q;
+            const originX = scales.xScale(0);
+            const originY = scales.yScaleTC(0);
+
+            // 1. Draw VC Curve
+            drawCurve(ctxTC, VC, scales, scales.yScaleTC, '#34c759', [5, 5], 1.5);
+            // Move VC label to end of VC curve, not config.qMax on TC scale
+            const vcEndX = scales.xScale(config.qMax);
+            const vcEndY = scales.yScaleTC(VC(config.qMax));
+            drawLabel(ctxTC, 'VC', vcEndX + 5, vcEndY, '#34c759', false);
+
+            // 2. Ray for AVC (Origin -> VC at q)
+            const vcVal = VC(q);
+            const vcY = scales.yScaleTC(vcVal);
+            
+            ctxTC.beginPath();
+            ctxTC.strokeStyle = '#34c759'; // Green for AVC
+            ctxTC.lineWidth = 2;
+            ctxTC.moveTo(originX, originY);
+            const avcEndX = scales.xScale(q);
+            ctxTC.lineTo(avcEndX, vcY);
+            ctxTC.stroke();
+
+            // 3. Ray for AFC (Origin -> FC at q)
+            const fcY = scales.yScaleTC(config.d);
+            ctxTC.beginPath();
+            ctxTC.strokeStyle = '#999'; // Gray for AFC
+            ctxTC.lineWidth = 2;
+            ctxTC.setLineDash([2, 2]);
+            ctxTC.moveTo(originX, originY);
+            ctxTC.lineTo(scales.xScale(q), fcY);
+            ctxTC.stroke();
+            ctxTC.setLineDash([]);
+
+            // Labels on Rays (Moved to right of dots)
+            // We draw labels relative to the dots. 
+            // The x argument to drawLabel is where the label starts (left-aligned).
+            drawLabel(ctxTC, `AVC = ${avc.toFixed(2)}`, scales.xScale(q) + 10, vcY, '#34c759', false);
+            drawLabel(ctxTC, `AFC = ${afc.toFixed(2)}`, scales.xScale(q) + 10, fcY, '#999', false);
+
+
+            // Highlight Points on TC Graph
+            drawPoint(ctxTC, scales.xScale(q), vcY, '#34c759', 6); // Larger dot for VC
+            drawPoint(ctxTC, scales.xScale(q), fcY, '#999', 4);
+            
+            // TC Dot (smaller in AVC mode)
+            const tcY = scales.yScaleTC(TC(q));
+            drawPoint(ctxTC, scales.xScale(q), tcY, 'black', 4);
+
+            // Highlight AVC Point on MC Graph
+            drawPoint(ctxMC, x, yAVC, '#34c759', 6);
+
+            // Visualize ATC - AVC = AFC on MC graph
+            ctxMC.beginPath();
+            ctxMC.strokeStyle = '#666';
+            ctxMC.lineWidth = 4;  // Thicker
+            ctxMC.setLineDash([]); // Solid
+            ctxMC.moveTo(x, yATC);
+            ctxMC.lineTo(x, yAVC);
+            ctxMC.stroke();
+            
+            // Add caps to the line
+            const capWidth = 8;
+            ctxMC.beginPath();
+            ctxMC.lineWidth = 2;
+            // Top Cap
+            ctxMC.moveTo(x - capWidth/2, yATC);
+            ctxMC.lineTo(x + capWidth/2, yATC);
+            // Bottom Cap
+            ctxMC.moveTo(x - capWidth/2, yAVC);
+            ctxMC.lineTo(x + capWidth/2, yAVC);
+            ctxMC.stroke();
+            
+            // Label for AFC difference (moved above right of top cap)
+            drawLabel(ctxMC, `AFC = ${afc.toFixed(2)}`, x + 10, yATC - 10, '#666');
+
+            // Label on MC graph
+            drawLabel(ctxMC, `AVC = ${avc.toFixed(2)}`, x + 10, yAVC - 10, '#34c759');
+
+        } else {
+            const slope = MC(q);
+            const delta = 3;
+            const qStart = Math.max(0, q - delta);
+            const qEnd = Math.min(config.qMax, q + delta);
+            const x1 = scales.xScale(qStart);
+            const y1 = scales.yScaleTC(slope * (qStart - q) + TC(q));
+            const x2 = scales.xScale(qEnd);
+            const y2 = scales.yScaleTC(slope * (qEnd - q) + TC(q));
+
+            ctxTC.beginPath();
+            ctxTC.strokeStyle = '#ff3b30'; 
+            ctxTC.lineWidth = 2;
+            ctxTC.moveTo(x1, y1);
+            ctxTC.lineTo(x2, y2);
+            ctxTC.stroke();
+
+            drawPoint(ctxMC, x, yMC, '#ff3b30', 6);
+
+            // Labels
+            drawLabel(ctxTC, `Slope (MC) = ${slope.toFixed(2)}`, x + 10, yTC - 25, '#ff3b30');
+            drawLabel(ctxMC, `MC = ${slope.toFixed(2)}`, x + 10, yMC - 25, '#ff3b30');
+            
+             if(isMinATC) {
+                 drawLabel(ctxMC, "Min ATC (MC=ATC)", x, yATC + 25, '#333', true);
+            }
+        }
+    }
+
+    function drawLabel(ctx, text, x, y, color, center=false) {
+        ctx.save();
+        ctx.font = 'bold 14px sans-serif';
+        // textBaseline 'middle' aligns text vertically to the y coordinate
+        ctx.textBaseline = 'left'; 
+        
+        let drawX = x;
+        // If center is true, x is the center point. If false, x is the left edge.
+        if (center) {
+            const metrics = ctx.measureText(text);
+            drawX = x - metrics.width / 2;
+        }
+        
+        // Halo effect instead of box
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineJoin = 'round';
+        ctx.strokeText(text, drawX, y);
+        
+        // Text
+        ctx.fillStyle = color;
+        ctx.fillText(text, drawX, y);
+        ctx.restore();
+    }
+
+    // Event Listeners
+    function handleMove(e) {
+        const rect = e.target.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        if (!clientX) return;
+
+        const x = clientX - rect.left;
+        
+        const w = parseFloat(tcCanvas.style.width);
+        const h = parseFloat(tcCanvas.style.height);
+        const scales = getScales(w, h);
+        
+        let newQ = scales.xInv(x);
+        state.q = newQ;
+        draw();
+    }
+
+    function handleTouch(e) {
+        e.preventDefault(); 
+        handleMove(e);
+    }
+
+    [tcCanvas, mcCanvas].forEach(canvas => {
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('touchmove', handleTouch, {passive: false});
+        canvas.addEventListener('touchstart', handleTouch, {passive: false});
+    });
+
+    // Mode Switching
+    window.setMode = function(mode) {
+        state.mode = mode;
+        document.getElementById('btn-atc').className = mode === 'atc' ? 'active' : '';
+        document.getElementById('btn-avc').className = mode === 'avc' ? 'active' : '';
+        document.getElementById('btn-mc').className = mode === 'mc' ? 'active' : '';
+        
+        // Update Explanation Text
+        if (mode === 'atc') {
+            explanationEl.className = 'explanation-box';
+            explanationEl.innerHTML = `
+                <span class="explanation-title">Average Total Cost (ATC)</span>
+                ATC is the cost per unit of output: <strong>ATC = TC / Q</strong>. <br>
+                Geometrically, this is the slope of a ray from the origin (0,0) to the point on the TC curve.
+            `;
+        } else if (mode === 'avc') {
+            explanationEl.className = 'explanation-box avc-mode';
+            explanationEl.innerHTML = `
+                <span class="explanation-title">Average Variable Cost (AVC)</span>
+                AVC is the variable cost per unit: <strong>AVC = VC / Q = (TC - FC) / Q</strong>. <br>
+                Geometrically, this is the slope of a ray from the origin (0, 0) to the point on the VC curve.
+            `;
+        } else {
+            explanationEl.className = 'explanation-box mc-mode';
+            explanationEl.innerHTML = `
+                <span class="explanation-title">Marginal Cost (MC)</span>
+                MC is the cost of producing one more unit: <strong>MC = ΔTC / ΔQ</strong>. <br>
+                Geometrically, this is the slope of the <strong>tangent line</strong> to the TC curve at that specific quantity.
+            `;
+        }
+        
+        draw();
+    }
+
+    // Init
+    setTimeout(resize, 100);
+</script>
+
+</body>
+</html>

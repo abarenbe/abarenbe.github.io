@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimal Choice: MRS & Marginal Utility</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['\\(', '\\)']] },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady();
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        #sidebar {
+            width: 340px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex-shrink: 0;
+            position: relative;
+            transition: transform 0.3s ease;
+            z-index: 2;
+        }
+        body.panel-hidden #sidebar {
+            position: absolute;
+            left: 0;
+            transform: translateX(-360px);
+        }
+        #panel-toggle {
+            align-self: flex-start;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        #panel-toggle:hover {
+            background: #f5f5f5;
+        }
+        body.panel-hidden #panel-toggle {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            z-index: 5;
+        }
+        #main-area {
+            flex-grow: 1;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        body.panel-hidden #main-area {
+            padding-left: 20px;
+        }
+        #plot-container {
+            flex-grow: 2;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        #plot { width: 100%; height: 100%; }
+        
+        /* Math & Stats Panels */
+        .math-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .math-box {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #ccc;
+        }
+        .math-box.correct { border-left-color: #28a745; background: #e6fffa; }
+        .math-box.wrong { border-left-color: #dc3545; background: #fff5f5; }
+        
+        h2 { margin-top: 0; color: #333; font-size: 1.4rem; }
+        h3 { margin: 0 0 10px 0; font-size: 1.1rem; color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        .control-group { margin-bottom: 10px; }
+        label { display: flex; justify-content: space-between; font-weight: 600; color: #555; font-size: 0.9em; }
+        input[type=range] { width: 100%; cursor: pointer; }
+        .val { color: #007bff; font-family: monospace; }
+
+        .formula { font-family: 'Times New Roman', serif; font-style: italic; font-size: 1.1em; text-align: center; margin: 5px 0; }
+        .comparison { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: bold; font-size: 1.2em; margin-top: 5px;}
+        .bar-container { height: 10px; background: #eee; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; background: #007bff; transition: width 0.3s; }
+        
+        /* Special slider for choosing bundle */
+        #bundle-slider-container {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #90caf9;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Consumer Choice</h2>
+    <p style="font-size: 0.85em; color: #666; margin-top: -10px;">
+        \(U(x,y) = x^\alpha y^{1-\alpha}\) (Cobb-Douglas)
+    </p>
+
+    <div id="bundle-slider-container">
+        <label style="color: #0d47a1;">Explore Budget Line (Move X):</label>
+        <input type="range" id="x-choice" min="0" max="100" step="0.1" value="150">
+        <div style="text-align: center; font-size: 0.9em; margin-top: 5px;">
+            Bundle: (<span id="bundle-x" class="val">0</span>, <span id="bundle-y" class="val">0</span>)
+        </div>
+    </div>
+
+    <div class="control-group">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; font-size: 0.85em; margin-bottom: 5px; text-align: center; background: #f8f9fa; padding: 5px; border-radius: 4px;">
+            <div>I: <span id="val-I" class="val">1500</span></div>
+            <div>Px: <span id="val-Px" class="val">3</span></div>
+            <div>Py: <span id="val-Py" class="val">2</span></div>
+        </div>
+        <label style="font-size: 0.85em;">Income</label>
+        <input type="range" id="inp-I" min="100" max="2000" step="50" value="1500">
+        <label style="font-size: 0.85em; margin-top: 5px;">Price X</label>
+        <input type="range" id="inp-Px" min="1" max="10" step="0.5" value="3">
+        <label style="font-size: 0.85em; margin-top: 5px;">Price Y</label>
+        <input type="range" id="inp-Py" min="1" max="10" step="0.5" value="2">
+    </div>
+    <div class="control-group">
+        <label>Preference (\(\alpha\)): <span id="val-alpha" class="val">0.3</span></label>
+        <input type="range" id="inp-alpha" min="0.1" max="0.9" step="0.1" value="0.3">
+    </div>
+
+    <div style="margin-top: auto; font-size: 0.85em; color: #777; background: #f8f9fa; padding: 10px; border-radius: 4px;">
+        <strong>Logic:</strong><br>
+        1. <b>Slope Condition:</b> \(MRS = MRT\) <br>
+           where \(MRT = P_x/P_y\) (Market Rate of Transformation)<br>
+        2. <b>Bang for Buck:</b> \(MU_x/P_x = MU_y/P_y\)<br>
+        Both conditions define the optimum.
+    </div>
+</div>
+
+<div id="main-area">
+    <button id="panel-toggle" class="panel-toggle">Hide Panel</button>
+    <div id="plot-container">
+        <div id="plot"></div>
+    </div>
+    
+    <div class="math-panel">
+        <!-- Condition 1: Slopes -->
+        <div class="math-box" id="box-slopes">
+            <h3>Condition 1: Slopes</h3>
+            <div class="formula">MRS vs MRT</div>
+            
+            <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                Indifference Slope (\(MRS = \frac{MU_x}{MU_y}\)): <span id="val-mrs" style="font-weight:bold; color:orange">0</span>
+            </div>
+            <div style="font-size: 0.9em; color: #666;">
+                Budget Slope (\(MRT = \frac{P_x}{P_y}\)): <span id="val-pratio" style="font-weight:bold; color:blue">0</span>
+            </div>
+            
+            <div class="comparison" id="comp-slopes">
+                MRS > MRT
+            </div>
+            <p id="msg-slopes" style="font-size: 0.85em; margin: 5px 0;">
+                Value X more than market cost. Buy more X!
+            </p>
+        </div>
+
+        <!-- Condition 2: Bang for Buck -->
+        <div class="math-box" id="box-bang">
+            <h3>Condition 2: Marginal Utility per $</h3>
+            <div class="formula">\(\frac{MU_x}{P_x}\) vs \(\frac{MU_y}{P_y}\)</div>
+            
+            <div style="display:flex; justify-content: space-between; margin-top: 5px;">
+                <span>\(MU_x\): <span id="val-mux">0</span></span>
+                <span>\(MU_y\): <span id="val-muy">0</span></span>
+            </div>
+
+            <div style="margin-top: 8px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.9em;">
+                    <span>X Gain/$: <b id="val-bangx">0</b></span>
+                </div>
+                <div class="bar-container"><div id="bar-bangx" class="bar-fill" style="width: 50%"></div></div>
+            </div>
+
+            <div style="margin-top: 5px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.9em;">
+                    <span>Y Gain/$: <b id="val-bangy">0</b></span>
+                </div>
+                <div class="bar-container"><div id="bar-bangy" class="bar-fill" style="width: 50%; background: orange;"></div></div>
+            </div>
+            
+            <div class="comparison" id="comp-bang" style="margin-top: 10px;">
+                X > Y
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const AXIS_LIMIT = 1000;
+
+    // State
+    const state = {
+        I: 1500,
+        Px: 3,
+        Py: 2,
+        alpha: 0.3,
+        x: 150 // Current choice of X (optimal would be alpha*I/Px = 0.3*1500/3 = 150)
+    };
+
+    // DOM Elements
+    const els = {
+        I: document.getElementById('inp-I'),
+        Px: document.getElementById('inp-Px'),
+        Py: document.getElementById('inp-Py'),
+        alpha: document.getElementById('inp-alpha'),
+        x: document.getElementById('x-choice'),
+        
+        // Displays
+        d_I: document.getElementById('val-I'),
+        d_Px: document.getElementById('val-Px'),
+        d_Py: document.getElementById('val-Py'),
+        d_alpha: document.getElementById('val-alpha'),
+        d_bx: document.getElementById('bundle-x'),
+        d_by: document.getElementById('bundle-y'),
+
+        // Logic
+        d_mrs: document.getElementById('val-mrs'),
+        d_pratio: document.getElementById('val-pratio'),
+        comp_slopes: document.getElementById('comp-slopes'),
+        msg_slopes: document.getElementById('msg-slopes'),
+        box_slopes: document.getElementById('box-slopes'),
+        
+        d_mux: document.getElementById('val-mux'),
+        d_muy: document.getElementById('val-muy'),
+        d_bangx: document.getElementById('val-bangx'),
+        d_bangy: document.getElementById('val-bangy'),
+        bar_bangx: document.getElementById('bar-bangx'),
+        bar_bangy: document.getElementById('bar-bangy'),
+        comp_bang: document.getElementById('comp-bang'),
+        box_bang: document.getElementById('box-bang')
+    };
+
+    const plotEl = document.getElementById('plot');
+    const panelToggleBtn = document.getElementById('panel-toggle');
+
+    panelToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('panel-hidden');
+        const hidden = document.body.classList.contains('panel-hidden');
+        panelToggleBtn.textContent = hidden ? 'Show Panel' : 'Hide Panel';
+    });
+
+    function updateState() {
+        state.I = parseFloat(els.I.value);
+        state.Px = parseFloat(els.Px.value);
+        state.Py = parseFloat(els.Py.value);
+        state.alpha = parseFloat(els.alpha.value);
+        
+        // Update X slider max based on budget
+        const maxX = state.I / state.Px;
+        if(els.x.max != maxX) {
+            // Preserve relative position if possible?
+            // Or just constrain value
+            const ratio = state.x / parseFloat(els.x.max || 1);
+            els.x.max = maxX;
+            // Adjust current x if out of bounds
+            if(state.x > maxX) state.x = maxX;
+            els.x.value = state.x;
+        }
+        
+        state.x = parseFloat(els.x.value);
+        
+        render();
+    }
+
+    function render() {
+        // Displays
+        els.d_I.textContent = state.I;
+        els.d_Px.textContent = state.Px;
+        els.d_Py.textContent = state.Py;
+        els.d_alpha.textContent = state.alpha;
+        els.d_bx.textContent = state.x.toFixed(1);
+        
+        // ... [Calculation Logic] ...
+
+        // Force MathJax typeset if available
+        if (window.MathJax) {
+             // MathJax 3.x uses typesetPromise or typeset
+             // We don't want to re-render everything constantly if it's static,
+             // but since we don't change the LaTeX strings dynamically in this app,
+             // initial load handles it.
+             // If we changed the formulas dynamically, we'd call MathJax.typesetPromise();
+        }
+
+        // Calculate Y based on budget
+        // I = Px*x + Py*y => y = (I - Px*x)/Py
+        const y = Math.max(0, (state.I - state.Px * state.x) / state.Py);
+        els.d_by.textContent = y.toFixed(1);
+        
+        // Utility and Marginals
+        // U = x^a * y^(1-a)
+        // MUx = a * x^(a-1) * y^(1-a) = a * (y/x)^(1-a)
+        // MUy = (1-a) * x^a * y^(-a) = (1-a) * (x/y)^a
+        
+        // Handle zeros carefully
+        const alpha = state.alpha;
+        const beta = 1 - alpha;
+        
+        let MUx = 0, MUy = 0;
+        if(state.x > 0 && y > 0) {
+            MUx = alpha * Math.pow(state.x, alpha - 1) * Math.pow(y, beta);
+            MUy = beta * Math.pow(state.x, alpha) * Math.pow(y, beta - 1);
+        } else if (state.x === 0 && y > 0) {
+            MUx = Infinity; // Technically
+            MUy = 0; 
+        } else if (state.x > 0 && y === 0) {
+            MUx = 0;
+            MUy = Infinity;
+        }
+
+        // Values for Logic
+        const MRS = (MUy !== 0) ? MUx / MUy : Infinity;
+        const PriceRatio = state.Px / state.Py;
+        
+        const BangX = (state.Px > 0) ? MUx / state.Px : 0;
+        const BangY = (state.Py > 0) ? MUy / state.Py : 0;
+
+        // Update Logic UI
+        els.d_mrs.textContent = (MRS === Infinity) ? "Inf" : MRS.toFixed(2);
+        els.d_pratio.textContent = PriceRatio.toFixed(2);
+        els.d_mux.textContent = (MUx === Infinity) ? "Inf" : MUx.toFixed(2);
+        els.d_muy.textContent = (MUy === Infinity) ? "Inf" : MUy.toFixed(2);
+        els.d_bangx.textContent = (BangX === Infinity) ? "Inf" : BangX.toFixed(3);
+        els.d_bangy.textContent = (BangY === Infinity) ? "Inf" : BangY.toFixed(3);
+
+        // Visual Bars for Bang/Buck
+        // Normalize bars. Find max of the two.
+        const maxBang = Math.max(BangX, BangY);
+        // If infinity, just fill 100%
+        if(!isFinite(maxBang)) {
+            els.bar_bangx.style.width = (!isFinite(BangX)) ? '100%' : '0%';
+            els.bar_bangy.style.width = (!isFinite(BangY)) ? '100%' : '0%';
+        } else if (maxBang === 0) {
+            els.bar_bangx.style.width = '0%';
+            els.bar_bangy.style.width = '0%';
+        } else {
+            els.bar_bangx.style.width = `${(BangX / maxBang) * 100}%`;
+            els.bar_bangy.style.width = `${(BangY / maxBang) * 100}%`;
+        }
+
+        // Logic Checks
+        // Tolerance
+        const diff = MRS - PriceRatio;
+        const bangDiff = BangX - BangY;
+        const tolerance = 0.05;
+        
+        let labelText = "";
+        let labelColor = "";
+
+        if (Math.abs(diff) < tolerance || Math.abs(bangDiff) < tolerance/10) {
+            // Optimal
+            labelText = "MRS ≈ MRT";
+            labelColor = "#28a745"; // Green
+            
+            els.box_slopes.className = 'math-box correct';
+            els.comp_slopes.innerHTML = 'MRS &approx; MRT <span style="color:green">✓</span>';
+            els.msg_slopes.textContent = 'Slopes match! You are maximizing utility.';
+            
+            els.box_bang.className = 'math-box correct';
+            els.comp_bang.innerHTML = 'Equal! <span style="color:green">✓</span>';
+        } else if (BangX > BangY) {
+            // X is better deal
+            labelText = "MRS > MRT";
+            labelColor = "#d62728"; // Red
+            
+            els.box_slopes.className = 'math-box wrong';
+            els.comp_slopes.innerHTML = 'MRS > MRT';
+            els.msg_slopes.textContent = 'You value X more than the market does. Buy more X!';
+            
+            els.box_bang.className = 'math-box wrong';
+            els.comp_bang.innerHTML = 'X is better deal &rarr;';
+        } else {
+            // Y is better deal
+            labelText = "MRS < MRT";
+            labelColor = "#d62728"; // Red
+            
+            els.box_slopes.className = 'math-box wrong';
+            els.comp_slopes.innerHTML = 'MRS < MRT';
+            els.msg_slopes.textContent = 'X is too expensive for the utility it gives. Buy less X (more Y).';
+            
+            els.box_bang.className = 'math-box wrong';
+            els.comp_bang.innerHTML = '&larr; Y is better deal';
+        }
+
+
+        // --- PLOTTING ---
+        // Static axis limits - keep at 1000 for clarity
+        const maxAxisX = AXIS_LIMIT;
+        const maxAxisY = AXIS_LIMIT;
+        
+        // 1. Budget Line
+        const traceBudget = {
+            x: [0, state.I/state.Px],
+            y: [state.I/state.Py, 0],
+            mode: 'lines', name: `Budget: I=${state.I}, Px=${state.Px}, Py=${state.Py}`,
+            line: {color: 'blue', width: 2}
+        };
+        
+        // 2. Static Background Indifference Curves
+        // Generate a fixed set of utility levels that span the space
+        const tracesIC = [];
+        
+        // Helper to generate one curve points
+        function getICPoints(u_val) {
+            const cx = [];
+            const cy = [];
+            for(let i=0.1; i<=maxAxisX; i+=maxAxisX/100) {
+                const val = Math.pow(u_val / Math.pow(i, alpha), 1/beta);
+                if(val >= 0 && val <= maxAxisY * 1.2) {
+                    cx.push(i);
+                    cy.push(val);
+                }
+            }
+            return {x: cx, y: cy};
+        }
+
+        // Static utility levels (10 curves spanning the space)
+        // Max possible utility at center: roughly (500, 500) midpoint
+        const maxU = Math.pow(500, alpha) * Math.pow(500, beta);
+        const numCurves = 10;
+        
+        const icLabels = []; // Store labels for annotations
+        
+        for(let k = 1; k <= numCurves; k++) {
+            const u_level = (maxU / numCurves) * k;
+            const pts = getICPoints(u_level);
+            
+            if (pts.x.length > 0) {
+                tracesIC.push({
+                    x: pts.x, y: pts.y,
+                    mode: 'lines', 
+                    line: {color: '#e0e0e0', width: 1.5},
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+                
+                // Add label at right end of curve
+                const lastIdx = pts.x.length - 1;
+                // Check if visible and not too close to edge
+                if (lastIdx >= 0 && pts.x[lastIdx] <= maxAxisX && pts.y[lastIdx] <= maxAxisY) {
+                    icLabels.push({
+                        x: pts.x[lastIdx],
+                        y: pts.y[lastIdx],
+                        text: `${u_level.toFixed(0)}`,
+                        showarrow: false,
+                        xanchor: 'center',
+                        yanchor: 'bottom',
+                        font: { size: 10, color: '#999' },
+                        bgcolor: 'rgba(255,255,255,0.7)',
+                        borderpad: 2,
+                        yshift: 1
+                    });
+                }
+            }
+        }
+
+        // Current IC (highlighted)
+        const U_curr = Math.pow(state.x, alpha) * Math.pow(y, beta);
+        const ptsMain = getICPoints(U_curr);
+        tracesIC.push({
+            x: ptsMain.x, y: ptsMain.y,
+            mode: 'lines', name: `IC (U=${U_curr.toFixed(1)})`,
+            line: {color: 'orange', width: 3}
+        });
+        
+        // Add label for current IC at right end
+        if (ptsMain.x.length > 0) {
+            const lastIdx = ptsMain.x.length - 1;
+            if (lastIdx >= 0 && ptsMain.x[lastIdx] <= maxAxisX && ptsMain.y[lastIdx] <= maxAxisY) {
+                icLabels.push({
+                    x: ptsMain.x[lastIdx],
+                    y: ptsMain.y[lastIdx],
+                    text: `${U_curr.toFixed(0)}`,
+                    showarrow: false,
+                    xanchor: 'center',
+                    yanchor: 'bottom',
+                    font: { size: 11, color: '#ff7f0e', weight: 'bold' },
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    borderpad: 3,
+                    yshift: 1
+                });
+            }
+        }
+        
+        // 3. Tangent Line at current point
+        // Slope = -MRS. Passes through (x,y).
+        // y - y0 = m(x - x0) => y = y0 - MRS(x - x0)
+        // We draw a short segment around x
+        const tanLen = maxAxisX * 0.15;
+        const x1 = Math.max(0, state.x - tanLen);
+        const x2 = Math.min(maxAxisX, state.x + tanLen);
+        const y1 = y - MRS * (x1 - state.x);
+        const y2 = y - MRS * (x2 - state.x);
+        
+        const traceTangent = {
+            x: [x1, x2], y: [y1, y2],
+            mode: 'lines', name: `Slope = -${MRS.toFixed(2)}`,
+            line: {color: 'red', dash: 'dot', width: 2}
+        };
+        
+        // 4. The Point
+        const tracePoint = {
+            x: [state.x], y: [y],
+            mode: 'markers', name: 'Choice',
+            marker: {size: 12, color: 'black'}
+        };
+        
+        // Optimum ghost point (Visual hint)
+        const x_opt = (state.alpha * state.I) / state.Px;
+        const y_opt = ((1-state.alpha) * state.I) / state.Py;
+        const traceOpt = {
+            x: [x_opt], y: [y_opt],
+            mode: 'markers', name: 'True Optimum',
+            marker: {size: 8, color: 'green', opacity: 0.3},
+            showlegend: false
+        };
+
+        const layout = {
+            title: 'Budget vs Preferences',
+            xaxis: {title: 'Quantity X', range: [0, maxAxisX]},
+            yaxis: {title: 'Quantity Y', range: [0, maxAxisY]},
+            margin: {l: 50, r: 20, t: 40, b: 40},
+            showlegend: true,
+            legend: {x: 1, xanchor: 'right', y: 1},
+            dragmode: false,
+            annotations: [
+                {
+                    x: state.x,
+                    y: y,
+                    text: labelText,
+                    showarrow: true,
+                    arrowhead: 2,
+                    arrowsize: 0.6,
+                    arrowwidth: 1.2,
+                    ax: 40,
+                    ay: -10,
+                    xanchor: 'left',
+                    font: { size: 14, color: labelColor, weight: 'bold' },
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    bordercolor: labelColor,
+                    borderwidth: 2,
+                    borderpad: 4
+                },
+                ...icLabels
+            ]
+        };
+        
+        Plotly.react('plot', [traceBudget, ...tracesIC, traceTangent, tracePoint, traceOpt], layout, {
+            responsive: true,
+            displayModeBar: false,
+            scrollZoom: false,
+            doubleClick: false,
+            staticPlot: false
+        });
+    }
+
+    // Listeners
+    els.I.addEventListener('input', updateState);
+    els.Px.addEventListener('input', updateState);
+    els.Py.addEventListener('input', updateState);
+    els.alpha.addEventListener('input', updateState);
+    els.x.addEventListener('input', updateState);
+
+    // --- Dragging logic for the choice point ---
+    let isDraggingPoint = false;
+    let activePointerId = null;
+
+    function getPlotAreaRect() {
+        const plotArea = plotEl.querySelector('.cartesianlayer .plot');
+        return plotArea ? plotArea.getBoundingClientRect() : null;
+    }
+
+    function getDataXFromEvent(evt) {
+        const rect = getPlotAreaRect();
+        if (!rect) return null;
+        if (evt.clientY < rect.top || evt.clientY > rect.bottom) return null;
+        const rel = (evt.clientX - rect.left) / rect.width;
+        const dataX = Math.max(0, Math.min(AXIS_LIMIT, rel * AXIS_LIMIT));
+        const pointPx = rect.left + (state.x / AXIS_LIMIT) * rect.width;
+        const distPx = Math.abs(evt.clientX - pointPx);
+        return { dataX, distPx };
+    }
+
+    function updateChoiceFromDrag(newX) {
+        const maxBudgetX = state.I / state.Px;
+        const clamped = Math.max(0, Math.min(maxBudgetX, newX));
+        state.x = clamped;
+        els.x.value = clamped;
+        render();
+    }
+
+    plotEl.addEventListener('pointerdown', (evt) => {
+        if (evt.button !== 0) return;
+        const info = getDataXFromEvent(evt);
+        if (!info) return;
+        if (info.distPx > 35) return;
+        isDraggingPoint = true;
+        activePointerId = evt.pointerId;
+        plotEl.setPointerCapture(activePointerId);
+        updateChoiceFromDrag(info.dataX);
+    });
+
+    plotEl.addEventListener('pointermove', (evt) => {
+        if (!isDraggingPoint) return;
+        const info = getDataXFromEvent(evt);
+        if (!info) return;
+        updateChoiceFromDrag(info.dataX);
+    });
+
+    function endDrag(evt) {
+        if (!isDraggingPoint) return;
+        if (activePointerId !== null) {
+            try { plotEl.releasePointerCapture(activePointerId); } catch (err) {}
+        }
+        isDraggingPoint = false;
+        activePointerId = null;
+    }
+
+    plotEl.addEventListener('pointerup', endDrag);
+    plotEl.addEventListener('pointerleave', endDrag);
+    plotEl.addEventListener('pointercancel', endDrag);
+
+    updateState();
+
+</script>
+
+</body>
+</html>
+
