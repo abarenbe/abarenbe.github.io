@@ -3,23 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faculty Name - University Name</title>
+    <title>Andrew Barenberg, Ph.D. - Saint Martin's University</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Helper for interactive widgets later -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> 
+    <style>
+        .widget-card {
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .widget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
     <header>
         <div class="container">
-            <h1>Faculty Name</h1>
-            <h2>Position, Department</h2>
-            <h3>University Name</h3>
+            <h1>Andrew Barenberg, Ph.D.</h1>
+            <h2>Associate Professor, Economics</h2>
+            <h3>Saint Martin's University</h3>
             <nav>
                 <ul>
                     <li><a href="#about">About</a></li>
                     <li><a href="#research">Research</a></li>
                     <li><a href="#publications">Publications</a></li>
                     <li><a href="#teaching">Teaching</a></li>
+                    <li><a href="#widgets">Interactive Data</a></li>
+                    <!-- Link to blog if Chirpy is restored later -->
+                    <li><a href="/blog">Blog</a></li> 
                     <li><a href="#contact">Contact</a></li>
                 </ul>
             </nav>
@@ -31,63 +51,129 @@
             <h2>About Me</h2>
             <div class="profile-grid">
                 <div class="profile-image">
-                    <!-- <img src="assets/profile.jpg" alt="Faculty Name"> -->
-                    <div class="placeholder-image">Photo</div>
+                    <img src="assets/profile.jpg" alt="Andrew Barenberg, Ph.D.">
                 </div>
                 <div class="bio">
-                    <p>Welcome to my academic website. I am a [Position] in the [Department] at [University].</p>
-                    <p>My research interests include [Interest 1], [Interest 2], and [Interest 3].</p>
-                    <p><a href="#" class="button">Download CV</a></p>
+                    <p><strong>Education:</strong></p>
+                    <ul style="list-style: none; padding-left: 0; margin-bottom: 1rem;">
+                        <li>Ph.D., University of Massachusetts - Amherst</li>
+                        <li>B.A., University of Missouri - Kansas City</li>
+                    </ul>
+                    
+                    <p>After completing high school, I worked as an Americorp VISTA volunteer and in the Kansas City Catholic Chancery Peace and Justice Office. This work left me with an interest in issues of poverty and inequality, which inspired me to study economics first at the University of Missouri-Kansas City and then at the University of Massachusetts-Amherst.</p>
+                    
+                    <p>During my studies, I helped establish a pay-day loan alternative in Kansas City and set up <em>girlstoschool.org</em>, a 501(c)3 not-for-profit that provides educational opportunities to girls in Mauritania. After completing my Ph.D., I taught for one year at Denison University before coming to Saint Martin's University.</p>
+
+                    <p>My interests include watching and playing soccer, keeping up with the science of climate change, and hanging out with my family.</p>
+
+                    <p>
+                        <a href="https://www.stmartin.edu/documents/andrew-barenberg-phd-cv" class="button" target="_blank">Download CV</a>
+                    </p>
                 </div>
             </div>
         </section>
 
         <section id="research">
-            <h2>Research</h2>
-            <p>Short description of research focus.</p>
-            <div class="research-item">
-                <h3>Project Title A</h3>
-                <p>Description of project A...</p>
-            </div>
-            <div class="research-item">
-                <h3>Project Title B</h3>
-                <p>Description of project B...</p>
-            </div>
+            <h2>Research Interests</h2>
+            <p>My research focuses on development economics, poverty, inequality, and public health.</p>
+            <!-- Placeholder for more specific research projects if known -->
         </section>
 
         <section id="publications">
             <h2>Selected Publications</h2>
             <ul class="publication-list">
                 <li>
-                    <span class="authors">Smith, J., <strong>Name, F.</strong></span> (2024). 
-                    <span class="title">Title of the Article.</span> 
-                    <em class="journal">Journal Name</em>, 10(2), 100-110.
-                    [<a href="#">PDF</a>]
+                    <span class="authors">Basu, D., Soylu, C., & <strong>Barenberg, A.</strong></span> (2016). 
+                    <span class="title">Public Health Expenditure, Inequality, and Infant Mortality across Indian States, 1981- 2010.</span> 
+                    <em class="journal">Journal of Development Studies</em>, 1-20.
                 </li>
                 <li>
-                    <span class="authors"><strong>Name, F.</strong>, Doe, A.</span> (2023). 
-                    <span class="title">Another Important Paper.</span> 
-                    <em class="journal">Conference Proceedings</em>.
-                    [<a href="#">PDF</a>]
+                    <span class="authors">wa Gĩthĩnji, M., Konstantinidis, C., & <strong>Barenberg, A.</strong></span> (2014). 
+                    <span class="title">Small and as Productive: Female Headed Households and the Inverse Relationship between Land Size and Output in Kenya.</span> 
+                    <em class="journal">Feminist Economics</em>, 1-29.
+                </li>
+                <li>
+                    <span class="authors"><strong>Barenberg, A.</strong></span> (2009). 
+                    <span class="title">Microfinance for water and sanitation: a case study from Tiruchirappalli, India.</span> 
+                    <em class="journal">Water, sanitation and hygiene: sustainable development and multisectoral approaches. Proceedings of the 34th WEDC International Conference</em>, Addis Ababa, Ethiopia, 68-74.
                 </li>
             </ul>
         </section>
 
         <section id="teaching">
             <h2>Teaching</h2>
-            <ul>
-                <li><strong>CS 101:</strong> Introduction to Computer Science (Fall 2024)</li>
-                <li><strong>CS 400:</strong> Advanced Algorithms (Spring 2024)</li>
-            </ul>
+            <!-- Placeholder based on typical Econ courses, can be updated by user -->
+            <p>I teach a variety of courses in Economics at Saint Martin's University. (Course list to be updated)</p>
+        </section>
+
+        <section id="widgets">
+            <h2>Interactive Data & Widgets</h2>
+            <p>Explore interactive economic models and data visualizations below. (Built with Python/Plotly)</p>
+            
+            <div class="widget-grid">
+                <!-- Example Widget 1: Plotly Graph -->
+                <div class="widget-card">
+                    <h3>Sample: Inequality Trends</h3>
+                    <p>Interactive visualization of inequality metrics over time.</p>
+                    <div id="plot-inequality" style="width:100%; height:300px;"></div>
+                </div>
+                
+                <!-- Example Widget 2: Cost Curve Simulation -->
+                <div class="widget-card">
+                    <h3>Cost Curve Simulation</h3>
+                    <p>Dynamic modeling of firm cost structures.</p>
+                    <div id="plot-costs" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+
+            <script>
+                // Example Plotly Graph 1: Inequality
+                var trace1 = {
+                    x: [2015, 2016, 2017, 2018, 2019, 2020],
+                    y: [0.35, 0.36, 0.38, 0.39, 0.41, 0.42],
+                    mode: 'lines+markers',
+                    name: 'Gini Coefficient',
+                    line: {color: '#2c3e50', width: 3}
+                };
+                
+                var layout1 = {
+                    title: 'Hypothetical Gini Coefficient Trend',
+                    xaxis: {title: 'Year'},
+                    yaxis: {title: 'Coefficient'},
+                    font: {family: "Helvetica Neue, sans-serif"}
+                };
+                
+                Plotly.newPlot('plot-inequality', [trace1], layout1, {responsive: true});
+
+                // Example Plotly Graph 2: Cost Curves
+                var q = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                var mc = q.map(x => 2 * x); // MC = 2q
+                var ac = q.map(x => x + (10/x)); // AC = q + 10/q
+
+                var traceMC = { x: q, y: mc, name: 'Marginal Cost (MC)', line: {color: '#e74c3c'} };
+                var traceAC = { x: q, y: ac, name: 'Average Cost (AC)', line: {color: '#3498db'} };
+
+                var layout2 = {
+                    title: 'Firm Cost Structure',
+                    xaxis: {title: 'Quantity (q)'},
+                    yaxis: {title: 'Cost ($)'},
+                    font: {family: "Helvetica Neue, sans-serif"}
+                };
+
+                Plotly.newPlot('plot-costs', [traceMC, traceAC], layout2, {responsive: true});
+            </script>
         </section>
 
         <section id="contact">
             <h2>Contact</h2>
-            <p><i class="fas fa-envelope"></i> email@university.edu</p>
-            <p><i class="fas fa-map-marker-alt"></i> Building 123, Room 456</p>
+            <div class="contact-info">
+                <p><i class="fas fa-envelope"></i> <a href="mailto:abarenberg@stmartin.edu">abarenberg@stmartin.edu</a></p>
+                <p><i class="fas fa-phone"></i> 360-688-2759</p>
+                <p><i class="fas fa-map-marker-alt"></i> Old Main 370</p>
+                <p><i class="fas fa-clock"></i> <strong>Office Hours:</strong> Mon-Fri, 11:00 a.m. - 1:00 p.m.</p>
+            </div>
             <div class="social-links">
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-github"></i></a>
+                <!-- Add actual links if available -->
                 <a href="#"><i class="fab fa-linkedin"></i></a>
                 <a href="#"><i class="ai ai-google-scholar"></i></a>
             </div>
@@ -96,10 +182,9 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 Faculty Name. Powered by GitHub Pages.</p>
+            <p>&copy; 2025 Andrew Barenberg. Powered by GitHub Pages.</p>
         </div>
     </footer>
 
 </body>
 </html>
-
