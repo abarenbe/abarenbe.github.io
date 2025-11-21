@@ -9,45 +9,7 @@
     <!-- Helper for interactive widgets later -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> 
     <style>
-        .widget-card {
-            background: #fff;
-            border: 1px solid #e1e4e8;
-            border-radius: 6px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .widget-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .interactive-list {
-            list-style: none;
-            padding: 0;
-        }
-        .interactive-list li {
-            margin-bottom: 1rem;
-            padding-left: 1.5rem;
-            position: relative;
-        }
-        .interactive-list li::before {
-            content: "\f080"; /* FontAwesome chart icon */
-            font-family: "Font Awesome 6 Free";
-            font-weight: 900;
-            position: absolute;
-            left: 0;
-            color: var(--accent-color);
-        }
-        .interactive-list h3 {
-            font-size: 1.1rem;
-            margin: 0 0 0.2rem 0;
-        }
-        .interactive-list p {
-            margin: 0;
-            font-size: 0.9rem;
-            color: #666;
-        }
+        /* Helper styles will be moved to style.css eventually */
     </style>
 </head>
 <body>
@@ -63,7 +25,7 @@
                     <li><a href="#research">Research</a></li>
                     <li><a href="#publications">Publications</a></li>
                     <li><a href="#teaching">Teaching</a></li>
-                    <li><a href="#interactives">Interactives</a></li>
+                    <li><a href="interactives.html">Interactives</a></li>
                     <!-- Link to blog if Chirpy is restored later -->
                     <li><a href="/blog">Blog</a></li> 
                     <li><a href="#contact">Contact</a></li>
@@ -130,47 +92,7 @@
             <h2>Teaching</h2>
             <!-- Placeholder based on typical Econ courses, can be updated by user -->
             <p>I teach a variety of courses in Economics at Saint Martin's University. (Course list to be updated)</p>
-        </section>
-
-        <section id="interactives">
-            <h2>Microeconomic Interactives</h2>
-            <p>A collection of interactive models and simulations for Microeconomics students.</p>
-
-            <h3>Unit 3: Consumer Choice</h3>
-            <ul class="interactive-list">
-                <li>
-                    <h3><a href="interactives/micro/ch3/optimal_choice_MRS.html" target="_blank">Optimal Choice & MRS</a></h3>
-                    <p>Visualize the optimal consumption bundle where the budget constraint is tangent to the indifference curve.</p>
-                </li>
-                <li>
-                    <h3><a href="interactives/micro/ch3/income_substitution.html" target="_blank">Income & Substitution Effects</a></h3>
-                    <p>Decompose the effect of a price change into income and substitution effects (Slutsky decomposition).</p>
-                </li>
-                <li>
-                    <h3><a href="interactives/micro/ch3/labor_supply_derivation.html" target="_blank">Labor Supply Derivation</a></h3>
-                    <p>Deriving the individual labor supply curve from the labor-leisure tradeoff model.</p>
-                </li>
-                <li>
-                    <h3><a href="interactives/micro/ch3/utility_3d.html" target="_blank">Utility Surface (3D)</a></h3>
-                    <p>Explore the 3D utility function surface to understand indifference curve mapping.</p>
-                </li>
-            </ul>
-
-            <h3>Unit 8: Cost Curves & Market Structure</h3>
-            <ul class="interactive-list">
-                <li>
-                    <h3><a href="interactives/micro/cost_curves/cost_curves.html" target="_blank">Cost Curves Simulation</a></h3>
-                    <p>Interactive exploration of Marginal Cost, Average Cost, and Variable Cost relationships.</p>
-                </li>
-                <li>
-                    <h3><a href="interactives/micro/cost_curves/market_equilibrium.html" target="_blank">Market Equilibrium</a></h3>
-                    <p>Simulating market equilibrium interactions.</p>
-                </li>
-                 <li>
-                    <h3><a href="interactives/micro/cost_curves/market_equilibrium_with_n_firms.html" target="_blank">Market Equilibrium with N Firms</a></h3>
-                    <p>See how changing the number of firms affects market outcomes and individual firm behavior.</p>
-                </li>
-            </ul>
+            <p>For interactive learning modules, please visit the <a href="interactives.html">Interactives page</a>.</p>
         </section>
 
         <section id="contact">
