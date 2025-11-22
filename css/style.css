@@ -1,9 +1,11 @@
 /* Reset and Variables */
 :root {
     --primary-color: #2c3e50;
+    --secondary-color: #34495e; /* Added for compatibility with interactives layout */
     --accent-color: #3498db;
     --text-color: #333;
     --bg-color: #fff;
+    --white: #fff; /* Added for compatibility */
     --light-bg: #f8f9fa;
     --border-color: #e9ecef;
     --max-width: 900px;
@@ -31,12 +33,31 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 0.5em;
 }
 
-h1 { font-size: 2.5rem; font-weight: 700; }
-h2 { font-size: 1.8rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3rem; margin-top: 2rem; }
-h3 { font-size: 1.4rem; margin-top: 1.5rem; }
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
 
-a { color: var(--accent-color); text-decoration: none; }
-a:hover { text-decoration: underline; }
+h2 {
+    font-size: 1.8rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.3rem;
+    margin-top: 2rem;
+}
+
+h3 {
+    font-size: 1.4rem;
+    margin-top: 1.5rem;
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
 
 /* Layout */
 .container {
@@ -54,9 +75,26 @@ header {
     margin-bottom: 2rem;
 }
 
-header h1 { margin-bottom: 0.2rem; }
-header h2 { font-size: 1.2rem; font-weight: 400; color: #666; margin-bottom: 0.2rem; border: none; padding: 0; margin-top: 0; }
-header h3 { font-size: 1rem; font-weight: 400; color: #888; margin-top: 0; }
+header h1 {
+    margin-bottom: 0.2rem;
+}
+
+header h2 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #666;
+    margin-bottom: 0.2rem;
+    border: none;
+    padding: 0;
+    margin-top: 0;
+}
+
+header h3 {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #888;
+    margin-top: 0;
+}
 
 nav ul {
     list-style: none;
@@ -76,10 +114,15 @@ nav a {
     letter-spacing: 1px;
 }
 
-nav a:hover { color: var(--accent-color); text-decoration: none; }
+nav a:hover {
+    color: var(--accent-color);
+    text-decoration: none;
+}
 
 /* Sections */
-section { margin-bottom: 3rem; }
+section {
+    margin-bottom: 3rem;
+}
 
 /* Profile */
 .profile-grid {
@@ -105,7 +148,10 @@ section { margin-bottom: 3rem; }
     font-family: var(--header-font);
 }
 
-.bio { font-size: 1.1rem; }
+.bio {
+    font-size: 1.1rem;
+}
+
 .button {
     display: inline-block;
     background: var(--primary-color);
@@ -116,25 +162,54 @@ section { margin-bottom: 3rem; }
     font-size: 0.9rem;
     margin-top: 10px;
 }
-.button:hover { background: var(--accent-color); text-decoration: none; }
+
+.button:hover {
+    background: var(--accent-color);
+    text-decoration: none;
+}
 
 /* Publications */
-.publication-list { list-style: none; }
-.publication-list li { margin-bottom: 1rem; padding-left: 1rem; border-left: 3px solid var(--border-color); }
-.publication-list .title { font-weight: 600; }
-.publication-list .journal { font-style: italic; }
+.publication-list {
+    list-style: none;
+}
+
+.publication-list li {
+    margin-bottom: 1rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--border-color);
+}
+
+.publication-list .title {
+    font-weight: 600;
+}
+
+.publication-list .journal {
+    font-style: italic;
+}
 
 /* Teaching */
-section#teaching ul { margin-left: 20px; }
-section#teaching li { margin-bottom: 0.5rem; }
+section#teaching ul {
+    margin-left: 20px;
+}
+
+section#teaching li {
+    margin-bottom: 0.5rem;
+}
 
 /* Contact */
 .social-links {
     margin-top: 1rem;
     font-size: 1.5rem;
 }
-.social-links a { margin-right: 15px; color: var(--primary-color); }
-.social-links a:hover { color: var(--accent-color); }
+
+.social-links a {
+    margin-right: 15px;
+    color: var(--primary-color);
+}
+
+.social-links a:hover {
+    color: var(--accent-color);
+}
 
 /* Footer */
 footer {
@@ -148,9 +223,133 @@ footer {
 
 /* Responsive */
 @media (max-width: 700px) {
-    .profile-grid { grid-template-columns: 1fr; }
-    .profile-image { max-width: 250px; margin: 0 auto 20px; }
-    header { padding: 2rem 0; }
-    nav ul { gap: 15px; }
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-image {
+        max-width: 250px;
+        margin: 0 auto 20px;
+    }
+
+    header {
+        padding: 2rem 0;
+    }
+
+    nav ul {
+        gap: 15px;
+    }
 }
 
+/* ==========================================
+   Interactives Layout (Added locally)
+   ========================================== */
+.interactives-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 40px;
+    margin-top: 40px;
+    align-items: start;
+}
+
+.toc-sidebar {
+    background: var(--light-bg);
+    padding: 20px;
+    border-radius: 5px;
+    position: sticky;
+    top: 20px;
+}
+
+.toc-sidebar h3 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 5px;
+    font-size: 1.2rem; /* Adjusted to match new typography */
+    margin-top: 0; /* Reset override */
+}
+
+.toc-sidebar ul {
+    list-style: none;
+    padding-left: 0;
+    display: block; /* Override flex from nav ul if inherited, though it shouldn't be */
+}
+
+.toc-sidebar > ul > li {
+    margin-bottom: 15px;
+}
+
+.toc-sidebar a {
+    color: var(--secondary-color);
+    display: block;
+    padding: 2px 0;
+    font-weight: normal; /* Reset from nav a */
+    text-transform: none; /* Reset from nav a */
+}
+
+.toc-sidebar a:hover {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.toc-sidebar ul ul {
+    padding-left: 15px;
+    margin-top: 5px;
+    display: block;
+}
+
+.toc-sidebar ul ul li {
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.interactives-content section {
+    padding-top: 0;
+    border-bottom: none;
+    margin-bottom: 40px;
+}
+
+@media (max-width: 768px) {
+    .interactives-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .toc-sidebar {
+        position: static;
+        margin-bottom: 30px;
+    }
+}
+
+/* ==========================================
+   Thumbnail Popup (Preserved)
+   ========================================== */
+.thumbnail-popup {
+    position: absolute;
+    display: none;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 0;
+    border-radius: 4px;
+    pointer-events: none;
+    width: 300px;
+    height: 225px;
+    overflow: hidden;
+}
+
+.thumbnail-popup iframe {
+    width: 1000px;
+    height: 750px;
+    transform: scale(0.3);
+    transform-origin: 0 0;
+    border: none;
+    background: #fff;
+}
+
+.thumbnail-popup img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 2px;
+}

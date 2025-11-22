@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecological Economics: Supply, Demand, and Externalities</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        canvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+        }
+
+        .controls {
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            min-width: 150px;
+        }
+
+        input[type=range] {
+            flex: 1;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .metric-card {
+            background: #f1f3f5;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .line-sample {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        
+        .box-sample {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Negative Externalities & Deadweight Loss</h1>
+    <p class="instructions">Adjust the externality size to see how it creates a divergence between private and social costs, leading to deadweight loss.</p>
+
+    <div class="canvas-wrapper">
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><span class="line-sample" style="background: #007aff;"></span> Demand (MSB = MPB)</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff9500;"></span> Supply (MPC)</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff3b30; border-bottom: 2px dashed #ff3b30;"></span> Social Cost (MSC)</div>
+        <div class="legend-item"><span class="box-sample" style="background: rgba(255, 59, 48, 0.3);"></span> Deadweight Loss</div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="externalitySlider">Externality Cost ($): <span id="extValue">5.00</span></label>
+            <input type="range" id="externalitySlider" min="0" max="15" step="0.5" value="5">
+        </div>
+    </div>
+
+    <div class="metrics">
+        <div class="metric-card">
+            <div class="metric-label">Market Price (Pm)</div>
+            <div class="metric-value" id="valPm">$0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Market Qty (Qm)</div>
+            <div class="metric-value" id="valQm">0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Social Optimum Q (Q*)</div>
+            <div class="metric-value" id="valQopt">0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label" style="color: #d63031;">Deadweight Loss</div>
+            <div class="metric-value" style="color: #d63031;" id="valDWL">$0.00</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI Elements
+    const slider = document.getElementById('externalitySlider');
+    const extValueLabel = document.getElementById('extValue');
+    const valPm = document.getElementById('valPm');
+    const valQm = document.getElementById('valQm');
+    const valQopt = document.getElementById('valQopt');
+    const valDWL = document.getElementById('valDWL');
+
+    // Configuration
+    const config = {
+        maxP: 30,
+        maxQ: 30,
+        padding: { top: 40, right: 40, bottom: 40, left: 50 }
+    };
+
+    // Economics Parameters
+    // Demand: P = 25 - 0.8Q
+    // Supply (MPC): P = 2 + 0.5Q
+    const econ = {
+        demand: { intercept: 25, slope: -0.8 },
+        supply: { intercept: 2, slope: 0.5 },
+        externality: 5 // Marginal External Cost (constant)
+    };
+
+    let canvasWidth, canvasHeight;
+
+    function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Set display size
+        canvas.style.width = (rect.width - 22) + 'px';
+        canvas.style.height = '400px';
+        
+        // Set actual size in memory
+        canvasWidth = (rect.width - 22) * dpr;
+        canvasHeight = 400 * dpr;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        ctx.scale(dpr, dpr);
+        // Adjust logical width/height for drawing functions
+        canvasWidth /= dpr;
+        canvasHeight /= dpr;
+
+        draw();
+    }
+
+    // Scale functions
+    const xScale = (q) => config.padding.left + (q / config.maxQ) * (canvasWidth - config.padding.left - config.padding.right);
+    const yScale = (p) => canvasHeight - config.padding.bottom - (p / config.maxP) * (canvasHeight - config.padding.top - config.padding.bottom);
+
+    function drawAxes() {
+        ctx.beginPath();
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+
+        // Y Axis
+        ctx.moveTo(xScale(0), yScale(0));
+        ctx.lineTo(xScale(0), yScale(config.maxP));
+
+        // X Axis
+        ctx.moveTo(xScale(0), yScale(0));
+        ctx.lineTo(xScale(config.maxQ), yScale(0));
+        ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = '#555';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Quantity (Q)', xScale(config.maxQ/2), canvasHeight - 10);
+        
+        ctx.save();
+        ctx.translate(15, canvasHeight/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.fillText('Price ($)', 0, 0);
+        ctx.restore();
+    }
+
+    function drawLine(x1, y1, x2, y2, color, width=2, dashed=false) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        if (dashed) ctx.setLineDash([5, 5]);
+        else ctx.setLineDash([]);
+        ctx.moveTo(xScale(x1), yScale(y1));
+        ctx.lineTo(xScale(x2), yScale(y2));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function drawPoint(q, p, color='#333') {
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(xScale(q), yScale(p), 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function drawLabel(text, q, p, color='#333', align='left') {
+        ctx.fillStyle = color;
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = align;
+        ctx.fillText(text, xScale(q), yScale(p));
+    }
+
+    function calculateIntersections() {
+        // Market Equilibrium: Demand = MPC
+        // 25 - 0.8Q = 2 + 0.5Q
+        // 23 = 1.3Q => Q = 23/1.3
+        const Qm = (econ.demand.intercept - econ.supply.intercept) / (econ.supply.slope - econ.demand.slope);
+        const Pm = econ.demand.intercept + econ.demand.slope * Qm;
+
+        // Social Optimum: Demand = MSC
+        // MSC = MPC + E = (2 + E) + 0.5Q
+        // 25 - 0.8Q = (2 + E) + 0.5Q
+        // 23 - E = 1.3Q => Q* = (23 - E)/1.3
+        const mscIntercept = econ.supply.intercept + econ.externality;
+        const Qopt = (econ.demand.intercept - mscIntercept) / (econ.supply.slope - econ.demand.slope);
+        const Popt = econ.demand.intercept + econ.demand.slope * Qopt; // Price on Demand curve
+
+        return { Qm, Pm, Qopt, Popt, mscIntercept };
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        drawAxes();
+
+        const { Qm, Pm, Qopt, Popt, mscIntercept } = calculateIntersections();
+
+        // 1. Draw Deadweight Loss Area first (so lines go on top)
+        // DWL is area between MSC and MSB (Demand) from Qopt to Qm
+        if (Qm > Qopt) {
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(255, 59, 48, 0.3)';
+            
+            // MSC at Qm
+            const mscAtQm = mscIntercept + econ.supply.slope * Qm;
+            // MSB at Qm (which is Pm)
+            const msbAtQm = Pm;
+            
+            // MSC at Qopt (should equal MSB at Qopt)
+            const eqPointVal = Popt; // They intersect here
+
+            // Triangle vertices:
+            // 1. Intersection of MSC and MSB (Social Optimum)
+            ctx.moveTo(xScale(Qopt), yScale(eqPointVal));
+            // 2. MSC at Market Q
+            ctx.lineTo(xScale(Qm), yScale(mscAtQm));
+            // 3. MSB at Market Q
+            ctx.lineTo(xScale(Qm), yScale(Pm));
+            
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 2. Draw Curves
+        
+        // Demand
+        const dEndQ = config.maxQ;
+        const dEndP = econ.demand.intercept + econ.demand.slope * dEndQ;
+        drawLine(0, econ.demand.intercept, dEndQ, dEndP, '#007aff', 3);
+        drawLabel("D = MSB", 2, econ.demand.intercept + econ.demand.slope * 2 - 1, '#007aff');
+
+        // Supply (MPC)
+        const sEndQ = config.maxQ;
+        const sEndP = econ.supply.intercept + econ.supply.slope * sEndQ;
+        drawLine(0, econ.supply.intercept, sEndQ, sEndP, '#ff9500', 3);
+        drawLabel("S = MPC", 25, econ.supply.intercept + econ.supply.slope * 25 - 2, '#ff9500', 'right');
+
+        // MSC (MPC + Externality)
+        if (econ.externality > 0) {
+            const mscEndP = mscIntercept + econ.supply.slope * sEndQ;
+            drawLine(0, mscIntercept, sEndQ, mscEndP, '#ff3b30', 3, true); // Dashed red
+            drawLabel("MSC", 2, mscIntercept + econ.supply.slope * 2 + 2, '#ff3b30');
+        }
+
+        // 3. Draw Equilibrium Points and Dashed Lines
+        
+        // Market Equilibrium
+        drawPoint(Qm, Pm, '#333');
+        // Dashed lines to axes
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 1;
+        // Vertical
+        ctx.beginPath();
+        ctx.moveTo(xScale(Qm), yScale(Pm));
+        ctx.lineTo(xScale(Qm), yScale(0));
+        ctx.stroke();
+        // Horizontal
+        ctx.beginPath();
+        ctx.moveTo(xScale(Qm), yScale(Pm));
+        ctx.lineTo(xScale(0), yScale(Pm));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        drawLabel("Qm", Qm, -1.5, '#333', 'center');
+        drawLabel("Pm", -1.5, Pm, '#333', 'right');
+
+
+        // Social Optimum (only if different)
+        if (Math.abs(Qm - Qopt) > 0.1) {
+            drawPoint(Qopt, Popt, '#28cd41'); // Green for eco/social optimum
+             // Dashed lines
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = '#28cd41'; // Green dashed
+            // Vertical
+            ctx.beginPath();
+            ctx.moveTo(xScale(Qopt), yScale(Popt));
+            ctx.lineTo(xScale(Qopt), yScale(0));
+            ctx.stroke();
+            
+            drawLabel("Q*", Qopt, -1.5, '#28cd41', 'center');
+            ctx.setLineDash([]);
+        }
+
+        // 4. Calculate DWL Value
+        // Area of triangle = 0.5 * base * height
+        // Height is (MSC_at_Qm - MSB_at_Qm) = Externality cost at Qm
+        // Actually height of triangle perpendicular to Q axis is just the Externality amount (E) if curves are parallel vertically?
+        // Let's check: MSC = MPC + E. 
+        // At Qm: MSC = (MPC_at_Qm) + E = Pm + E.
+        // MSB = Pm.
+        // So vertical distance at Qm is (Pm + E) - Pm = E.
+        // Base is (Qm - Qopt).
+        // Area = 0.5 * (Qm - Qopt) * E.
+        
+        const dwlValue = 0.5 * (Qm - Qopt) * econ.externality;
+        
+        // Update Text Metrics
+        valPm.textContent = '$' + Pm.toFixed(2);
+        valQm.textContent = Qm.toFixed(2);
+        valQopt.textContent = Qopt.toFixed(2);
+        valDWL.textContent = '$' + dwlValue.toFixed(2);
+    }
+
+    // Interaction
+    slider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        econ.externality = val;
+        extValueLabel.textContent = val.toFixed(2);
+        window.requestAnimationFrame(draw);
+    });
+
+    window.addEventListener('resize', resize);
+    
+    // Initialize
+    setTimeout(resize, 100);
+
+</script>
+</body>
+</html>
+

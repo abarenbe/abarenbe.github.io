@@ -12,3 +12,4 @@ This is the source code for my faculty website, hosted on GitHub Pages.
 
 To update the content, edit `index.html`.
 
+

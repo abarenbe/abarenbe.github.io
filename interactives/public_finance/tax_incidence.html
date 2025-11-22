@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Finance: Tax Incidence & Deadweight Loss</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        canvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+        }
+
+        .controls {
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            min-width: 180px;
+        }
+
+        input[type=range] {
+            flex: 1;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .metric-card {
+            background: #f1f3f5;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .line-sample {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        
+        .box-sample {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Tax Incidence & Deadweight Loss</h1>
+    <p class="instructions">Adjust the tax size and the elasticities (slopes) of supply and demand to see how the burden of tax is shared and how deadweight loss changes.</p>
+
+    <div class="canvas-wrapper">
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><span class="line-sample" style="background: #007aff;"></span> Demand</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff9500;"></span> Supply</div>
+        <div class="legend-item"><span class="line-sample" style="background: #ff3b30; border-bottom: 2px dashed #ff3b30;"></span> Supply + Tax</div>
+        <div class="legend-item"><span class="box-sample" style="background: rgba(0, 0, 0, 0.1);"></span> DWL</div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="taxSlider">Tax Amount ($): <span id="taxValue">5.00</span></label>
+            <input type="range" id="taxSlider" min="0" max="15" step="0.5" value="5">
+        </div>
+        <div class="control-group">
+            <label for="demandSlopeSlider">Demand Inelasticity (Slope): <span id="demandSlopeValue">0.8</span></label>
+            <input type="range" id="demandSlopeSlider" min="0.1" max="3" step="0.1" value="0.8">
+        </div>
+        <div class="control-group">
+            <label for="supplySlopeSlider">Supply Inelasticity (Slope): <span id="supplySlopeValue">0.5</span></label>
+            <input type="range" id="supplySlopeSlider" min="0.1" max="3" step="0.1" value="0.5">
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="incidenceCheck">
+            <label for="incidenceCheck" style="min-width: auto; font-weight: normal;">Show Tax Incidence Analysis</label>
+        </div>
+    </div>
+
+    <div class="metrics">
+        <div class="metric-card">
+            <div class="metric-label">Consumer Price (Pc)</div>
+            <div class="metric-value" id="valPc">$0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Producer Price (Pp)</div>
+            <div class="metric-value" id="valPp">$0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Quantity (Qt)</div>
+            <div class="metric-value" id="valQt">0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Tax Revenue</div>
+            <div class="metric-value" id="valRev">$0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label" style="color: #d63031;">Deadweight Loss</div>
+            <div class="metric-value" style="color: #d63031;" id="valDWL">$0.00</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI Elements
+    const taxSlider = document.getElementById('taxSlider');
+    const demandSlopeSlider = document.getElementById('demandSlopeSlider');
+    const supplySlopeSlider = document.getElementById('supplySlopeSlider');
+    const incidenceCheck = document.getElementById('incidenceCheck');
+    
+    const taxValueLabel = document.getElementById('taxValue');
+    const demandSlopeLabel = document.getElementById('demandSlopeValue');
+    const supplySlopeLabel = document.getElementById('supplySlopeValue');
+
+    const valPc = document.getElementById('valPc');
+    const valPp = document.getElementById('valPp');
+    const valQt = document.getElementById('valQt');
+    const valRev = document.getElementById('valRev');
+    const valDWL = document.getElementById('valDWL');
+
+    // Configuration
+    const config = {
+        maxP: 30,
+        maxQ: 30,
+        padding: { top: 40, right: 40, bottom: 40, left: 50 }
+    };
+
+    // Economics Parameters
+    // Demand: P = intercept - slope * Q
+    // Supply: P = intercept + slope * Q
+    const econ = {
+        demand: { intercept: 25, slope: 0.8 },
+        supply: { intercept: 2, slope: 0.5 },
+        tax: 5
+    };
+
+    let canvasWidth, canvasHeight;
+
+    function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        
+        canvas.style.width = (rect.width - 22) + 'px';
+        canvas.style.height = '400px';
+        
+        canvasWidth = (rect.width - 22) * dpr;
+        canvasHeight = 400 * dpr;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        ctx.scale(dpr, dpr);
+        canvasWidth /= dpr;
+        canvasHeight /= dpr;
+
+        draw();
+    }
+
+    // Scale functions
+    const xScale = (q) => config.padding.left + (q / config.maxQ) * (canvasWidth - config.padding.left - config.padding.right);
+    const yScale = (p) => canvasHeight - config.padding.bottom - (p / config.maxP) * (canvasHeight - config.padding.top - config.padding.bottom);
+
+    function drawAxes() {
+        ctx.beginPath();
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+
+        // Y Axis
+        ctx.moveTo(xScale(0), yScale(0));
+        ctx.lineTo(xScale(0), yScale(config.maxP));
+
+        // X Axis
+        ctx.moveTo(xScale(0), yScale(0));
+        ctx.lineTo(xScale(config.maxQ), yScale(0));
+        ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = '#555';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Quantity (Q)', xScale(config.maxQ/2), canvasHeight - 10);
+        
+        ctx.save();
+        ctx.translate(15, canvasHeight/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.fillText('Price ($)', 0, 0);
+        ctx.restore();
+    }
+
+    function drawLine(x1, y1, x2, y2, color, width=2, dashed=false) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        if (dashed) ctx.setLineDash([5, 5]);
+        else ctx.setLineDash([]);
+        ctx.moveTo(xScale(x1), yScale(y1));
+        ctx.lineTo(xScale(x2), yScale(y2));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function drawPoint(q, p, color='#333') {
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(xScale(q), yScale(p), 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function drawLabel(text, q, p, color='#333', align='left') {
+        ctx.fillStyle = color;
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = align;
+        ctx.fillText(text, xScale(q), yScale(p));
+    }
+
+    function calculateEquilibrium() {
+        // No Tax
+        // Demand: P = dInt - dSlope * Q
+        // Supply: P = sInt + sSlope * Q
+        // dInt - dSlope*Q = sInt + sSlope*Q
+        // dInt - sInt = (sSlope + dSlope)*Q
+        const Q_eq = (econ.demand.intercept - econ.supply.intercept) / (econ.supply.slope + econ.demand.slope);
+        const P_eq = econ.demand.intercept - econ.demand.slope * Q_eq;
+
+        // With Tax
+        // Supply becomes: P = sInt + sSlope*Q + Tax
+        // dInt - dSlope*Q = sInt + sSlope*Q + Tax
+        // dInt - sInt - Tax = (sSlope + dSlope)*Q
+        const Q_tax = (econ.demand.intercept - econ.supply.intercept - econ.tax) / (econ.supply.slope + econ.demand.slope);
+        
+        // Consumer pays P on demand curve
+        const Pc = econ.demand.intercept - econ.demand.slope * Q_tax;
+        // Producer receives P on original supply curve
+        const Pp = econ.supply.intercept + econ.supply.slope * Q_tax;
+        
+        // Or Pp = Pc - Tax.
+        
+        return { Q_eq, P_eq, Q_tax, Pc, Pp };
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        drawAxes();
+
+        const { Q_eq, P_eq, Q_tax, Pc, Pp } = calculateEquilibrium();
+        
+        // Prevent negative Q or invalid states
+        if (Q_tax < 0) {
+             // If Q < 0, market closes.
+             // Draw simple curves and exit? Or clamp to 0.
+        }
+
+        const safeQ_tax = Math.max(0, Q_tax);
+        const safePc = econ.demand.intercept - econ.demand.slope * safeQ_tax;
+        const safePp = econ.supply.intercept + econ.supply.slope * safeQ_tax;
+
+        // 1. Draw Areas (DWL and Tax Revenue)
+        
+        // DWL Triangle
+        // Vertices: (Q_tax, Pc), (Q_tax, Pp), (Q_eq, P_eq)
+        // Base is Tax (Pc - Pp), Height is (Q_eq - Q_tax)
+        // Actually, triangle is between Demand and Supply from Q_tax to Q_eq
+        if (Q_eq > safeQ_tax) {
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Grey for DWL
+            // Top point (on demand at Q_tax) -> Pc
+            ctx.moveTo(xScale(safeQ_tax), yScale(safePc));
+            // Bottom point (on supply at Q_tax) -> Pp
+            ctx.lineTo(xScale(safeQ_tax), yScale(safePp));
+            // Right point (Equilibrium)
+            ctx.lineTo(xScale(Q_eq), yScale(P_eq));
+            ctx.closePath();
+            ctx.fill();
+            
+            // Label DWL if enough space
+            if ((Q_eq - safeQ_tax) > 1) {
+                ctx.fillStyle = '#666';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                // Rough centroid
+                ctx.fillText('DWL', xScale((safeQ_tax + Q_eq*2)/3), yScale(P_eq));
+            }
+        }
+
+        // Tax Revenue Rectangle / Incidence
+        if (safeQ_tax > 0 && econ.tax > 0) {
+            const showIncidence = incidenceCheck.checked;
+
+            if (showIncidence) {
+                // Consumer Burden: Rectangle from Pc down to P_eq
+                ctx.fillStyle = 'rgba(0, 122, 255, 0.2)'; // Blueish
+                ctx.fillRect(
+                    xScale(0), 
+                    yScale(safePc), 
+                    xScale(safeQ_tax) - xScale(0), 
+                    yScale(P_eq) - yScale(safePc)
+                );
+
+                // Producer Burden: Rectangle from P_eq down to Pp
+                ctx.fillStyle = 'rgba(255, 149, 0, 0.2)'; // Orangeish
+                ctx.fillRect(
+                    xScale(0), 
+                    yScale(P_eq), 
+                    xScale(safeQ_tax) - xScale(0), 
+                    yScale(safePp) - yScale(P_eq)
+                );
+            } else {
+                // Just Tax Revenue
+                ctx.fillStyle = 'rgba(40, 205, 65, 0.2)'; // Greenish
+                ctx.fillRect(
+                    xScale(0), 
+                    yScale(safePc), 
+                    xScale(safeQ_tax) - xScale(0), 
+                    yScale(safePp) - yScale(safePc) // Height is Pc - Pp = Tax
+                );
+            }
+        }
+
+        // 2. Draw Curves
+
+        // Demand
+        const dEndQ = config.maxQ;
+        const dEndP = econ.demand.intercept - econ.demand.slope * dEndQ;
+        drawLine(0, econ.demand.intercept, dEndQ, dEndP, '#007aff', 3);
+        drawLabel("D", 2, econ.demand.intercept - econ.demand.slope * 2 + 1.5, '#007aff');
+
+        // Supply (Original)
+        const sEndQ = config.maxQ;
+        const sEndP = econ.supply.intercept + econ.supply.slope * sEndQ;
+        drawLine(0, econ.supply.intercept, sEndQ, sEndP, '#ff9500', 3);
+        drawLabel("S", 25, econ.supply.intercept + econ.supply.slope * 25 - 2, '#ff9500', 'right');
+
+        // Supply + Tax
+        if (econ.tax > 0) {
+            const stIntercept = econ.supply.intercept + econ.tax;
+            const stEndP = stIntercept + econ.supply.slope * sEndQ;
+            drawLine(0, stIntercept, sEndQ, stEndP, '#ff3b30', 3, true); // Dashed red
+            drawLabel("S+Tax", 2, stIntercept + econ.supply.slope * 2 + 2, '#ff3b30');
+        }
+
+        // 3. Draw Points and Guidelines
+        
+        if (safeQ_tax > 0) {
+            // Points at Pc and Pp
+            drawPoint(safeQ_tax, safePc, '#333'); // Consumer point
+            drawPoint(safeQ_tax, safePp, '#333'); // Producer point
+
+            // Dashed lines to Price axis
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = '#999';
+            
+            // Horizontal to Pc
+            ctx.beginPath();
+            ctx.moveTo(xScale(safeQ_tax), yScale(safePc));
+            ctx.lineTo(xScale(0), yScale(safePc));
+            ctx.stroke();
+            drawLabel("Pc", -0.5, safePc, '#333', 'right');
+
+            // Horizontal to Pp
+            ctx.beginPath();
+            ctx.moveTo(xScale(safeQ_tax), yScale(safePp));
+            ctx.lineTo(xScale(0), yScale(safePp));
+            ctx.stroke();
+            drawLabel("Pp", -0.5, safePp, '#333', 'right');
+
+            // Vertical to Q
+            ctx.beginPath();
+            ctx.moveTo(xScale(safeQ_tax), yScale(safePp)); // Start from bottom point
+            ctx.lineTo(xScale(safeQ_tax), yScale(0));
+            ctx.stroke();
+            drawLabel("Qt", safeQ_tax, -1, '#333', 'center');
+            
+            ctx.setLineDash([]);
+        }
+
+        // Original Equilibrium (ghosted or small)
+        // drawPoint(Q_eq, P_eq, '#999');
+        
+        
+        // 4. Metrics Update
+        const taxRevenue = safeQ_tax * econ.tax;
+        const dwl = 0.5 * (Q_eq - safeQ_tax) * econ.tax;
+
+        valPc.textContent = '$' + safePc.toFixed(2);
+        valPp.textContent = '$' + safePp.toFixed(2);
+        valQt.textContent = safeQ_tax.toFixed(2);
+        valRev.textContent = '$' + taxRevenue.toFixed(2);
+        valDWL.textContent = '$' + dwl.toFixed(2);
+    }
+
+    // Interaction
+    taxSlider.addEventListener('input', (e) => {
+        econ.tax = parseFloat(e.target.value);
+        taxValueLabel.textContent = econ.tax.toFixed(2);
+        window.requestAnimationFrame(draw);
+    });
+
+    demandSlopeSlider.addEventListener('input', (e) => {
+        econ.demand.slope = parseFloat(e.target.value);
+        demandSlopeLabel.textContent = econ.demand.slope.toFixed(1);
+        window.requestAnimationFrame(draw);
+    });
+
+    supplySlopeSlider.addEventListener('input', (e) => {
+        econ.supply.slope = parseFloat(e.target.value);
+        supplySlopeLabel.textContent = econ.supply.slope.toFixed(1);
+        window.requestAnimationFrame(draw);
+    });
+
+    incidenceCheck.addEventListener('change', () => {
+        window.requestAnimationFrame(draw);
+    });
+
+    window.addEventListener('resize', resize);
+    
+    // Initialize
+    setTimeout(resize, 100);
+
+</script>
+</body>
+</html>
+
