@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Law of One Price Simulator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --home-color: #2563eb;
+            --foreign-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 2rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: -0.025em;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 100px);
+            width: 100%;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .control-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        .visualization {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            min-width: 400px;
+            backdrop-filter: blur(8px);
+            display: grid;
+            grid-template-columns: 1fr 1px 1fr 1px 1fr;
+            gap: 1.5rem;
+            text-align: left;
+        }
+
+        .stat-divider {
+            width: 1px;
+            background: var(--border);
+            height: 100%;
+        }
+
+        .stat-column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-header {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 0.25rem;
+            text-align: center;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-feature-settings: "tnum";
+            font-size: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .visualization {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Law of One Price Simulator</h1>
+
+    <div class="container">
+        <div class="controls">
+            <!-- Global Frictions -->
+            <div class="control-group">
+                <div class="control-header">Trade Frictions</div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Transport Cost ($T$)</span>
+                        <span id="transport-val">5</span>
+                    </div>
+                    <input type="range" id="transport" min="0" max="20" value="5" step="0.5">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Tariff ($t$)</span>
+                        <span id="tariff-val">0</span>
+                    </div>
+                    <input type="range" id="tariff" min="0" max="20" value="0" step="0.5">
+                </div>
+                <div class="slider-container" style="margin-top: 0.5rem;">
+                    <div class="slider-label">
+                        <span style="font-weight: 600;">Total Wedge</span>
+                        <span id="wedge-val" style="font-weight: 600;">5</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Home Market -->
+            <div class="control-group">
+                <div class="control-header" style="color: var(--home-color)">Home Market</div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Demand Intercept</span>
+                        <span id="h-d-int-val">100</span>
+                    </div>
+                    <input type="range" id="h-d-int" min="50" max="150" value="100">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Supply Intercept</span>
+                        <span id="h-s-int-val">10</span>
+                    </div>
+                    <input type="range" id="h-s-int" min="0" max="50" value="10">
+                </div>
+            </div>
+
+            <!-- Foreign Market -->
+            <div class="control-group">
+                <div class="control-header" style="color: var(--foreign-color)">Foreign Market</div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Demand Intercept</span>
+                        <span id="f-d-int-val">100</span>
+                    </div>
+                    <input type="range" id="f-d-int" min="50" max="150" value="100">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Supply Intercept</span>
+                        <span id="f-s-int-val">50</span>
+                    </div>
+                    <input type="range" id="f-s-int" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <canvas id="graph"></canvas>
+
+            <div class="stats-panel">
+                <div class="stat-column">
+                    <div class="stat-header" style="color: var(--home-color); border-bottom-color: var(--home-color)">Home</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Price</span>
+                        <span class="stat-value" id="stat-h-p">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Produced</span>
+                        <span class="stat-value" id="stat-h-prod">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Consumed</span>
+                        <span class="stat-value" id="stat-h-cons">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Autarky</span>
+                        <span class="stat-value" id="stat-h-autarky">-</span>
+                    </div>
+                </div>
+                
+                <div class="stat-divider"></div>
+
+                <div class="stat-column">
+                    <div class="stat-header" style="border-bottom-color: var(--warning)">Trade</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Volume</span>
+                        <span class="stat-value" id="stat-trade-vol">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Direction</span>
+                        <span class="stat-value" id="stat-direction">-</span>
+                    </div>
+                </div>
+
+                <div class="stat-divider"></div>
+
+                <div class="stat-column">
+                    <div class="stat-header" style="color: var(--foreign-color); border-bottom-color: var(--foreign-color)">Foreign</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Price</span>
+                        <span class="stat-value" id="stat-f-p">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Produced</span>
+                        <span class="stat-value" id="stat-f-prod">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Consumed</span>
+                        <span class="stat-value" id="stat-f-cons">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Autarky</span>
+                        <span class="stat-value" id="stat-f-autarky">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graph');
+        const ctx = canvas.getContext('2d');
+
+        // Constants
+        const SLOPES = {
+            h_d: 1.0,
+            h_s: 1.0,
+            f_d: 1.0,
+            f_s: 1.0
+        };
+
+        const state = {
+            transport: 5,
+            tariff: 0,
+            h_dInt: 100,
+            h_sInt: 10,
+            f_dInt: 100,
+            f_sInt: 50
+        };
+
+        const inputs = {
+            transport: document.getElementById('transport'),
+            tariff: document.getElementById('tariff'),
+            h_dInt: document.getElementById('h-d-int'),
+            h_sInt: document.getElementById('h-s-int'),
+            f_dInt: document.getElementById('f-d-int'),
+            f_sInt: document.getElementById('f-s-int')
+        };
+
+        const displays = {
+            transport: document.getElementById('transport-val'),
+            tariff: document.getElementById('tariff-val'),
+            wedge: document.getElementById('wedge-val'),
+            h_dInt: document.getElementById('h-d-int-val'),
+            h_sInt: document.getElementById('h-s-int-val'),
+            f_dInt: document.getElementById('f-d-int-val'),
+            f_sInt: document.getElementById('f-s-int-val')
+        };
+
+        const stats = {
+            h_p: document.getElementById('stat-h-p'),
+            h_prod: document.getElementById('stat-h-prod'),
+            h_cons: document.getElementById('stat-h-cons'),
+            h_autarky: document.getElementById('stat-h-autarky'),
+            trade_vol: document.getElementById('stat-trade-vol'),
+            direction: document.getElementById('stat-direction'),
+            f_p: document.getElementById('stat-f-p'),
+            f_prod: document.getElementById('stat-f-prod'),
+            f_cons: document.getElementById('stat-f-cons'),
+            f_autarky: document.getElementById('stat-f-autarky')
+        };
+
+        let width, height;
+        const padding = { top: 80, right: 40, bottom: 40, left: 60 };
+        const gap = 100; // Gap between two graphs
+
+        function init() {
+            resize();
+            window.addEventListener('resize', () => {
+                resize();
+                draw();
+            });
+
+            Object.keys(inputs).forEach(key => {
+                inputs[key].addEventListener('input', () => {
+                    state[key] = parseFloat(inputs[key].value);
+                    if (displays[key]) displays[key].textContent = state[key];
+                    if (key === 'transport' || key === 'tariff') {
+                        displays.wedge.textContent = state.transport + state.tariff;
+                    }
+                    draw();
+                });
+            });
+
+            draw();
+        }
+
+        function resize() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 48;
+            canvas.height = rect.height - 48;
+            width = canvas.width;
+            height = canvas.height;
+        }
+
+        function toCanvasY(p, scaleY) {
+            return height - padding.bottom - p * scaleY;
+        }
+
+        // Map q to x for Home (left graph)
+        function toCanvasX_Home(q, scaleX) {
+            return padding.left + q * scaleX;
+        }
+
+        // Map q to x for Foreign (right graph)
+        function toCanvasX_Foreign(q, scaleX, xOffset) {
+            // We flip the Foreign graph? No, usually side-by-side standard orientation is fine.
+            // But sometimes back-to-back is used. Let's stick to side-by-side standard.
+            return xOffset + padding.left + q * scaleX;
+        }
+
+        function drawLine(x1, y1, x2, y2, color, width = 2, dash = []) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.setLineDash(dash);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function drawText(text, x, y, align = 'center', color = '#64748b', font = '12px Inter') {
+            ctx.fillStyle = color;
+            ctx.font = font;
+            ctx.textAlign = align;
+            ctx.fillText(text, x, y);
+        }
+
+        function solveMarket() {
+            // 1. Autarky Prices
+            const getAutarky = (dInt, sInt, dSlope, sSlope) => {
+                const q = (dInt - sInt) / (dSlope + sSlope);
+                const p = sInt + sSlope * q;
+                return { p, q };
+            };
+
+            // Foreign Supply Logic Inversion for Slider
+            // Slider value (state.f_sInt) represents "Supply Level"
+            // Higher Slider -> Higher Supply -> Lower Intercept (Right Shift)
+            // Mapping: Slider 0..100 -> Intercept 100..0
+            const f_s_intercept = 100 - state.f_sInt;
+
+            const h_autarky = getAutarky(state.h_dInt, state.h_sInt, SLOPES.h_d, SLOPES.h_s);
+            const f_autarky = getAutarky(state.f_dInt, f_s_intercept, SLOPES.f_d, SLOPES.f_s);
+
+            const wedge = state.transport + state.tariff;
+            let h_p, f_p, direction;
+
+            if (Math.abs(h_autarky.p - f_autarky.p) <= wedge) {
+                // No Trade
+                h_p = h_autarky.p;
+                f_p = f_autarky.p;
+                direction = 'None';
+            } else if (h_autarky.p > f_autarky.p + wedge) {
+                // Import from Foreign
+                direction = 'F -> H';
+                const sumInvSlopes = 1/SLOPES.h_d + 1/SLOPES.f_d + 1/SLOPES.h_s + 1/SLOPES.f_s;
+                const rhs = (state.h_dInt - wedge)/SLOPES.h_d + state.f_dInt/SLOPES.f_d - (wedge - state.h_sInt)/SLOPES.h_s + f_s_intercept/SLOPES.f_s;
+                
+                f_p = rhs / sumInvSlopes;
+                h_p = f_p + wedge;
+            } else {
+                // Import from Home
+                direction = 'H -> F';
+                const sumInvSlopes = 1/SLOPES.h_d + 1/SLOPES.f_d + 1/SLOPES.h_s + 1/SLOPES.f_s;
+                const rhs = state.h_dInt/SLOPES.h_d + (state.f_dInt - wedge)/SLOPES.f_d + state.h_sInt/SLOPES.h_s - (wedge - f_s_intercept)/SLOPES.f_s;
+                
+                h_p = rhs / sumInvSlopes;
+                f_p = h_p + wedge;
+            }
+            
+            const h_qd = Math.max(0, (state.h_dInt - h_p) / SLOPES.h_d);
+            const h_qs = Math.max(0, (h_p - state.h_sInt) / SLOPES.h_s);
+            const f_qd = Math.max(0, (state.f_dInt - f_p) / SLOPES.f_d);
+            const f_qs = Math.max(0, (f_p - f_s_intercept) / SLOPES.f_s);
+            const q_trade = Math.abs(h_qd - h_qs);
+            
+            return { h_p, f_p, h_qd, h_qs, f_qd, f_qs, h_autarky, f_autarky, q_trade, direction, f_s_intercept };
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const sol = solveMarket();
+            
+            // Determine Scales
+            const maxP = Math.max(state.h_dInt, state.f_dInt) * 1.1;
+            const maxQ = Math.max(state.h_dInt/SLOPES.h_d, state.f_dInt/SLOPES.f_d) * 1.1;
+            
+            // Layout: Divide width into two graphs
+            const graphWidth = (width - padding.left - padding.right - gap) / 2;
+            const scaleX = graphWidth / maxQ;
+            const scaleY = (height - padding.top - padding.bottom) / maxP;
+            
+            // X Offsets
+            const xHome = 0;
+            const xForeign = graphWidth + gap;
+            
+            // Draw Axes
+            // Home
+            drawLine(padding.left, height - padding.bottom, padding.left + graphWidth, height - padding.bottom, '#e2e8f0');
+            drawLine(padding.left, height - padding.bottom, padding.left, padding.top, '#e2e8f0');
+            drawText('Quantity', padding.left + graphWidth, height - padding.bottom + 30, 'right');
+            drawText('Price ($)', padding.left, padding.top - 10, 'center');
+            drawText('Home Market', padding.left + graphWidth/2, padding.top - 30, 'center', '#2563eb', 'bold 16px Inter');
+            
+            // Foreign
+            drawLine(padding.left + xForeign, height - padding.bottom, padding.left + xForeign + graphWidth, height - padding.bottom, '#e2e8f0');
+            drawLine(padding.left + xForeign, height - padding.bottom, padding.left + xForeign, padding.top, '#e2e8f0');
+            drawText('Quantity', padding.left + xForeign + graphWidth, height - padding.bottom + 30, 'right');
+            drawText('Price ($)', padding.left + xForeign, padding.top - 10, 'center');
+            drawText('Foreign Market', padding.left + xForeign + graphWidth/2, padding.top - 30, 'center', '#ef4444', 'bold 16px Inter');
+            
+            // Draw Curves
+            // Home Demand
+            const h_dq_max = state.h_dInt / SLOPES.h_d;
+            drawLine(toCanvasX_Home(0, scaleX), toCanvasY(state.h_dInt, scaleY), toCanvasX_Home(h_dq_max, scaleX), toCanvasY(0, scaleY), '#2563eb', 3);
+            
+            // Home Supply
+            const h_sq_max = (maxP - state.h_sInt) / SLOPES.h_s;
+            drawLine(toCanvasX_Home(0, scaleX), toCanvasY(state.h_sInt, scaleY), toCanvasX_Home(h_sq_max, scaleX), toCanvasY(maxP, scaleY), '#2563eb', 3);
+            
+            // Foreign Demand
+            const f_dq_max = state.f_dInt / SLOPES.f_d;
+            drawLine(toCanvasX_Foreign(0, scaleX, xForeign), toCanvasY(state.f_dInt, scaleY), toCanvasX_Foreign(f_dq_max, scaleX, xForeign), toCanvasY(0, scaleY), '#ef4444', 3);
+            
+            // Foreign Supply (Using sol.f_s_intercept)
+            const f_sq_max = (maxP - sol.f_s_intercept) / SLOPES.f_s;
+            drawLine(toCanvasX_Foreign(0, scaleX, xForeign), toCanvasY(sol.f_s_intercept, scaleY), toCanvasX_Foreign(f_sq_max, scaleX, xForeign), toCanvasY(maxP, scaleY), '#ef4444', 3);
+            
+            // Draw Equilibrium Prices
+            // Autarky markers (dashed)
+            const h_aq = (state.h_dInt - state.h_sInt)/(SLOPES.h_d + SLOPES.h_s);
+            const f_aq = (state.f_dInt - state.f_sInt)/(SLOPES.f_d + SLOPES.f_s);
+            
+            drawLine(padding.left, toCanvasY(sol.h_autarky.p, scaleY), padding.left + graphWidth, toCanvasY(sol.h_autarky.p, scaleY), '#94a3b8', 1, [5, 5]);
+            drawLine(padding.left + xForeign, toCanvasY(sol.f_autarky.p, scaleY), padding.left + xForeign + graphWidth, toCanvasY(sol.f_autarky.p, scaleY), '#94a3b8', 1, [5, 5]);
+            
+            // Gains from Trade Shading
+            if (sol.direction !== 'None') {
+                ctx.save();
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.15)'; // Light Green
+
+                // Home Gains Triangle
+                // Vertices: (Autarky Q, Autarky P), (Qs, Trade P), (Qd, Trade P)
+                ctx.beginPath();
+                ctx.moveTo(toCanvasX_Home(sol.h_autarky.q, scaleX), toCanvasY(sol.h_autarky.p, scaleY));
+                ctx.lineTo(toCanvasX_Home(sol.h_qs, scaleX), toCanvasY(sol.h_p, scaleY));
+                ctx.lineTo(toCanvasX_Home(sol.h_qd, scaleX), toCanvasY(sol.h_p, scaleY));
+                ctx.closePath();
+                ctx.fill();
+
+                // Foreign Gains Triangle
+                // Vertices: (Autarky Q, Autarky P), (Qs, Trade P), (Qd, Trade P)
+                ctx.beginPath();
+                ctx.moveTo(toCanvasX_Foreign(sol.f_autarky.q, scaleX, xForeign), toCanvasY(sol.f_autarky.p, scaleY));
+                ctx.lineTo(toCanvasX_Foreign(sol.f_qs, scaleX, xForeign), toCanvasY(sol.f_p, scaleY));
+                ctx.lineTo(toCanvasX_Foreign(sol.f_qd, scaleX, xForeign), toCanvasY(sol.f_p, scaleY));
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.restore();
+            }
+
+            // Trade Prices (Solid)
+            drawLine(padding.left, toCanvasY(sol.h_p, scaleY), padding.left + graphWidth, toCanvasY(sol.h_p, scaleY), '#1e293b', 2);
+            drawLine(padding.left + xForeign, toCanvasY(sol.f_p, scaleY), padding.left + xForeign + graphWidth, toCanvasY(sol.f_p, scaleY), '#1e293b', 2);
+            
+            // Y-Axis Price Labels
+            const drawPriceLabel = (p, color, label, axisX) => {
+                const y = toCanvasY(p, scaleY);
+                const x = axisX - 8;
+                ctx.fillStyle = color;
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 11px Inter';
+                ctx.fillText(p.toFixed(0), x, y);
+                
+                if(label) {
+                    ctx.font = '10px Inter';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(label, x, y + 12);
+                }
+            };
+
+            // Home Axis Price Labels
+            drawPriceLabel(sol.h_p, '#1e293b', null, padding.left);
+            if(Math.abs(sol.h_p - sol.h_autarky.p) > 5) {
+                drawPriceLabel(sol.h_autarky.p, '#94a3b8', 'Aut', padding.left);
+            }
+
+            // Foreign Axis Price Labels
+            const fAxisX = padding.left + xForeign;
+            drawPriceLabel(sol.f_p, '#1e293b', null, fAxisX);
+            if(Math.abs(sol.f_p - sol.f_autarky.p) > 5) {
+                drawPriceLabel(sol.f_autarky.p, '#94a3b8', 'Aut', fAxisX);
+            }
+
+            // Wedge Connector
+            // Draw a line connecting the two price levels in the gap
+            const gapCenterX = padding.left + graphWidth + gap/2;
+            const gapLeft = padding.left + graphWidth;
+            const gapRight = padding.left + xForeign;
+            
+            // Line from H price to F price
+            ctx.beginPath();
+            ctx.moveTo(gapLeft, toCanvasY(sol.h_p, scaleY));
+            ctx.lineTo(gapRight, toCanvasY(sol.f_p, scaleY));
+            ctx.strokeStyle = '#f59e0b'; // Warning color for wedge
+            ctx.lineWidth = 2;
+            ctx.setLineDash([2, 2]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Visual Wedge indicator (Vertical bar in the middle)
+            if (Math.abs(sol.h_p - sol.f_p) > 0.01) {
+                ctx.beginPath();
+                ctx.moveTo(gapCenterX, toCanvasY(sol.h_p, scaleY));
+                ctx.lineTo(gapCenterX, toCanvasY(sol.f_p, scaleY));
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                
+                // Label wedge
+                drawText(`Wedge: ${(Math.abs(sol.h_p - sol.f_p)).toFixed(2)}`, gapCenterX + 10, toCanvasY((sol.h_p + sol.f_p)/2, scaleY), 'left', '#f59e0b', 'bold 12px Inter');
+            }
+
+            // Autarky Indicator
+            if (sol.q_trade < 0.1) {
+                ctx.save();
+                // Center of the entire canvas area
+                ctx.translate(width/2, height/2);
+                ctx.fillStyle = 'rgba(100, 116, 139, 0.1)'; // Very subtle gray
+                ctx.font = 'bold 120px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('AUTARKY', 0, 0);
+                
+                ctx.strokeStyle = 'rgba(100, 116, 139, 0.2)';
+                ctx.lineWidth = 3;
+                ctx.strokeText('AUTARKY', 0, 0);
+                ctx.restore();
+            }
+
+            // Stats Update
+            stats.h_p.textContent = sol.h_p.toFixed(2);
+            stats.h_prod.textContent = sol.h_qs.toFixed(2);
+            stats.h_cons.textContent = sol.h_qd.toFixed(2);
+            stats.h_autarky.textContent = sol.h_autarky.p.toFixed(2);
+            
+            stats.f_p.textContent = sol.f_p.toFixed(2);
+            stats.f_prod.textContent = sol.f_qs.toFixed(2);
+            stats.f_cons.textContent = sol.f_qd.toFixed(2);
+            stats.f_autarky.textContent = sol.f_autarky.p.toFixed(2);
+            
+            stats.trade_vol.textContent = sol.q_trade.toFixed(2);
+            stats.direction.textContent = sol.direction;
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
+

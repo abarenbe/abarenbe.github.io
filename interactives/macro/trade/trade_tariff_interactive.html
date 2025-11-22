@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>International Trade & Tariffs Simulator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --cs-color: rgba(34, 197, 94, 0.2);
+            --ps-color: rgba(59, 130, 246, 0.2);
+            --rev-color: rgba(245, 158, 11, 0.2);
+            --dwl-color: rgba(239, 68, 68, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 2rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: -0.025em;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 100px);
+            width: 100%;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .control-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .visualization {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+            min-width: 200px;
+            backdrop-filter: blur(4px);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-feature-settings: "tnum";
+        }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .color-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .visualization {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>International Trade & Tariffs Simulator</h1>
+
+    <div class="container">
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-header">Market Parameters</div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Demand Intercept</span>
+                        <span id="d-int-val">100</span>
+                    </div>
+                    <input type="range" id="d-int" min="50" max="150" value="100">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Demand Slope</span>
+                        <span id="d-slope-val">1.0</span>
+                    </div>
+                    <input type="range" id="d-slope" min="0.5" max="2" step="0.1" value="1.0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Supply Intercept</span>
+                        <span id="s-int-val">10</span>
+                    </div>
+                    <input type="range" id="s-int" min="0" max="50" value="10">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Supply Slope</span>
+                        <span id="s-slope-val">1.0</span>
+                    </div>
+                    <input type="range" id="s-slope" min="0.5" max="2" step="0.1" value="1.0">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">Trade Policy</div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>World Price ($P_W$)</span>
+                        <span id="pw-val">30</span>
+                    </div>
+                    <input type="range" id="pw" min="10" max="80" value="30">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Tariff ($t$)</span>
+                        <span id="tariff-val">0</span>
+                    </div>
+                    <input type="range" id="tariff" min="0" max="40" value="0">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">View Options</div>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="show-surplus" checked>
+                        Show Surplus Areas (CS/PS)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="show-tariff-impact" checked>
+                        Show Tariff Impact (Rev/DWL)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="show-values" checked>
+                        Show Values on Graph
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <canvas id="graph"></canvas>
+
+            <div class="stats-panel">
+                <div class="stat-row">
+                    <span class="stat-label">Autarky Price</span>
+                    <span class="stat-value" id="stat-autarky-p">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">World Price + Tariff</span>
+                    <span class="stat-value" id="stat-current-p">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Imports</span>
+                    <span class="stat-value" id="stat-imports">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Cons. Surplus</span>
+                    <span class="stat-value" id="stat-cs">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Prod. Surplus</span>
+                    <span class="stat-value" id="stat-ps">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Tariff Revenue</span>
+                    <span class="stat-value" id="stat-rev">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Deadweight Loss</span>
+                    <span class="stat-value" id="stat-dwl">-</span>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="color-box" style="background: var(--cs-color); border: 1px solid var(--success)"></div>
+                    <span>Consumer Surplus</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background: var(--ps-color); border: 1px solid var(--info)"></div>
+                    <span>Producer Surplus</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background: var(--rev-color); border: 1px solid var(--warning)"></div>
+                    <span>Tariff Revenue</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background: var(--dwl-color); border: 1px solid var(--danger)"></div>
+                    <span>Deadweight Loss</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas and Context
+        const canvas = document.getElementById('graph');
+        const ctx = canvas.getContext('2d');
+
+        // State
+        const state = {
+            dInt: 100,
+            dSlope: 1.0,
+            sInt: 10,
+            sSlope: 1.0,
+            pw: 30,
+            tariff: 0,
+            showSurplus: true,
+            showTariffImpact: true,
+            showValues: true
+        };
+
+        // Elements
+        const inputs = {
+            dInt: document.getElementById('d-int'),
+            dSlope: document.getElementById('d-slope'),
+            sInt: document.getElementById('s-int'),
+            sSlope: document.getElementById('s-slope'),
+            pw: document.getElementById('pw'),
+            tariff: document.getElementById('tariff'),
+            showSurplus: document.getElementById('show-surplus'),
+            showTariffImpact: document.getElementById('show-tariff-impact'),
+            showValues: document.getElementById('show-values')
+        };
+
+        const displays = {
+            dInt: document.getElementById('d-int-val'),
+            dSlope: document.getElementById('d-slope-val'),
+            sInt: document.getElementById('s-int-val'),
+            sSlope: document.getElementById('s-slope-val'),
+            pw: document.getElementById('pw-val'),
+            tariff: document.getElementById('tariff-val')
+        };
+
+        const stats = {
+            autarkyP: document.getElementById('stat-autarky-p'),
+            currentP: document.getElementById('stat-current-p'),
+            imports: document.getElementById('stat-imports'),
+            cs: document.getElementById('stat-cs'),
+            ps: document.getElementById('stat-ps'),
+            rev: document.getElementById('stat-rev'),
+            dwl: document.getElementById('stat-dwl')
+        };
+
+        // Layout Constants
+        const padding = { top: 40, right: 40, bottom: 40, left: 60 };
+        let width, height, scaleX, scaleY;
+
+        // Initialization
+        function init() {
+            resize();
+            window.addEventListener('resize', () => {
+                resize();
+                draw();
+            });
+
+            // Attach listeners
+            Object.keys(inputs).forEach(key => {
+                inputs[key].addEventListener('input', (e) => {
+                    const val = inputs[key].type === 'checkbox' ? inputs[key].checked : parseFloat(inputs[key].value);
+                    state[key] = val;
+                    if (displays[key]) displays[key].textContent = val;
+                    draw();
+                });
+            });
+
+            draw();
+        }
+
+        function resize() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 48; // subtract padding
+            canvas.height = rect.height - 100; // subtract padding and legend
+            width = canvas.width;
+            height = canvas.height;
+        }
+
+        // Coordinate Transformation
+        function toCanvasX(q) {
+            return padding.left + q * scaleX;
+        }
+
+        function toCanvasY(p) {
+            return height - padding.bottom - p * scaleY;
+        }
+
+        // Drawing Helpers
+        function drawLine(x1, y1, x2, y2, color, width = 2, dash = []) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.setLineDash(dash);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function drawText(text, x, y, align = 'center', color = '#64748b', font = '12px Inter') {
+            ctx.fillStyle = color;
+            ctx.font = font;
+            ctx.textAlign = align;
+            ctx.fillText(text, x, y);
+        }
+
+        function fillArea(points, color) {
+            if (points.length < 3) return;
+            ctx.beginPath();
+            ctx.moveTo(toCanvasX(points[0].q), toCanvasY(points[0].p));
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(toCanvasX(points[i].q), toCanvasY(points[i].p));
+            }
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawPoint(q, p, color = '#1e293b') {
+            ctx.beginPath();
+            ctx.arc(toCanvasX(q), toCanvasY(p), 4, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        // Main Draw Function
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Calculate Equilibrium and Intercepts
+            // Demand: P = dInt - dSlope * Q  => Q = (dInt - P) / dSlope
+            // Supply: P = sInt + sSlope * Q  => Q = (P - sInt) / sSlope
+
+            // Autarky
+            const autarkyQ = (state.dInt - state.sInt) / (state.sSlope + state.dSlope);
+            const autarkyP = state.sInt + state.sSlope * autarkyQ;
+
+            // Max ranges for axes
+            const maxQ = (state.dInt) / state.dSlope * 1.1; // Q when P=0 for demand
+            const maxP = state.dInt * 1.1;
+
+            scaleX = (width - padding.left - padding.right) / maxQ;
+            scaleY = (height - padding.top - padding.bottom) / maxP;
+
+            // 2. Draw Axes
+            drawLine(padding.left, height - padding.bottom, width - padding.right, height - padding.bottom, '#e2e8f0'); // X axis
+            drawLine(padding.left, height - padding.bottom, padding.left, padding.top, '#e2e8f0'); // Y axis
+
+            // Axis Labels
+            drawText('Quantity', width - padding.right, height - padding.bottom + 30, 'right');
+            drawText('Price', padding.left, padding.top - 10, 'center');
+
+            // 3. Draw Supply and Demand Curves
+            // Demand
+            const dQ_at_P0 = state.dInt / state.dSlope;
+            drawLine(toCanvasX(0), toCanvasY(state.dInt), toCanvasX(dQ_at_P0), toCanvasY(0), '#3b82f6', 3);
+            drawText('D', toCanvasX(dQ_at_P0) + 10, toCanvasY(0), 'left', '#3b82f6', 'bold 14px Inter');
+
+            // Supply
+            const sQ_at_maxP = (maxP - state.sInt) / state.sSlope;
+            drawLine(toCanvasX(0), toCanvasY(state.sInt), toCanvasX(sQ_at_maxP), toCanvasY(maxP), '#ef4444', 3);
+            drawText('S', toCanvasX(sQ_at_maxP) + 10, toCanvasY(maxP), 'left', '#ef4444', 'bold 14px Inter');
+
+            // 4. Trade Logic
+            const currentP = state.pw + state.tariff;
+            const isImporting = currentP < autarkyP;
+
+            let qd, qs, imports = 0;
+
+            if (isImporting) {
+                qs = Math.max(0, (currentP - state.sInt) / state.sSlope);
+                qd = (state.dInt - currentP) / state.dSlope;
+                imports = qd - qs;
+            } else {
+                // If price is above autarky, we revert to autarky for this simple model 
+                // (or export, but usually these simple tariff tools focus on import tariffs)
+                // Let's clamp to autarky for simplicity unless user wants export model, 
+                // but request implies "tariff" so we assume import competing.
+                // However, if Pw > Autarky, we would export. Let's stick to the standard tariff visual 
+                // where we only show tariff effects if we are importing.
+                qs = autarkyQ;
+                qd = autarkyQ;
+                // If Pw + t > Autarky P, the tariff is prohibitive or we are exporting.
+                // Let's just use the actual intersection points but clamp imports to 0 if qs > qd
+            }
+
+            // Recalculate strictly for logic
+            const rawQs = (currentP - state.sInt) / state.sSlope;
+            const rawQd = (state.dInt - currentP) / state.dSlope;
+
+            // Effective market outcome
+            let marketP = currentP;
+            let marketQ = rawQd; // Consumers buy this much
+
+            if (currentP >= autarkyP) {
+                marketP = autarkyP;
+                qs = autarkyQ;
+                qd = autarkyQ;
+                imports = 0;
+            }
+
+            // 5. Calculate Areas
+            // CS: Triangle below Demand, above Price
+            // Vertices: (0, dInt), (qd, currentP), (0, currentP)
+            const csArea = 0.5 * (state.dInt - marketP) * qd;
+
+            // PS: Triangle above Supply, below Price
+            // Vertices: (0, sInt), (qs, currentP), (0, currentP)
+            const psArea = 0.5 * (marketP - state.sInt) * qs;
+
+            // Revenue: Rect (qs_world, P_world) to (qs_tariff, P_tariff)? No.
+            // Revenue is Imports * Tariff
+            // Only exists if we have a tariff AND we are importing
+            let revArea = 0;
+            let dwlArea = 0;
+
+            if (state.tariff > 0 && currentP < autarkyP) {
+                revArea = imports * state.tariff;
+
+                // DWL
+                // Supply side triangle: 0.5 * (qs_tariff - qs_world) * tariff
+                // Demand side triangle: 0.5 * (qd_world - qd_tariff) * tariff
+
+                const qs_world = (state.pw - state.sInt) / state.sSlope;
+                const qd_world = (state.dInt - state.pw) / state.dSlope;
+
+                const dwl_supply = 0.5 * (qs - qs_world) * state.tariff; // qs is at tariff price
+                const dwl_demand = 0.5 * (qd_world - qd) * state.tariff; // qd is at tariff price
+
+                // Note: qs at tariff is higher than qs at world? No.
+                // Higher price -> Higher Supply. So qs(tariff) > qs(world).
+                // Higher price -> Lower Demand. So qd(tariff) < qd(world).
+
+                dwlArea = dwl_supply + dwl_demand;
+            }
+
+            // 6. Draw Areas (if enabled)
+            if (state.showSurplus) {
+                // CS
+                fillArea([
+                    { q: 0, p: state.dInt },
+                    { q: qd, p: marketP },
+                    { q: 0, p: marketP }
+                ], 'rgba(34, 197, 94, 0.2)');
+
+                // PS
+                fillArea([
+                    { q: 0, p: state.sInt },
+                    { q: qs, p: marketP },
+                    { q: 0, p: marketP }
+                ], 'rgba(59, 130, 246, 0.2)');
+            }
+
+            if (state.showTariffImpact && state.tariff > 0 && currentP < autarkyP) {
+                // Revenue Rectangle
+                // From qs to qd, height from Pw to Pw+t
+                fillArea([
+                    { q: qs, p: state.pw },
+                    { q: qs, p: currentP },
+                    { q: qd, p: currentP },
+                    { q: qd, p: state.pw }
+                ], 'rgba(245, 158, 11, 0.3)');
+
+                // DWL Triangles
+                const qs_world = (state.pw - state.sInt) / state.sSlope;
+                const qd_world = (state.dInt - state.pw) / state.dSlope;
+
+                // Left DWL (Supply distortion)
+                fillArea([
+                    { q: qs_world, p: state.pw },
+                    { q: qs, p: currentP },
+                    { q: qs, p: state.pw }
+                ], 'rgba(239, 68, 68, 0.3)');
+
+                // Right DWL (Demand distortion)
+                fillArea([
+                    { q: qd, p: currentP },
+                    { q: qd_world, p: state.pw },
+                    { q: qd, p: state.pw }
+                ], 'rgba(239, 68, 68, 0.3)');
+            }
+
+            // 7. Draw Price Lines
+            // World Price Line (dashed if tariff exists)
+            if (currentP < autarkyP || state.pw < autarkyP) {
+                // Draw base world price line
+                drawLine(padding.left, toCanvasY(state.pw), width - padding.right, toCanvasY(state.pw), '#94a3b8', 2, [5, 5]);
+                drawText('Pw', width - padding.right - 10, toCanvasY(state.pw) - 5, 'right', '#94a3b8');
+            }
+
+            // Current Price Line (Solid)
+            if (currentP < autarkyP) {
+                drawLine(padding.left, toCanvasY(currentP), width - padding.right, toCanvasY(currentP), '#1e293b', 2);
+                drawText(state.tariff > 0 ? 'Pw + t' : 'Pw', width - padding.right - 10, toCanvasY(currentP) - 5, 'right', '#1e293b', 'bold 12px Inter');
+
+                // Drop lines for Qs and Qd
+                drawLine(toCanvasX(qs), toCanvasY(currentP), toCanvasX(qs), height - padding.bottom, '#cbd5e1', 1, [4, 4]);
+                drawLine(toCanvasX(qd), toCanvasY(currentP), toCanvasX(qd), height - padding.bottom, '#cbd5e1', 1, [4, 4]);
+
+                drawText('Qs', toCanvasX(qs), height - padding.bottom + 15);
+                drawText('Qd', toCanvasX(qd), height - padding.bottom + 15);
+            } else {
+                // Autarky case
+                drawLine(padding.left, toCanvasY(autarkyP), width - padding.right, toCanvasY(autarkyP), '#1e293b', 2, [2, 2]);
+                drawLine(toCanvasX(autarkyQ), toCanvasY(autarkyP), toCanvasX(autarkyQ), height - padding.bottom, '#cbd5e1', 1, [4, 4]);
+                drawText('Q*', toCanvasX(autarkyQ), height - padding.bottom + 15);
+                drawText('P*', padding.left - 10, toCanvasY(autarkyP), 'right');
+            }
+
+            // 8. Update Stats
+            stats.autarkyP.textContent = autarkyP.toFixed(2);
+            stats.currentP.textContent = marketP.toFixed(2);
+            stats.imports.textContent = imports.toFixed(2);
+            stats.cs.textContent = csArea.toFixed(2);
+            stats.ps.textContent = psArea.toFixed(2);
+            stats.rev.textContent = revArea.toFixed(2);
+            stats.dwl.textContent = dwlArea.toFixed(2);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+
+</html>

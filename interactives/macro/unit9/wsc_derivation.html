@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Discipline Model & Wage Setting Curve</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin-top: 0;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type=range] {
+            width: 100%;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .value-display {
+            font-weight: normal;
+            color: #007bff;
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        .chart-container {
+            width: 100%;
+            height: 450px;
+            margin-bottom: 10px;
+        }
+        .description {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #e8f4fd;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        .note {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Worker Discipline & Wage Setting Curve</h1>
+    
+    <div class="controls">
+        <!-- Employment Level Control -->
+        <div class="control-group">
+            <label>
+                Aggregate Employment Level (N)
+                <span id="n-val" class="value-display">80%</span>
+            </label>
+            <input type="range" id="n-slider" min="0" max="98" step="1" value="80">
+            <div class="note">Drag to change employment.</div>
+        </div>
+    </div>
+
+    <!-- Top Chart: Worker Discipline Model -->
+    <div id="chart-top" class="chart-container"></div>
+    <div class="description">
+        <strong>Worker Discipline Model (Top):</strong> The firm maximizes effort per dollar by setting the wage where the <strong>Iso-cost line</strong> is tangent to the <strong>Best Response Function</strong>.
+    </div>
+
+    <!-- Bottom Chart: Wage Setting Curve -->
+    <div id="chart-bottom" class="chart-container"></div>
+    <div class="description">
+        <strong>Wage Setting Curve (Bottom):</strong> 
+        The WSC curves upwards (convex) because the <strong>Reservation Wage</strong> itself rises sharply as unemployment becomes scarce (as N approaches 100%).
+    </div>
+</div>
+
+<script>
+    // State
+    const state = {
+        N: 80,
+        floor_wage: 5,
+        A: 1.0, // Scaling factor, will adapt to alpha to keep effort visible
+        alpha: 0.5,
+        nonlinear: true
+    };
+
+    // DOM Elements
+    const nSlider = document.getElementById('n-slider');
+    const nVal = document.getElementById('n-val');
+
+    // --- Model Logic ---
+
+    // 1. Reservation Wage Function w_res(N)
+    function getReservationWage(N) {
+        const base = state.floor_wage;
+        
+        // Asymptotic curve: rises as N -> 100
+        // w_res = base + K / (Asymptote - N) - Offset
+        const asymptote = 105; 
+        const K = 200;
+        const offset = K / asymptote; // Normalize so at N=0, w_res = base
+        return base + (K / (asymptote - N)) - offset;
+    }
+
+    // 2. Best Response Function e(w) = A * (w - w_res)^alpha
+    function calculateBRF(w, w_res) {
+        if (w <= w_res) return 0;
+        // e = (w - w_res)^alpha
+        // We scale it so it fits nicely on the plot (normalize around maxW)
+        const rawE = Math.pow(w - w_res, state.alpha);
+        return rawE * state.A; 
+    }
+
+    // 3. Optimal Wage Logic
+    // Maximize (w - w_res)^alpha / w
+    // FOC -> w = w_res / (1 - alpha)
+    // Example: alpha=0.5 -> w = 2 * w_res
+    // Example: alpha=0.2 -> w = 1.25 * w_res
+    function getOptimalWage(w_res) {
+        return w_res / (1 - state.alpha);
+    }
+    
+    function getOptimalEffort(w_opt, w_res) {
+         return calculateBRF(w_opt, w_res);
+    }
+
+    // Adjust A so that the optimal point is usually visible around effort 0.5-0.8
+    function calibrateA() {
+        // We want calculateBRF(optimalW_at_base, base) to be around 0.6
+        const testRes = state.floor_wage + 5; 
+        const testW = getOptimalWage(testRes);
+        const rawE = Math.pow(testW - testRes, state.alpha);
+        state.A = 0.6 / rawE;
+    }
+
+    // --- Data Generation ---
+
+    function updatePlots() {
+        const N = state.N;
+        const alpha = state.alpha;
+        
+        const w_res = getReservationWage(N);
+        const w_opt = getOptimalWage(w_res);
+        const e_opt = getOptimalEffort(w_opt, w_res);
+        
+        // --- Chart 1: Worker Discipline (Effort vs Wage) ---
+        
+        const brfWages = [];
+        const brfEfforts = [];
+        const maxW = Math.max(100, w_opt * 1.5); // Dynamic range
+        
+        for (let w = 0; w <= maxW; w += maxW/200) {
+            brfWages.push(w);
+            brfEfforts.push(calculateBRF(w, w_res));
+        }
+
+        // Iso-cost line (Ray through optimal point)
+        const slope = e_opt / w_opt;
+        const isoX = [0, maxW];
+        const isoY = [0, slope * maxW];
+
+        const tracesTop = [
+            {
+                x: brfWages,
+                y: brfEfforts,
+                mode: 'lines',
+                name: 'Best Response',
+                line: { color: '#2c3e50', width: 3 }
+            },
+            {
+                x: isoX,
+                y: isoY,
+                mode: 'lines',
+                name: 'Iso-cost Line',
+                line: { color: '#e74c3c', width: 1.5, dash: 'dash' }
+            },
+            {
+                x: [w_opt],
+                y: [e_opt],
+                mode: 'markers',
+                name: 'Equilibrium',
+                marker: { color: '#e74c3c', size: 10 }
+            },
+            {
+                x: [w_res],
+                y: [0],
+                mode: 'markers',
+                name: 'Reservation Wage',
+                marker: { color: '#f39c12', size: 10, symbol: 'triangle-up' }
+            },
+            // Dashed line down to Wage
+            {
+                x: [w_opt, w_opt],
+                y: [0, e_opt],
+                mode: 'lines',
+                showlegend: false,
+                line: { color: '#555', width: 1, dash: 'dash' }
+            }
+        ];
+
+        const layoutTop = {
+            title: 'Worker Discipline Model',
+            xaxis: { title: 'Hourly Wage ($)', range: [0, maxW] },
+            yaxis: { title: 'Effort', range: [0, 1.1] },
+            margin: { t: 40, r: 20, b: 40, l: 50 },
+            showlegend: true,
+            legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.8)' },
+            annotations: [
+                {
+                    x: w_opt,
+                    y: 0,
+                    xref: 'x',
+                    yref: 'y',
+                    text: `$${w_opt.toFixed(0)}`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    ax: 0,
+                    ay: -25,
+                    font: { color: '#e74c3c', size: 14, weight: 'bold' }
+                }
+            ]
+        };
+
+        // --- Chart 2: Wage Setting Curve (Wage vs Employment) ---
+
+        const wscN = [];
+        const wscW = [];
+        const wscRes = [];
+        
+        // Plot up to 98 to avoid asymptote issues
+        for (let nIter = 0; nIter <= 98; nIter += 1) {
+            const wr = getReservationWage(nIter);
+            const wo = getOptimalWage(wr);
+            wscN.push(nIter);
+            wscW.push(wo);
+            wscRes.push(wr);
+        }
+
+        const tracesBottom = [
+            {
+                x: wscN,
+                y: wscW,
+                mode: 'lines',
+                name: 'Wage Setting Curve',
+                line: { color: '#2980b9', width: 3 }
+            },
+            {
+                x: wscN,
+                y: wscRes,
+                mode: 'lines',
+                name: 'Reservation Wage',
+                line: { color: '#f39c12', width: 1.5, dash: 'dot' }
+            },
+            {
+                x: [N],
+                y: [w_opt],
+                mode: 'markers',
+                name: 'Current State',
+                marker: { color: '#e74c3c', size: 12, line: {color: 'white', width: 2} }
+            },
+            // Vertical drop line
+            {
+                x: [N, N],
+                y: [0, w_opt],
+                mode: 'lines',
+                showlegend: false,
+                line: { color: '#999', width: 1, dash: 'dot' }
+            },
+            // Horizontal drop line to wage
+            {
+                x: [0, N],
+                y: [w_opt, w_opt],
+                mode: 'lines',
+                showlegend: false,
+                line: { color: '#555', width: 1, dash: 'dash' }
+            }
+        ];
+
+        const layoutBottom = {
+            title: 'Wage Setting Curve',
+            xaxis: { title: 'Employment Level (N)', range: [0, 100], ticksuffix: '%' },
+            yaxis: { title: 'Real Wage ($)', range: [0, 100] },
+            margin: { t: 40, r: 20, b: 40, l: 50 },
+            showlegend: true,
+            legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.8)' },
+            annotations: [
+                {
+                    x: 0,
+                    y: w_opt,
+                    xref: 'x',
+                    yref: 'y',
+                    text: `$${w_opt.toFixed(0)}`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    ax: 25,
+                    ay: 0,
+                    font: { color: '#e74c3c', size: 14, weight: 'bold' }
+                }
+            ]
+        };
+
+        Plotly.react('chart-top', tracesTop, layoutTop, { displayModeBar: false });
+        Plotly.react('chart-bottom', tracesBottom, layoutBottom, { displayModeBar: false });
+    }
+
+    // Event Listeners
+    nSlider.addEventListener('input', (e) => {
+        state.N = parseFloat(e.target.value);
+        nVal.textContent = state.N + '%';
+        updatePlots();
+    });
+
+    // Initialize
+    calibrateA();
+    updatePlots();
+
+</script>
+
+</body>
+</html>
+

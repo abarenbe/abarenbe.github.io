@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Discipline Model</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type=range] {
+            width: 100%;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .value-display {
+            font-weight: normal;
+            color: #007bff;
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        #chart {
+            width: 100%;
+            height: 600px;
+        }
+        .description {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fd;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        .legend-box {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .note {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Worker Discipline Model</h1>
+    
+    <div class="controls">
+        <!-- Employment Level Control -->
+        <div class="control-group">
+            <label>
+                Aggregate Employment Level (N)
+                <span id="n-val" class="value-display">80%</span>
+            </label>
+            <input type="range" id="n-slider" min="50" max="100" step="1" value="80">
+            <div class="note">Affects the Reservation Wage. Higher N = Higher Reservation Wage.</div>
+        </div>
+        
+        <!-- Iso-cost Line Control -->
+        <div class="control-group">
+            <label>
+                Effort/Wage Ratio (e/w)
+                <span id="slope-val" class="value-display">0.040</span>
+            </label>
+            <!-- Slider removed for direct manipulation -->
+            <div class="note" style="color: #d35400;"><strong>Interactive:</strong> Click and drag anywhere on the chart to rotate the Iso-cost line.</div>
+        </div>
+    </div>
+
+    <div id="chart"></div>
+
+    <div id="description" class="description">
+        <strong>Model Overview:</strong>
+        <br>The curve represents the worker's <strong>Best Response Function</strong>: the effort they provide for a given wage.
+        <br>The straight line is the firm's <strong>Iso-cost line</strong>: all combinations of effort and wage that have the same cost per unit of effort.
+        <br><strong>Goal:</strong> The firm wants to minimize the cost per unit of effort, which happens where the steepest possible Iso-cost line is tangent to the Best Response curve.
+    </div>
+</div>
+
+<script>
+    // State
+    const state = {
+        N: 80,           // Employment level (50-100)
+        slope: 0.040,    // Iso-cost slope (e/w)
+        floor_wage: 5,   // Non-market reservation wage floor
+        isDragging: false // Track dragging state
+    };
+
+    // DOM Elements
+    const nSlider = document.getElementById('n-slider');
+    const nVal = document.getElementById('n-val');
+    const slopeVal = document.getElementById('slope-val');
+    const chartDiv = document.getElementById('chart');
+
+    // Logic
+    // 1. Reservation Wage Function w_res(N)
+    // Imported from wsc_derivation.html
+    function getReservationWage(N) {
+        const base = state.floor_wage;
+        
+        // Asymptotic curve: rises as N -> 100
+        // w_res = base + K / (Asymptote - N) - Offset
+        const asymptote = 105; 
+        const K = 200;
+        const offset = K / asymptote; // Normalize so at N=0, w_res = base
+        return base + (K / (asymptote - N)) - offset;
+    }
+
+    // 2. Best Response Function e(w) = A * (w - w_res)^alpha
+    // Imported from wsc_derivation.html (alpha=0.5 assumed for sqrt)
+    function calculateBRF(w, w_res) {
+        if (w <= w_res) return 0;
+        // e = (w - w_res)^alpha
+        // We scale it so it fits nicely on the plot (normalize around maxW)
+        // Using fixed A=0.18 to match previous visuals or adapting? 
+        // Let's use the previous functional form but with the new reservation wage logic.
+        // Previous: e = 0.18 * sqrt(w - w_res) which is alpha=0.5.
+        
+        const A = 0.18;
+        const alpha = 0.5;
+        
+        const e = A * Math.pow(w - w_res, alpha);
+        return Math.min(e, 1); // Cap effort at 1
+    }
+
+    function updatePlot() {
+        const w_res = getReservationWage(state.N);
+        
+        // Generate Data for BRF
+        const wages = [];
+        const efforts = [];
+        const maxW = 60;
+        
+        for (let w = 0; w <= maxW; w += 0.5) {
+            wages.push(w);
+            efforts.push(calculateBRF(w, w_res));
+        }
+
+        // Generate Data for Iso-cost Line (Ray)
+        // e = slope * w
+        // We just need two points: (0,0) and (maxW, slope*maxW)
+        // But we should clamp to plot range
+        const isoX = [0, maxW];
+        const isoY = [0, state.slope * maxW];
+
+        // Define Traces
+        const traces = [
+            // BRF Curve
+            {
+                x: wages,
+                y: efforts,
+                mode: 'lines',
+                name: 'Best Response Function',
+                line: { color: '#2c3e50', width: 4 }
+            },
+            // Iso-cost Line
+            {
+                x: isoX,
+                y: isoY,
+                mode: 'lines',
+                name: 'Iso-cost Line',
+                line: { color: '#e74c3c', width: 2, dash: 'dash' }
+            },
+            // Reservation Wage Marker
+            {
+                x: [w_res],
+                y: [0],
+                mode: 'markers',
+                name: 'Reservation Wage',
+                marker: { color: '#e67e22', size: 12, symbol: 'triangle-up' },
+                hoverinfo: 'text',
+                text: `Reservation Wage: ${w_res.toFixed(1)}`
+            }
+        ];
+
+        // Define Layout
+        const layout = {
+            title: 'Worker Effort vs. Wage',
+            xaxis: {
+                title: 'Hourly Wage ($)',
+                range: [0, 60],
+                fixedrange: true
+            },
+            yaxis: {
+                title: 'Effort per hour',
+                range: [0, 1.1],
+                fixedrange: true
+            },
+            showlegend: true,
+            legend: { x: 0.02, y: 0.98 },
+            margin: { t: 50, r: 30, b: 50, l: 60 },
+            hovermode: 'closest',
+            dragmode: false,
+            annotations: [
+                {
+                    x: w_res,
+                    y: 0.05,
+                    xref: 'x',
+                    yref: 'y',
+                    text: 'Reservation Wage',
+                    showarrow: true,
+                    arrowhead: 2,
+                    ax: 0,
+                    ay: -40
+                }
+            ]
+        };
+
+        // Tangency/Intersection Calculation
+        const A = 0.18;
+        
+        // Intersection of e = s*w and e = A*(w - w_res)^0.5
+        // s*w = A*(w - w_res)^0.5
+        // s^2 * w^2 = A^2 * (w - w_res)  <-- Corrected Equation for alpha=0.5
+        // s^2 * w^2 - A^2 * w + A^2 * w_res = 0
+        
+        const s = state.slope;
+        const a_quad = s * s;
+        const b_quad = -(A * A);
+        const c_quad = A * A * w_res;
+        
+        // Calculate theoretical max slope (tangency)
+        // Tangency where MRS = MRT
+        // e = A(w-w_res)^0.5
+        // e/w = s
+        // de/dw = 0.5 * A * (w-w_res)^(-0.5)
+        // s = 0.5 * A / sqrt(w-w_res)
+        // e/w = A*sqrt(w-w_res)/w
+        // 0.5*A/sqrt(w-w_res) = A*sqrt(w-w_res)/w
+        // 0.5/sqrt(w-w_res) = sqrt(w-w_res)/w
+        // 0.5 * w = w - w_res
+        // 0.5 * w = w_res  =>  w* = 2 * w_res
+        
+        const w_tangent = 2 * w_res;
+        // max_slope = e(2*w_res) / (2*w_res)
+        // e(2*w_res) = A * sqrt(2*w_res - w_res) = A * sqrt(w_res)
+        // max_slope = A * sqrt(w_res) / (2 * w_res) = A / (2 * sqrt(w_res))
+        
+        const max_slope = A / (2 * Math.sqrt(w_res));
+        
+        // Snap to tangency if close (Much less sticky: 0.0001 tolerance)
+        const tolerance = 0.0001;
+        if (state.isDragging && Math.abs(state.slope - max_slope) < tolerance) {
+             state.slope = max_slope;
+             // Update display to show "Tangent"
+             slopeVal.textContent = state.slope.toFixed(3) + " (Tangent)";
+        } else if (!state.isDragging && Math.abs(state.slope - max_slope) < tolerance) {
+             // Keep it snapped
+             state.slope = max_slope;
+             slopeVal.textContent = state.slope.toFixed(3) + " (Tangent)";
+        } else {
+             slopeVal.textContent = state.slope.toFixed(3);
+        }
+
+        // Re-calculate quad params with potentially snapped slope
+        const s_snap = state.slope;
+        const a_quad_snap = s_snap * s_snap;
+        // b_quad and c_quad don't change with slope
+        
+        const discriminant = b_quad * b_quad - 4 * a_quad_snap * c_quad;
+        
+        if (discriminant >= 0) {
+            const roots = [];
+            // Calculate both roots
+            // Use slightly more robust check for zero to handle float precision
+            if (Math.abs(discriminant) < 1e-9) { 
+                // Tangency case (discriminant ~ 0)
+                const r = -b_quad / (2 * a_quad_snap);
+                roots.push(r);
+            } else {
+                const r1 = (-b_quad - Math.sqrt(discriminant)) / (2 * a_quad_snap);
+                const r2 = (-b_quad + Math.sqrt(discriminant)) / (2 * a_quad_snap);
+                roots.push(r1, r2);
+            }
+
+            roots.forEach((w_intersect, index) => {
+                 // w must be > w_res to be valid on the curve (and positive)
+                 if (w_intersect <= w_res + 0.01) return;
+
+                const e_intersect = s_snap * w_intersect;
+
+                // If intersection is within plot bounds
+                if (w_intersect <= 60 && e_intersect <= 1.1) {
+                    // Add intersection point
+                    traces.push({
+                        x: [w_intersect],
+                        y: [e_intersect],
+                        mode: 'markers',
+                        name: 'Intersection',
+                        marker: { color: 'red', size: 10 },
+                        hoverinfo: 'none',
+                        showlegend: false
+                    });
+
+                    // Add dashed lines
+                    traces.push({
+                        x: [w_intersect, w_intersect, 0],
+                        y: [0, e_intersect, e_intersect],
+                        mode: 'lines',
+                        line: { color: 'gray', dash: 'dot', width: 1 },
+                        hoverinfo: 'none',
+                        showlegend: false
+                    });
+                    
+                    let labelText = `E/W = ${state.slope.toFixed(3)}`;
+                    // If tangent (one root or snapped), indicate Profit Max
+                    if (roots.length === 1 || Math.abs(state.slope - max_slope) < 1e-9) {
+                        labelText += " (Profit Max)";
+                    }
+
+                    // Add annotation at point
+                    layout.annotations.push({
+                        x: w_intersect,
+                        y: e_intersect,
+                        xref: 'x',
+                        yref: 'y',
+                        text: labelText,
+                        showarrow: true,
+                        arrowhead: 0,
+                        ax: 80, // Shift further right
+                        ay: 0,  // Align vertically
+                        bgcolor: 'white',
+                        bordercolor: 'black'
+                    });
+
+                    // Add Resulting Wage on Axis
+                    layout.annotations.push({
+                        x: w_intersect,
+                        y: 0,
+                        xref: 'x',
+                        yref: 'y',
+                        text: `${w_intersect.toFixed(1)}`,
+                        showarrow: false,
+                        yshift: -20,
+                        font: { color: 'blue' }
+                    });
+
+                     // Add Resulting Effort on Axis (Inside axis)
+                     layout.annotations.push({
+                        x: 0,
+                        y: e_intersect,
+                        xref: 'x',
+                        yref: 'y',
+                        text: `${(e_intersect * 100).toFixed(0)}%`,
+                        showarrow: false,
+                        xshift: 10, // Shift inside
+                        yshift: 10, // Shift up slightly
+                        font: { color: 'blue' },
+                        xanchor: 'left' // Anchor text to left so it grows rightward
+                    });
+                }
+            });
+        } else {
+            // No intersection (Feasible Set is empty for this slope)
+             layout.annotations.push({
+                x: 0,
+                y: 0.8,
+                xref: 'x',
+                yref: 'y',
+                text: "Not Feasible (Slope too steep)",
+                showarrow: false,
+                font: { color: 'red', size: 16 },
+                xanchor: 'left',
+                xshift: 50 
+            });
+        }
+
+        Plotly.react('chart', traces, layout, { displayModeBar: false });
+    }
+
+    // Event Listeners
+    nSlider.addEventListener('input', (e) => {
+        state.N = parseFloat(e.target.value);
+        nVal.textContent = state.N + '%';
+        updatePlot();
+    });
+
+    // Custom Drag Logic for Iso-cost Line
+    function updateSlopeFromEvent(e) {
+        // Get chart dimensions
+        const rect = chartDiv.getBoundingClientRect();
+        
+        // Margins must match layout
+        const margin = {l: 60, r: 30, t: 50, b: 50};
+        const plotWidth = rect.width - margin.l - margin.r;
+        const plotHeight = rect.height - margin.t - margin.b;
+        
+        // Mouse position relative to plot area (0,0 is bottom-left of plot area)
+        const xPixel = e.clientX - rect.left - margin.l;
+        const yPixel = e.clientY - rect.top - margin.t; // From top
+        
+        // Convert to Data Coordinates
+        // Range X: [0, 60]
+        // Range Y: [0, 1.1]
+        
+        // Avoid updating if outside horizontal bounds roughly
+        if (xPixel < 10) return; // Don't allow setting slope too close to y-axis (infinite slope)
+        
+        const xData = (xPixel / plotWidth) * 60;
+        
+        // Y is inverted in pixels (0 is top)
+        const yPct = 1 - (yPixel / plotHeight);
+        const yData = yPct * 1.1;
+        
+        // Slope = y / x (since line goes through origin)
+        let newSlope = yData / xData;
+        
+        // Clamp for usability
+        if (newSlope < 0.005) newSlope = 0.005;
+        if (newSlope > 0.25) newSlope = 0.25;
+        
+        state.slope = newSlope;
+        slopeVal.textContent = state.slope.toFixed(3);
+        
+        // Use requestAnimationFrame to prevent UI blocking
+        // Don't overwrite manual snap
+        // requestAnimationFrame(() => {
+        //    updatePlot();
+        // });
+        updatePlot(); // Sync update to ensure snap logic runs correctly before next frame
+    }
+
+    chartDiv.addEventListener('mousedown', (e) => {
+        state.isDragging = true;
+        updateSlopeFromEvent(e);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (state.isDragging) {
+            updateSlopeFromEvent(e);
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        state.isDragging = false;
+    });
+
+    // Initialize
+    updatePlot();
+
+</script>
+
+</body>
+</html>

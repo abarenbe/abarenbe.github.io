@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparative Advantage Simulator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #475569;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --home-color: #3b82f6;
+            --foreign-color: #ef4444;
+            --trade-color: #10b981;
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0 0 1rem 0;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: -0.025em;
+            flex: 0 0 auto;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-section {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .home-title {
+            color: var(--home-color);
+        }
+
+        .foreign-title {
+            color: var(--foreign-color);
+        }
+
+        .slider-group {
+            margin-bottom: 1rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--primary);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            border: none;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            background: var(--primary);
+        }
+
+        #tot {
+            background: linear-gradient(to right, #e2e8f0 0%, #e2e8f0 100%);
+        }
+
+        .visualization {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        .graph-card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .graph-title-overlay {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .home-title {
+            color: var(--home-color);
+        }
+
+        .foreign-title {
+            color: var(--foreign-color);
+        }
+
+        .opp-cost-container {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            align-items: flex-end;
+            z-index: 10;
+        }
+
+        .opp-cost-badge {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(241, 245, 249, 0.9);
+            color: var(--text-light);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(2px);
+        }
+
+        .opp-cost-badge.highlight {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border-color: #86efac;
+            font-weight: 700;
+        }
+
+        canvas {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        .outcomes-overlay {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.25rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .outcome-row {
+            display: contents;
+        }
+
+        .outcome-label {
+            color: var(--text-light);
+        }
+
+        .outcome-val {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .analysis-panel {
+            grid-column: 1 / -1;
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 0.75rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            min-height: 60px;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .trade-status {
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .trade-status.no-trade {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Comparative Advantage Simulator</h1>
+
+    <div class="container">
+        <div class="controls">
+            <!-- Home Controls -->
+            <div class="control-section">
+                <div class="section-title home-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z" />
+                    </svg>
+                    Home Production
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Hours to make 1 X</span>
+                        <span id="h-hx-val">10</span>
+                    </div>
+                    <input type="range" id="h-hx" min="1" max="20" value="10">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Hours to make 1 Y</span>
+                        <span id="h-hy-val">10</span>
+                    </div>
+                    <input type="range" id="h-hy" min="1" max="20" value="10">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Total Labor Hours</span>
+                        <span id="h-l-val">1000</span>
+                    </div>
+                    <input type="range" id="h-l" min="100" max="2000" step="50" value="1000">
+                </div>
+            </div>
+
+            <!-- Foreign Controls -->
+            <div class="control-section">
+                <div class="section-title foreign-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                    </svg>
+                    Foreign Production
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Hours to make 1 X</span>
+                        <span id="f-hx-val">10</span>
+                    </div>
+                    <input type="range" id="f-hx" min="1" max="20" value="10">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Hours to make 1 Y</span>
+                        <span id="f-hy-val">20</span>
+                    </div>
+                    <input type="range" id="f-hy" min="1" max="20" value="20">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Total Labor Hours</span>
+                        <span id="f-l-val">1000</span>
+                    </div>
+                    <input type="range" id="f-l" min="100" max="2000" step="50" value="1000">
+                </div>
+            </div>
+
+            <!-- Trade Controls -->
+            <div class="control-section">
+                <div class="section-title" style="color: var(--trade-color)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+                    </svg>
+                    Terms of Trade
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Price of X (in terms of Y)</span>
+                        <span id="tot-val">1.50</span>
+                    </div>
+                    <input type="range" id="tot" min="0.1" max="5.0" step="0.05" value="1.50">
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem; line-height: 1.4;">
+                    Adjust the relative price to see if trade is mutually beneficial.
+                </div>
+            </div>
+
+            <!-- View Options -->
+            <div class="control-section">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" id="show-ic" style="width: 16px; height: 16px;">
+                    Show Indifference Curves
+                </label>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <!-- Home Graph -->
+            <div class="graph-card">
+                <span class="graph-title-overlay home-title">Home</span>
+                <div class="opp-cost-container">
+                    <span class="opp-cost-badge" id="h-oc-x">Opp Cost of X: 1.0Y</span>
+                    <span class="opp-cost-badge" id="h-oc-y">Opp Cost of Y: 1.0X</span>
+                </div>
+                <canvas id="home-canvas"></canvas>
+
+                <!-- Home Outcomes Overlay -->
+                <div id="h-outcomes" class="outcomes-overlay" style="display: none;">
+                    <div class="outcome-row">
+                        <span class="outcome-label">Production:</span>
+                        <span id="h-prod" class="outcome-val">-</span>
+                    </div>
+                    <div class="outcome-row">
+                        <span class="outcome-label">Consumption:</span>
+                        <span id="h-cons" class="outcome-val">-</span>
+                    </div>
+                    <div class="outcome-row">
+                        <span class="outcome-label">Trade:</span>
+                        <span id="h-trade" class="outcome-val">-</span>
+                    </div>
+                    <div class="outcome-row">
+                        <span class="outcome-label">Gains:</span>
+                        <span id="h-gains" class="outcome-val" style="color: var(--trade-color)">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Foreign Graph -->
+            <div class="graph-card">
+                <span class="graph-title-overlay foreign-title">Foreign</span>
+                <div class="opp-cost-container">
+                    <span class="opp-cost-badge" id="f-oc-x">Opp Cost of X: 0.5Y</span>
+                    <span class="opp-cost-badge" id="f-oc-y">Opp Cost of Y: 2.0X</span>
+                </div>
+                <canvas id="foreign-canvas"></canvas>
+
+                <!-- Foreign Outcomes Overlay -->
+                <div id="f-outcomes" class="outcomes-overlay" style="display: none;">
+                    <div class="outcome-row">
+                        <span class="outcome-label">Production:</span>
+                        <span id="f-prod" class="outcome-val">-</span>
+                    </div>
+                    <div class="outcome-row">
+                        <span class="outcome-label">Consumption:</span>
+                        <span id="f-cons" class="outcome-val">-</span>
+                    </div>
+                    <div class="outcome-row">
+                        <span class="outcome-label">Trade:</span>
+                        <span id="f-trade" class="outcome-val">-</span>
+                    </div>
+                    <div class="outcome-row">
+                        <span class="outcome-label">Gains:</span>
+                        <span id="f-gains" class="outcome-val" style="color: var(--trade-color)">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Panel -->
+            <div class="analysis-panel">
+                <div class="stat-box">
+                    <div class="stat-label">Home Specializes In</div>
+                    <div class="stat-value" id="h-spec">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Trade Status</div>
+                    <div class="trade-status" id="trade-status">Mutually Beneficial</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Foreign Specializes In</div>
+                    <div class="stat-value" id="f-spec">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const state = {
+            hHoursX: 10,
+            hHoursY: 10,
+            hTotal: 1000,
+            fHoursX: 10,
+            fHoursY: 20,
+            fTotal: 1000,
+            tot: 1.5,
+            showIC: false
+        };
+
+        // Elements
+        const inputs = {
+            hHoursX: document.getElementById('h-hx'),
+            hHoursY: document.getElementById('h-hy'),
+            hTotal: document.getElementById('h-l'),
+            fHoursX: document.getElementById('f-hx'),
+            fHoursY: document.getElementById('f-hy'),
+            fTotal: document.getElementById('f-l'),
+            tot: document.getElementById('tot'),
+            showIC: document.getElementById('show-ic')
+        };
+
+        const displays = {
+            hHoursX: document.getElementById('h-hx-val'),
+            hHoursY: document.getElementById('h-hy-val'),
+            hTotal: document.getElementById('h-l-val'),
+            fHoursX: document.getElementById('f-hx-val'),
+            fHoursY: document.getElementById('f-hy-val'),
+            fTotal: document.getElementById('f-l-val'),
+            tot: document.getElementById('tot-val'),
+
+            // New Opp Cost Displays
+            hOCx: document.getElementById('h-oc-x'),
+            hOCy: document.getElementById('h-oc-y'),
+            fOCx: document.getElementById('f-oc-x'),
+            fOCy: document.getElementById('f-oc-y'),
+
+            hSpec: document.getElementById('h-spec'),
+            fSpec: document.getElementById('f-spec'),
+            status: document.getElementById('trade-status')
+        };
+
+        const canvases = {
+            home: document.getElementById('home-canvas'),
+            foreign: document.getElementById('foreign-canvas')
+        };
+
+        const ctxs = {
+            home: canvases.home.getContext('2d'),
+            foreign: canvases.foreign.getContext('2d')
+        };
+
+        // Layout
+        const padding = { top: 30, right: 30, bottom: 40, left: 50 };
+
+        function init() {
+            resize();
+            window.addEventListener('resize', () => {
+                resize();
+                draw();
+            });
+
+            Object.keys(inputs).forEach(key => {
+                inputs[key].addEventListener('input', (e) => {
+                    if (key === 'showIC') {
+                        state.showIC = e.target.checked;
+                        document.getElementById('h-outcomes').style.display = state.showIC ? 'grid' : 'none';
+                        document.getElementById('f-outcomes').style.display = state.showIC ? 'grid' : 'none';
+                    } else {
+                        const val = parseFloat(e.target.value);
+                        state[key] = val;
+                        if (displays[key]) displays[key].textContent = val.toFixed(key === 'tot' ? 2 : 0);
+                    }
+                    draw();
+                });
+            });
+
+            draw();
+        }
+
+        function updateSliderBackground() {
+            // Calculate trade range
+            const hOpp = state.hHoursX / state.hHoursY;
+            const fOpp = state.fHoursX / state.fHoursY;
+            const minOpp = Math.min(hOpp, fOpp);
+            const maxOpp = Math.max(hOpp, fOpp);
+
+            // Slider range
+            const sliderMin = parseFloat(inputs.tot.min);
+            const sliderMax = parseFloat(inputs.tot.max);
+
+            // Calculate percentages for gradient
+            const minPercent = ((minOpp - sliderMin) / (sliderMax - sliderMin)) * 100;
+            const maxPercent = ((maxOpp - sliderMin) / (sliderMax - sliderMin)) * 100;
+
+            // Clamp to valid range
+            const minPercentClamped = Math.max(0, Math.min(100, minPercent));
+            const maxPercentClamped = Math.max(0, Math.min(100, maxPercent));
+
+            // Create gradient with green zone
+            const gradient = `linear-gradient(to right, 
+                #e2e8f0 0%, 
+                #e2e8f0 ${minPercentClamped}%, 
+                #dcfce7 ${minPercentClamped}%, 
+                #dcfce7 ${maxPercentClamped}%, 
+                #e2e8f0 ${maxPercentClamped}%, 
+                #e2e8f0 100%)`;
+
+            inputs.tot.style.background = gradient;
+        }
+
+        function resize() {
+            Object.values(canvases).forEach(canvas => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 32; // padding
+                canvas.height = rect.height - 80; // header/legend space
+            });
+        }
+
+        function drawGraph(ctx, hoursX, hoursY, totalHours, color, isHome, partnerMaxX, partnerMaxY) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+
+            // Calculate Max Production
+            const maxX = totalHours / hoursX;
+            const maxY = totalHours / hoursY;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const axisMax = Math.max(maxX, maxY) * 1.2;
+
+            const scaleX = (width - padding.left - padding.right) / axisMax;
+            const scaleY = (height - padding.top - padding.bottom) / axisMax;
+
+            const toX = (val) => padding.left + val * scaleX;
+            const toY = (val) => height - padding.bottom - val * scaleY;
+
+            // Axes
+            ctx.beginPath();
+            ctx.moveTo(padding.left, height - padding.bottom);
+            ctx.lineTo(width - padding.right, height - padding.bottom);
+            ctx.moveTo(padding.left, height - padding.bottom);
+            ctx.lineTo(padding.left, padding.top);
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('Good X', width - padding.right, height - padding.bottom + 30);
+            ctx.textAlign = 'right';
+            ctx.fillText('Good Y', padding.left - 10, padding.top);
+
+            // PPF (Autarky)
+            ctx.beginPath();
+            ctx.moveTo(toX(0), toY(maxY));
+            ctx.lineTo(toX(maxX), toY(0));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            ctx.stroke();
+
+            // PPF Intercept Labels
+            ctx.fillStyle = color;
+            ctx.textAlign = 'right';
+            ctx.fillText(maxY.toFixed(0), toX(0) - 10, toY(maxY) + 5);
+            ctx.textAlign = 'center';
+            ctx.fillText(maxX.toFixed(0), toX(maxX), toY(0) + 20);
+
+            // Trade Logic
+            const hOpp = state.hHoursX / state.hHoursY;
+            const fOpp = state.fHoursX / state.fHoursY;
+
+            // Determine specialization
+            let specializesInX = false;
+            let specializesInY = false;
+
+            if (hOpp < fOpp) {
+                if (isHome) specializesInX = true;
+                else specializesInY = true;
+            } else if (hOpp > fOpp) {
+                if (isHome) specializesInY = true;
+                else specializesInX = true;
+            }
+
+            // Draw CPF
+            let prodX = specializesInX ? maxX : 0;
+            let prodY = specializesInY ? maxY : 0;
+
+            if (Math.abs(hOpp - fOpp) < 0.001) return;
+
+            // Check if beneficial
+            // We need to calculate the trade line first to check benefit
+            // But simple check: is Price between Opp Costs?
+            const minOpp = Math.min(hOpp, fOpp);
+            const maxOpp = Math.max(hOpp, fOpp);
+            const isBeneficial = (state.tot > minOpp && state.tot < maxOpp);
+
+            if (isBeneficial) {
+                // Calculate the Trade Line Segment (Kinked CPF)
+                // Start Point: Production Point
+                const p1 = { x: prodX, y: prodY };
+                let p2 = { x: 0, y: 0 };
+                let p3 = { x: 0, y: 0 }; // The final point on the axis (after the kink)
+
+                let hasKink = false;
+
+                if (specializesInX) {
+                    // Exporting X, Importing Y
+                    // Constraint: Cannot import more Y than partnerMaxY
+
+                    // Unconstrained endpoint (if partner was infinite)
+                    // Y = Pw * MaxX
+                    const unconstrainedY = state.tot * maxX;
+
+                    if (unconstrainedY > partnerMaxY) {
+                        // Partner is small! We hit the limit.
+                        hasKink = true;
+                        // Trade up to Y = partnerMaxY
+                        // X spent = partnerMaxY / Pw
+                        const xAtKink = maxX - (partnerMaxY / state.tot);
+                        p2 = { x: xAtKink, y: partnerMaxY };
+
+                        // From p2, we produce Y domestically
+                        // Slope is -OppCost (same as PPF)
+                        // Line: Y - p2.y = -OppCost * (X - p2.x)
+                        // Find Y-intercept (X=0)
+                        // Y = p2.y + OppCost * p2.x
+                        const oppCost = maxY / maxX; // Domestic opp cost
+                        const finalY = p2.y + oppCost * p2.x;
+                        p3 = { x: 0, y: finalY };
+                    } else {
+                        // Partner is big enough, straight line to axis
+                        p2 = { x: 0, y: unconstrainedY };
+                        p3 = p2; // No kink effectively
+                    }
+                } else {
+                    // Specializes in Y
+                    // Exporting Y, Importing X
+                    // Constraint: Cannot import more X than partnerMaxX
+
+                    // Unconstrained endpoint
+                    // X = MaxY / Pw
+                    const unconstrainedX = maxY / state.tot;
+
+                    if (unconstrainedX > partnerMaxX) {
+                        // Partner is small
+                        hasKink = true;
+                        // Trade up to X = partnerMaxX
+                        // Y spent = partnerMaxX * Pw
+                        const yAtKink = maxY - (partnerMaxX * state.tot);
+                        p2 = { x: partnerMaxX, y: yAtKink };
+
+                        // From p2, produce X domestically
+                        // Slope is -OppCost
+                        // Find X-intercept (Y=0)
+                        // 0 - p2.y = -OppCost * (X - p2.x)
+                        // X = p2.x + p2.y / OppCost
+                        const oppCost = maxY / maxX;
+                        const finalX = p2.x + p2.y / oppCost;
+                        p3 = { x: finalX, y: 0 };
+                    } else {
+                        p2 = { x: unconstrainedX, y: 0 };
+                        p3 = p2;
+                    }
+                }
+
+                // Draw the CPF Path
+                ctx.beginPath();
+                ctx.moveTo(toX(p1.x), toY(p1.y));
+                ctx.lineTo(toX(p2.x), toY(p2.y));
+                if (hasKink) {
+                    ctx.lineTo(toX(p3.x), toY(p3.y));
+                }
+
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+
+                // Draw Production Point
+                ctx.beginPath();
+                ctx.arc(toX(prodX), toY(prodY), 6, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Label Production
+                ctx.fillStyle = color;
+                ctx.font = 'bold 12px Inter';
+                ctx.fillText('Prod', toX(prodX) + (specializesInX ? -20 : 20), toY(prodY) + (specializesInY ? 20 : -10));
+
+                // Fill Gains Area
+                ctx.globalAlpha = 0.1;
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+
+                // Polygon: Prod -> P2 -> (P3 if kink) -> PPF Intercept -> Prod
+                ctx.moveTo(toX(p1.x), toY(p1.y));
+                ctx.lineTo(toX(p2.x), toY(p2.y));
+                if (hasKink) {
+                    ctx.lineTo(toX(p3.x), toY(p3.y));
+                }
+
+                // Close back to the relevant PPF intercept
+                if (specializesInY) {
+                    // Started at (0, MaxY) -> went to P2/P3 near X axis
+                    // Need to close to (MaxX, 0) then back to start?
+                    // No, the area is between CPF and PPF.
+                    // PPF is (0, MaxY) to (MaxX, 0).
+                    // CPF is (0, MaxY) -> P2 -> P3.
+                    // If kinked, P3 is on X-axis.
+                    // So we go P1 -> P2 -> P3 -> (MaxX, 0) -> P1
+                    ctx.lineTo(toX(maxX), toY(0));
+                } else {
+                    // Started at (MaxX, 0) -> went to P2/P3 near Y axis
+                    // P3 is on Y axis.
+                    // We go P1 -> P2 -> P3 -> (0, MaxY) -> P1
+                    ctx.lineTo(toX(0), toY(maxY));
+                }
+
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+
+                // Indifference Curves
+                if (state.showIC) {
+                    // We need to find the optimal point on the frontier (CPF)
+                    // Frontier is defined by segments: P1->P2 and (if kink) P2->P3
+                    // Utility U = X^0.5 * Y^0.5 (Cobb-Douglas, alpha=0.5)
+                    // Optimal point is where MRS = Price Ratio of the segment
+                    // MRS = Y/X.
+                    // Segment 1 (P1->P2): Slope = -Pw. Condition: Y/X = Pw => Y = Pw*X
+                    // Segment 2 (P2->P3): Slope = -OppCost. Condition: Y/X = OppCost => Y = OppCost*X
+
+                    let optimalX, optimalY, maxU = -1;
+
+                    // Function to check if a point is on a segment
+                    const isBetween = (val, a, b) => (val >= Math.min(a, b) - 0.001 && val <= Math.max(a, b) + 0.001);
+
+                    // Check Segment 1: P1 -> P2
+                    // Line eq: Y - p1.y = -state.tot * (X - p1.x)
+                    // Tangency: Y = state.tot * X
+                    // Substitute: state.tot*X - p1.y = -state.tot*X + state.tot*p1.x
+                    // 2*state.tot*X = p1.y + state.tot*p1.x
+                    // X = (p1.y + state.tot*p1.x) / (2*state.tot)
+
+                    const x1 = (p1.y + state.tot * p1.x) / (2 * state.tot);
+                    const y1 = state.tot * x1;
+
+                    // Check if x1 is within P1.x and P2.x
+                    if (isBetween(x1, p1.x, p2.x)) {
+                        const u = Math.sqrt(x1 * y1);
+                        if (u > maxU) { maxU = u; optimalX = x1; optimalY = y1; }
+                    }
+
+                    // Check Segment 2: P2 -> P3 (if kinked)
+                    if (hasKink) {
+                        const oppCost = maxY / maxX;
+                        // Line eq: Y - p2.y = -oppCost * (X - p2.x)
+                        // Tangency: Y = oppCost * X
+                        // Substitute: oppCost*X - p2.y = -oppCost*X + oppCost*p2.x
+                        // 2*oppCost*X = p2.y + oppCost*p2.x
+                        // X = (p2.y + oppCost*p2.x) / (2*oppCost)
+
+                        const x2 = (p2.y + oppCost * p2.x) / (2 * oppCost);
+                        const y2 = oppCost * x2;
+
+                        if (isBetween(x2, p2.x, p3.x)) {
+                            const u = Math.sqrt(x2 * y2);
+                            if (u > maxU) { maxU = u; optimalX = x2; optimalY = y2; }
+                        }
+                    }
+
+                    // Check Corners (P1, P2, P3)
+                    const points = [p1, p2];
+                    if (hasKink) points.push(p3);
+
+                    points.forEach(p => {
+                        const u = Math.sqrt(p.x * p.y);
+                        if (u > maxU) { maxU = u; optimalX = p.x; optimalY = p.y; }
+                    });
+
+                    // Draw Indifference Curve for maxU
+                    // Y = maxU^2 / X
+                    ctx.beginPath();
+                    let startIC = true;
+                    for (let cx = 1; cx < axisMax; cx += 1) {
+                        const cy = (maxU * maxU) / cx;
+                        if (cy > axisMax) continue;
+                        if (startIC) {
+                            ctx.moveTo(toX(cx), toY(cy));
+                            startIC = false;
+                        } else {
+                            ctx.lineTo(toX(cx), toY(cy));
+                        }
+                    }
+                    ctx.strokeStyle = '#d946ef'; // Fuchsia
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([]);
+                    ctx.stroke();
+
+                    // Draw Optimal Point
+                    ctx.beginPath();
+                    ctx.arc(toX(optimalX), toY(optimalY), 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#d946ef';
+                    ctx.fill();
+
+                    // Label Optimal Point
+                    ctx.fillStyle = '#d946ef';
+                    ctx.font = 'bold 12px Inter';
+                    ctx.fillText(`U=${maxU.toFixed(1)}`, toX(optimalX) + 10, toY(optimalY) - 10);
+
+                    // Calculate Autarky Baseline for Gains
+                    const autarkyX = maxX / 2;
+                    const autarkyY = maxY / 2;
+                    const gainX = optimalX - autarkyX;
+                    const gainY = optimalY - autarkyY;
+
+                    // Determine Trade Flows
+                    // Exports = Production - Consumption (if positive)
+                    // Imports = Consumption - Production (if positive)
+                    const netX = prodX - optimalX; // + means export, - means import
+                    const netY = prodY - optimalY;
+
+                    // Update Table
+                    const prefix = isHome ? 'h' : 'f';
+                    document.getElementById(`${prefix}-prod`).textContent = `(${prodX.toFixed(1)}, ${prodY.toFixed(1)})`;
+                    document.getElementById(`${prefix}-cons`).textContent = `(${optimalX.toFixed(1)}, ${optimalY.toFixed(1)})`;
+
+                    let tradeText = "";
+                    if (Math.abs(netX) > 0.1) {
+                        if (netX > 0) tradeText += `Exp ${netX.toFixed(1)} X`;
+                        else tradeText += `Imp ${Math.abs(netX).toFixed(1)} X`;
+                    }
+                    if (Math.abs(netY) > 0.1) {
+                        if (tradeText) tradeText += ", ";
+                        if (netY > 0) tradeText += `Exp ${netY.toFixed(1)} Y`;
+                        else tradeText += `Imp ${Math.abs(netY).toFixed(1)} Y`;
+                    }
+                    if (!tradeText) tradeText = "No Trade";
+
+                    document.getElementById(`${prefix}-trade`).textContent = tradeText;
+                    document.getElementById(`${prefix}-gains`).textContent = `+${gainX.toFixed(1)} X, +${gainY.toFixed(1)} Y`;
+                }
+            } else {
+                // Autarky Case (if no trade or not beneficial)
+                // If showIC is on, show autarky optimal
+                if (state.showIC) {
+                    // Max U on PPF
+                    // PPF: Y = maxY - (maxY/maxX)*X
+                    // Tangency: Y = (maxY/maxX)*X
+                    // Intersection: (maxY/maxX)*X = maxY - (maxY/maxX)*X
+                    // 2*(maxY/maxX)*X = maxY
+                    // X = maxX / 2
+                    // Y = maxY / 2
+
+                    const optX = maxX / 2;
+                    const optY = maxY / 2;
+                    const maxU = Math.sqrt(optX * optY);
+
+                    // Draw IC
+                    ctx.beginPath();
+                    let startIC = true;
+                    for (let cx = 1; cx < axisMax; cx += 1) {
+                        const cy = (maxU * maxU) / cx;
+                        if (cy > axisMax) continue;
+                        if (startIC) {
+                            ctx.moveTo(toX(cx), toY(cy));
+                            startIC = false;
+                        } else {
+                            ctx.lineTo(toX(cx), toY(cy));
+                        }
+                    }
+                    ctx.strokeStyle = '#d946ef';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([]);
+                    ctx.stroke();
+
+                    // Point
+                    ctx.beginPath();
+                    ctx.arc(toX(optX), toY(optY), 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#d946ef';
+                    ctx.fill();
+
+                    // Update Table for Autarky
+                    const prefix = isHome ? 'h' : 'f';
+                    document.getElementById(`${prefix}-prod`).textContent = `(${optX.toFixed(1)}, ${optY.toFixed(1)})`;
+                    document.getElementById(`${prefix}-cons`).textContent = `(${optX.toFixed(1)}, ${optY.toFixed(1)})`;
+                    document.getElementById(`${prefix}-trade`).textContent = "None";
+                    document.getElementById(`${prefix}-gains`).textContent = "0 X, 0 Y";
+                }
+            }
+        }
+
+        function draw() {
+            // Calculate Opp Costs
+            // Cost of X = HoursX / HoursY
+            const hOCx = state.hHoursX / state.hHoursY;
+            const hOCy = state.hHoursY / state.hHoursX;
+
+            const fOCx = state.fHoursX / state.fHoursY;
+            const fOCy = state.fHoursY / state.fHoursX;
+
+            // Update Text
+            displays.hOCx.textContent = `Opp Cost of X: ${hOCx.toFixed(2)} Y`;
+            displays.hOCy.textContent = `Opp Cost of Y: ${hOCy.toFixed(2)} X`;
+            displays.fOCx.textContent = `Opp Cost of X: ${fOCx.toFixed(2)} Y`;
+            displays.fOCy.textContent = `Opp Cost of Y: ${fOCy.toFixed(2)} X`;
+
+            // Highlight Comparative Advantage
+            // Reset classes
+            [displays.hOCx, displays.hOCy, displays.fOCx, displays.fOCy].forEach(el => el.classList.remove('highlight'));
+
+            if (Math.abs(hOCx - fOCx) > 0.001) {
+                // Compare X costs
+                if (hOCx < fOCx) {
+                    displays.hOCx.classList.add('highlight');
+                } else {
+                    displays.fOCx.classList.add('highlight');
+                }
+
+                // Compare Y costs (usually opposite)
+                if (hOCy < fOCy) {
+                    displays.hOCy.classList.add('highlight');
+                } else {
+                    displays.fOCy.classList.add('highlight');
+                }
+            }
+
+            // Update Logic
+            let hSpec = "-";
+            let fSpec = "-";
+            let status = "No Trade";
+            let statusClass = "no-trade";
+
+            if (Math.abs(hOCx - fOCx) < 0.01) {
+                status = "No Comparative Advantage";
+            } else {
+                const homeHasCompAdvInX = hOCx < fOCx;
+
+                hSpec = homeHasCompAdvInX ? "Good X" : "Good Y";
+                fSpec = homeHasCompAdvInX ? "Good Y" : "Good X";
+
+                const minOpp = Math.min(hOCx, fOCx);
+                const maxOpp = Math.max(hOCx, fOCx);
+
+                if (state.tot > minOpp && state.tot < maxOpp) {
+                    status = "Mutually Beneficial Trade";
+                    statusClass = "trade-status";
+                } else if (Math.abs(state.tot - minOpp) < 0.01 || Math.abs(state.tot - maxOpp) < 0.01) {
+                    status = "One Side Indifferent";
+                    statusClass = "trade-status";
+                } else {
+                    status = "Price Outside Trade Range";
+                    statusClass = "no-trade";
+                }
+            }
+
+            displays.hSpec.textContent = hSpec;
+            displays.fSpec.textContent = fSpec;
+            displays.status.textContent = status;
+            displays.status.className = statusClass;
+
+            // Update slider background to show trade range
+            updateSliderBackground();
+
+            // Draw Graphs
+            // Calculate max production for limits
+            const hMaxX = state.hTotal / state.hHoursX;
+            const hMaxY = state.hTotal / state.hHoursY;
+            const fMaxX = state.fTotal / state.fHoursX;
+            const fMaxY = state.fTotal / state.fHoursY;
+
+            drawGraph(ctxs.home, state.hHoursX, state.hHoursY, state.hTotal, '#3b82f6', true, fMaxX, fMaxY);
+            drawGraph(ctxs.foreign, state.fHoursX, state.fHoursY, state.fTotal, '#ef4444', false, hMaxX, hMaxY);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
