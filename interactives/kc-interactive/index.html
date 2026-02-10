@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keynesian Cross Interactive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --bg-app: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 360px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .sidebar-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-left: 44px;
+        }
+
+        /* Controls */
+        .controls-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .label-row label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .value-display {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: #eff6ff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+        }
+
+        /* Advanced Toggle Button */
+        .advanced-toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .advanced-toggle-btn:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .advanced-toggle-btn .chevron {
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        .advanced-toggle-btn.active .chevron {
+            transform: rotate(180deg);
+        }
+
+        .advanced-toggle-btn.active {
+            background: #eff6ff;
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+
+        .advanced-toggle-btn.active .chevron {
+            color: var(--primary);
+        }
+
+        /* Checkbox */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        .summary-card h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .s-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .s-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-app);
+        }
+
+        .tabs-container {
+            padding: 1rem 2rem 0;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 1rem 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+        }
+
+        .chart-card {
+            flex: 1;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+        }
+
+        /* Sub Navigation */
+        .sub-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: #e2e8f0;
+            padding: 4px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .sub-tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-tab-btn.active {
+            background: white;
+            color: var(--text-main);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .sub-tab-content {
+            display: none;
+        }
+
+        .sub-tab-content.active {
+            display: block;
+        }
+
+        .math-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        /* Modern Table */
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .modern-table th,
+        .modern-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .modern-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            background: #f8fafc;
+        }
+
+        .modern-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .modern-table tr:first-child th:first-child {
+            border-top-left-radius: 8px;
+        }
+
+        .modern-table tr:first-child th:last-child {
+            border-top-right-radius: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+            }
+
+            .main-content {
+                overflow-y: visible;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">K</div>
+                    <h2>Macro Model</h2>
+                </div>
+                <p class="subtitle">Interactive Keynesian Cross</p>
+            </div>
+
+            <div class="controls-wrapper">
+                <div class="controls">
+                    <div class="section-label">Basic Parameters</div>
+
+                    <!-- Autonomous Consumption -->
+                    <div class="control-group">
+                        <div class="label-row">
+                            <label for="C0">Auton. Consumption ($C_0$)</label>
+                            <span class="value-display" id="val-C0">9000</span>
+                        </div>
+                        <input type="range" id="C0" min="1" max="15000" step="10" value="9000">
+                    </div>
+
+                    <!-- MPC -->
+                    <div class="control-group">
+                        <div class="label-row">
+                            <label for="c1">MPC ($c_1$)</label>
+                            <span class="value-display" id="val-c1">0.35</span>
+                        </div>
+                        <input type="range" id="c1" min="0" max="1" step="0.01" value="0.35">
+                    </div>
+
+                    <!-- Investment -->
+                    <div class="control-group">
+                        <div class="label-row">
+                            <label for="I">Investment ($I$)</label>
+                            <span class="value-display" id="val-I">3600</span>
+                        </div>
+                        <input type="range" id="I" min="0" max="5000" step="50" value="3600">
+                    </div>
+
+                    <!-- Government -->
+                    <div class="control-group">
+                        <div class="label-row">
+                            <label for="G">Government ($G$)</label>
+                            <span class="value-display" id="val-G">3830</span>
+                        </div>
+                        <input type="range" id="G" min="0" max="5000" step="50" value="3830">
+                    </div>
+
+                    <!-- Advanced Toggle -->
+                    <button id="advanced-toggle-btn" class="advanced-toggle-btn">
+                        <span>Model Complexity (Advanced)</span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+
+                    <!-- Advanced Controls (Hidden by default) -->
+                    <div id="advanced-controls" class="hidden">
+
+                        <!-- Tax Rate -->
+                        <div class="control-group">
+                            <div class="label-row">
+                                <label for="t">Tax Rate ($t$)</label>
+                                <span class="value-display" id="val-t">0.28</span>
+                            </div>
+                            <input type="range" id="t" min="0" max="1" step="0.01" value="0.28">
+                        </div>
+
+                        <!-- Exports -->
+                        <div class="control-group">
+                            <div class="label-row">
+                                <label for="X">Exports ($X$)</label>
+                                <span class="value-display" id="val-X">2100</span>
+                            </div>
+                            <input type="range" id="X" min="0" max="3000" step="50" value="2100">
+                        </div>
+
+                        <!-- MPI -->
+                        <div class="control-group">
+                            <div class="label-row">
+                                <label for="m">MPI ($m$)</label>
+                                <span class="value-display" id="val-m">0.16</span>
+                            </div>
+                            <input type="range" id="m" min="0" max="1" step="0.01" value="0.16">
+                        </div>
+                    </div>
+
+                    <!-- Show S & I Toggle -->
+                    <div class="setting-row mt-4">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="show-inj-leak">
+                            <span class="checkmark"></span>
+                            <span>Show Inv. & Savings</span>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sidebar Summary -->
+            <div class="sidebar-footer">
+                <div class="summary-card">
+                    <h3>Key Results</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="s-label">Multiplier (k)</span>
+                            <span class="s-value" id="sb-k">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="s-label">Income (Y)</span>
+                            <span class="s-value" id="sb-Y">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="tabs-container">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="openTab('plot')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 3v18h18" />
+                            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+                        </svg>
+                        Graph
+                    </button>
+                    <button class="tab-btn" onclick="openTab('algebra')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                        Algebra
+                    </button>
+                    <button class="tab-btn" onclick="openTab('components')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                            <line x1="12" y1="22.08" x2="12" y2="12" />
+                        </svg>
+                        Components
+                    </button>
+                    <button class="tab-btn" onclick="openTab('injections')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2v20M2 12h20" />
+                        </svg>
+                        Flows
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div id="plot" class="tab-content active">
+                    <div class="card chart-card">
+                        <div class="chart-container">
+                            <canvas id="kcChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="algebra" class="tab-content">
+                    <div class="sub-nav">
+                        <button class="sub-tab-btn active" onclick="openSubTab('alg-short')">Summary</button>
+                        <button class="sub-tab-btn" onclick="openSubTab('alg-long')">Full Derivation</button>
+                    </div>
+
+                    <div id="alg-short" class="sub-tab-content active">
+                        <div class="math-card" id="alg-short-content"></div>
+                    </div>
+                    <div id="alg-long" class="sub-tab-content">
+                        <div class="math-card" id="alg-long-content"></div>
+                    </div>
+                </div>
+
+                <div id="components" class="tab-content">
+                    <div class="sub-nav">
+                        <button class="sub-tab-btn active" onclick="openSubTab('comp-cons')">Consumption</button>
+                        <button class="sub-tab-btn" onclick="openSubTab('comp-netexp')">Net Exports</button>
+                        <button class="sub-tab-btn" onclick="openSubTab('comp-saving')">Savings</button>
+                    </div>
+
+                    <div id="comp-cons" class="sub-tab-content active">
+                        <div class="math-card" id="comp-cons-content"></div>
+                    </div>
+                    <div id="comp-netexp" class="sub-tab-content">
+                        <div class="math-card" id="comp-netexp-content"></div>
+                    </div>
+                    <div id="comp-saving" class="sub-tab-content">
+                        <div class="math-card" id="comp-saving-content"></div>
+                    </div>
+                </div>
+
+                <div id="injections" class="tab-content">
+                    <div class="card table-card">
+                        <h3>Injections vs Leakages</h3>
+                        <table class="modern-table" id="inj-table">
+                            <!-- Filled by JS -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DOM Elements ---
+            const sliders = {
+                C0: document.getElementById('C0'),
+                c1: document.getElementById('c1'),
+                I: document.getElementById('I'),
+                G: document.getElementById('G'),
+                t: document.getElementById('t'),
+                X: document.getElementById('X'),
+                m: document.getElementById('m')
+            };
+
+            const displays = {
+                C0: document.getElementById('val-C0'),
+                c1: document.getElementById('val-c1'),
+                I: document.getElementById('val-I'),
+                G: document.getElementById('val-G'),
+                t: document.getElementById('val-t'),
+                X: document.getElementById('val-X'),
+                m: document.getElementById('val-m')
+            };
+
+            const sbStats = {
+                k: document.getElementById('sb-k'),
+                Y: document.getElementById('sb-Y')
+            };
+
+            // Toggles
+            const advancedToggleBtn = document.getElementById('advanced-toggle-btn');
+            const showInjLeakToggle = document.getElementById('show-inj-leak');
+            const advancedControls = document.getElementById('advanced-controls');
+
+            // Content Areas
+            const contentAreas = {
+                algShort: document.getElementById('alg-short-content'),
+                algLong: document.getElementById('alg-long-content'),
+                compCons: document.getElementById('comp-cons-content'),
+                compNetExp: document.getElementById('comp-netexp-content'),
+                compSaving: document.getElementById('comp-saving-content'),
+                injTable: document.getElementById('inj-table')
+            };
+
+            const ctx = document.getElementById('kcChart').getContext('2d');
+
+            // --- State ---
+            let params = {
+                C0: 9000,
+                c1: 0.35,
+                I: 3600,
+                G: 3830,
+                t: 0.28,
+                X: 2100,
+                m: 0.16
+            };
+
+            let state = {
+                isComplex: false,
+                showInjLeak: false
+            };
+
+            // --- Chart Initialization ---
+            let kcChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: '45-degree Line',
+                            data: [],
+                            borderColor: '#94a3b8',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            pointStyle: 'line',
+                            fill: false,
+                            order: 10
+                        },
+                        {
+                            label: 'Aggregate Expenditure (AE)',
+                            data: [],
+                            borderColor: '#ef4444', // Red
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            pointStyle: 'line',
+                            fill: false,
+                            order: 1
+                        },
+                        {
+                            label: 'Consumption',
+                            data: [],
+                            borderColor: '#3b82f6', // Blue
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointStyle: 'line',
+                            fill: false,
+                            order: 2
+                        },
+                        {
+                            label: 'Equilibrium',
+                            data: [],
+                            pointBackgroundColor: '#ef4444',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointStyle: 'circle',
+                            showLine: false,
+                            order: 0
+                        },
+                        {
+                            label: 'Eq Lines',
+                            data: [],
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                            borderDash: [2, 2],
+                            pointRadius: 0,
+                            pointStyle: 'line',
+                            showLine: true,
+                            fill: false,
+                            order: 5
+                        },
+                        // Injections
+                        {
+                            label: 'Injections',
+                            data: [],
+                            borderColor: '#10b981', // Green
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointStyle: 'line',
+                            fill: false,
+                            hidden: true,
+                            order: 3
+                        },
+                        // Leakages
+                        {
+                            label: 'Leakages',
+                            data: [],
+                            borderColor: '#f59e0b', // Amber
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointStyle: 'line',
+                            fill: false,
+                            hidden: true,
+                            order: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'nearest',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: { family: "'Inter', sans-serif", size: 12 },
+                                filter: function (item, chart) {
+                                    // Hide legend item if the dataset is hidden
+                                    const dataset = chart.datasets[item.datasetIndex];
+                                    return !dataset.hidden;
+                                }
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { family: "'Inter', sans-serif" },
+                            bodyFont: { family: "'Inter', sans-serif" },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString(undefined, { maximumFractionDigits: 0 });
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: {} // Will be populated dynamically
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: 0,
+                            max: 25000,
+                            title: { display: true, text: 'Income (Y)', font: { weight: '600' } },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        y: {
+                            min: 0, // Will be dynamic
+                            max: 25000,
+                            title: { display: true, text: 'Expenditure', font: { weight: '600' } },
+                            grid: { color: '#f1f5f9' }
+                        }
+                    },
+                    animation: { duration: 0 }
+                }
+            });
+
+            // --- Logic ---
+
+            function updateParams() {
+                for (let key in sliders) {
+                    params[key] = parseFloat(sliders[key].value);
+                    displays[key].textContent = params[key];
+                }
+
+                state.showInjLeak = showInjLeakToggle.checked;
+                // state.isComplex is handled by the button click listener
+            }
+
+            function calculateModel() {
+                // If Simple Mode: t=0, X=0, m=0
+                let t = state.isComplex ? params.t : 0;
+                let X = state.isComplex ? params.X : 0;
+                let m = state.isComplex ? params.m : 0;
+
+                // Standard params
+                let C0 = params.C0;
+                let c1 = params.c1;
+                let I = params.I;
+                let G = params.G;
+
+                const AE_val = C0 + I + G + X;
+                const denom = 1 - c1 + (c1 * t) + m;
+                const k = 1 / denom;
+                const Y = k * AE_val;
+                const T = t * Y;
+                const Yd = Y - T;
+                const C = C0 + (c1 * Yd);
+                const M = m * Y;
+                const S = -C0 + ((1 - c1) * Yd);
+
+                const slope = c1 - (t * c1) - m;
+
+                // Injections and Leakages
+                const J = I + G + X;
+                const L_slope = 1 - c1 + (c1 * t) + m;
+                const L_intercept = -C0;
+
+                return { AE_val, k, Y, T, Yd, C, M, S, slope, t, X, m, J, L_slope, L_intercept };
+            }
+
+            function updateUI() {
+                updateParams();
+                const model = calculateModel();
+
+                // 1. Update Sidebar Summary
+                sbStats.k.textContent = model.k.toFixed(2);
+                sbStats.Y.textContent = model.Y.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+                // 2. Update Chart
+                const axisLimit = 25000;
+
+                // Determine Y-axis range
+                let yMin = 0;
+                if (state.showInjLeak) {
+                    yMin = Math.min(0, -params.C0 * 1.2);
+                }
+                kcChart.options.scales.y.min = yMin;
+
+                // Update Labels based on Complexity
+                if (state.isComplex) {
+                    kcChart.data.datasets[5].label = 'Injections (I+G+X)';
+                    kcChart.data.datasets[6].label = 'Leakages (S+T+M)';
+                } else {
+                    kcChart.data.datasets[5].label = 'Injections (I+G)';
+                    kcChart.data.datasets[6].label = 'Leakages (S)';
+                }
+
+                // 45-degree line
+                kcChart.data.datasets[0].data = [{ x: 0, y: 0 }, { x: axisLimit, y: axisLimit }];
+
+                // AE Line
+                const aeEnd = model.AE_val + model.slope * axisLimit;
+                kcChart.data.datasets[1].data = [
+                    { x: 0, y: model.AE_val },
+                    { x: axisLimit, y: aeEnd }
+                ];
+
+                // Consumption Line
+                const c_slope = params.c1 * (1 - model.t);
+                const cEnd = params.C0 + c_slope * axisLimit;
+                kcChart.data.datasets[2].data = [
+                    { x: 0, y: params.C0 },
+                    { x: axisLimit, y: cEnd }
+                ];
+
+                // Equilibrium Point
+                kcChart.data.datasets[3].data = [{ x: model.Y, y: model.Y }];
+
+                // Dashed Lines
+                kcChart.data.datasets[4].data = [
+                    { x: 0, y: model.Y },
+                    { x: model.Y, y: model.Y },
+                    { x: model.Y, y: 0 }
+                ];
+
+                // Injections (Horizontal Line at J)
+                kcChart.data.datasets[5].hidden = !state.showInjLeak;
+                const jEnd = model.J;
+                kcChart.data.datasets[5].data = [
+                    { x: 0, y: model.J },
+                    { x: axisLimit, y: jEnd }
+                ];
+
+                // Leakages (Line starting at -C0 with slope L_slope)
+                kcChart.data.datasets[6].hidden = !state.showInjLeak;
+                const lEnd = model.L_intercept + model.L_slope * axisLimit;
+                kcChart.data.datasets[6].data = [
+                    { x: 0, y: model.L_intercept },
+                    { x: axisLimit, y: lEnd }
+                ];
+
+                // --- Annotations ---
+                const annotations = {
+                    box1: {
+                        type: 'box',
+                        xMin: 22000,
+                        xMax: 25000,
+                        yMin: -10000,
+                        yMax: 25000,
+                        backgroundColor: 'rgba(203, 213, 225, 0.2)',
+                        borderWidth: 0
+                    },
+                    zeroLine: {
+                        type: 'line',
+                        yMin: 0,
+                        yMax: 0,
+                        borderColor: '#cbd5e1',
+                        borderWidth: 1
+                    }
+                };
+
+                // Helper to add label
+                const addLabel = (id, text, yVal, color) => {
+                    annotations[id] = {
+                        type: 'label',
+                        xValue: axisLimit,
+                        yValue: yVal,
+                        backgroundColor: 'rgba(255,255,255,0.7)',
+                        content: text,
+                        color: color,
+                        font: { size: 11, weight: 'bold', family: "'Inter', sans-serif" },
+                        position: 'center',
+                        xAdjust: -20, // Pull back slightly from edge
+                        yAdjust: -15  // Position above the line
+                    };
+                };
+
+                // Add labels for visible lines
+                addLabel('lblAE', 'AE', aeEnd, '#ef4444');
+                addLabel('lblC', 'C', cEnd, '#3b82f6');
+                addLabel('lbl45', '45°', axisLimit, '#94a3b8');
+
+                if (state.showInjLeak) {
+                    addLabel('lblInj', state.isComplex ? 'I+G+X' : 'I+G', jEnd, '#10b981');
+                    addLabel('lblLeak', state.isComplex ? 'S+T+M' : 'S', lEnd, '#f59e0b');
+                }
+
+                kcChart.options.plugins.annotation.annotations = annotations;
+
+                kcChart.update();
+
+                // 3. Update Math Content
+                updateMathContent(model);
+            }
+
+            function updateMathContent(m) {
+                const r = (num, d = 0) => num.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+                const r2 = (num) => num.toFixed(2);
+
+                // -- Algebraic Short --
+                if (state.isComplex) {
+                    contentAreas.algShort.innerHTML = `
+                <p><strong>Multiplier ($k$):</strong></p>
+                $$ k = \\frac{1}{(1 - c_1 + c_1 \\cdot t + m)} = ${r2(m.k)} $$
+                <p><strong>Autonomous Expenditure ($AE$):</strong></p>
+                $$ AE = C_0 + I + G + X = ${r(m.AE_val)} $$
+                <p><strong>Equilibrium Output ($Y$):</strong></p>
+                $$ Y = k \\cdot AE = ${r2(m.k)} \\cdot ${r(m.AE_val)} = ${r(m.Y)} $$
+            `;
+                } else {
+                    contentAreas.algShort.innerHTML = `
+                <p><strong>Multiplier ($k$):</strong></p>
+                $$ k = \\frac{1}{(1 - c_1)} = \\frac{1}{(1 - ${r2(params.c1)})} = ${r2(m.k)} $$
+                <p><strong>Autonomous Expenditure ($AE$):</strong></p>
+                $$ AE = C_0 + I + G = ${params.C0} + ${params.I} + ${params.G} = ${r(m.AE_val)} $$
+                <p><strong>Equilibrium Output ($Y$):</strong></p>
+                $$ Y = k \\cdot AE = ${r2(m.k)} \\cdot ${r(m.AE_val)} = ${r(m.Y)} $$
+            `;
+                }
+
+                // -- Algebraic Long --
+                let derivation = '';
+                if (!state.isComplex) {
+                    derivation = `
+                $$ Y = C + I + G $$
+                $$ C = c_0 + c_1 Y $$
+                $$ Y = c_0 + c_1 Y + I + G $$
+                $$ Y - c_1 Y = c_0 + I + G $$
+                $$ Y(1 - c_1) = c_0 + I + G $$
+                $$ Y = \\frac{1}{1 - c_1} (c_0 + I + G) $$
+            `;
+                } else {
+                    derivation = `
+                $$ Y = C + I + G + (X-M) $$
+                $$ C = c_0 + c_1(1-t)Y $$
+                $$ M = mY $$
+                $$ Y = c_0 + c_1(1-t)Y + I + G + X - mY $$
+                $$ Y(1 - c_1(1-t) + m) = c_0 + I + G + X $$
+                $$ Y = \\frac{1}{1 - c_1 + c_1 t + m} (c_0 + I + G + X) $$
+            `;
+                }
+
+                contentAreas.algLong.innerHTML = derivation + `
+            <br>
+            $$ k = ${r2(m.k)} $$
+            $$ AE = ${r(m.AE_val)} $$
+            $$ Y = ${r(m.Y)} $$
+        `;
+
+                // -- Components --
+                if (state.isComplex) {
+                    contentAreas.compCons.innerHTML = `
+                $$ C = c_0 + c_1(Y - T) $$
+                $$ C = ${params.C0} + ${r2(params.c1)}(${r(m.Y)} - ${r(m.T)}) = ${r(m.C)} $$
+            `;
+                } else {
+                    contentAreas.compCons.innerHTML = `
+                $$ C = c_0 + c_1 Y $$
+                $$ C = ${params.C0} + ${r2(params.c1)}(${r(m.Y)}) = ${r(m.C)} $$
+            `;
+                }
+
+                contentAreas.compNetExp.innerHTML = state.isComplex ? `
+            $$ NX = X - mY $$
+            $$ NX = ${params.X} - ${r2(params.m)}(${r(m.Y)}) = ${r(params.X - m.M)} $$
+        ` : `<p>Net Exports are assumed to be zero in the simple model.</p>`;
+
+                if (state.isComplex) {
+                    contentAreas.compSaving.innerHTML = `
+                $$ S = -c_0 + (1-c_1)(Y-T) $$
+                $$ S = -${params.C0} + ${r2(1 - params.c1)}(${r(m.Yd)}) = ${r(m.S)} $$
+            `;
+                } else {
+                    contentAreas.compSaving.innerHTML = `
+                $$ S = -c_0 + (1-c_1)Y $$
+                $$ S = -${params.C0} + ${r2(1 - params.c1)}(${r(m.Y)}) = ${r(m.S)} $$
+            `;
+                }
+
+                // -- Injections Table --
+                const I_S = params.I - m.S;
+                const G_T = params.G - m.T;
+                const X_M = m.X - m.M;
+                const TotalInj = params.I + params.G + m.X;
+                const TotalLeak = m.S + m.T + m.M;
+
+                if (state.isComplex) {
+                    contentAreas.injTable.innerHTML = `
+                <tr>
+                    <th>Investment</th> <td>$I = ${r(params.I)}$</td>
+                    <th>Saving</th> <td>$S = ${r(m.S)}$</td>
+                    <th>$I - S =$</th> <td>${r(I_S)}</td>
+                </tr>
+                <tr>
+                    <th>Government</th> <td>$G = ${r(params.G)}$</td>
+                    <th>Taxes</th> <td>$T = ${r(m.T)}$</td>
+                    <th>$G - T =$</th> <td>${r(G_T)}</td>
+                </tr>
+                <tr>
+                    <th>Exports</th> <td>$X = ${r(m.X)}$</td>
+                    <th>Imports</th> <td>$M = ${r(m.M)}$</td>
+                    <th>$X - M =$</th> <td>${r(m.X - m.M)}</td>
+                </tr>
+                <tr style="font-weight:bold; background-color:#f1f5f9;">
+                    <th>Total Inj.</th> <td>${r(TotalInj)}</td>
+                    <th>Total Leak.</th> <td>${r(TotalLeak)}</td>
+                    <th>Diff</th> <td>${r(TotalInj - TotalLeak)}</td>
+                </tr>
+            `;
+                } else {
+                    contentAreas.injTable.innerHTML = `
+                <tr>
+                    <th>Investment</th> <td>$I = ${r(params.I)}$</td>
+                    <th>Saving</th> <td>$S = ${r(m.S)}$</td>
+                    <th>$I - S =$</th> <td>${r(I_S)}</td>
+                </tr>
+                <tr>
+                    <th>Government</th> <td>$G = ${r(params.G)}$</td>
+                    <th>Taxes</th> <td>$T = 0$</td>
+                    <th>$G - T =$</th> <td>${r(params.G)}</td>
+                </tr>
+                <tr style="font-weight:bold; background-color:#f1f5f9;">
+                    <th>Total Inj.</th> <td>${r(TotalInj)}</td>
+                    <th>Total Leak.</th> <td>${r(TotalLeak)}</td>
+                    <th>Diff</th> <td>${r(TotalInj - TotalLeak)}</td>
+                </tr>
+            `;
+                }
+
+                if (window.MathJax) {
+                    MathJax.typesetPromise().catch((err) => console.log(err));
+                }
+            }
+
+            // --- Tab Logic ---
+            window.openTab = function (tabName) {
+                const tabContents = document.getElementsByClassName("tab-content");
+                for (let i = 0; i < tabContents.length; i++) {
+                    tabContents[i].classList.remove("active");
+                }
+                const tabBtns = document.getElementsByClassName("tab-btn");
+                for (let i = 0; i < tabBtns.length; i++) {
+                    tabBtns[i].classList.remove("active");
+                }
+                document.getElementById(tabName).classList.add("active");
+                event.currentTarget.classList.add("active");
+            };
+
+            window.openSubTab = function (tabName) {
+                const parent = document.getElementById(tabName).parentElement;
+                const siblings = parent.getElementsByClassName("sub-tab-content");
+                for (let i = 0; i < siblings.length; i++) {
+                    siblings[i].classList.remove("active");
+                }
+                const btnContainer = parent.previousElementSibling;
+                const btnSiblings = btnContainer.getElementsByClassName("sub-tab-btn");
+                for (let i = 0; i < btnSiblings.length; i++) {
+                    btnSiblings[i].classList.remove("active");
+                }
+                document.getElementById(tabName).classList.add("active");
+                event.currentTarget.classList.add("active");
+            };
+
+            // --- Toggle Logic ---
+            advancedToggleBtn.addEventListener('click', function () {
+                state.isComplex = !state.isComplex;
+
+                // Update Button UI
+                if (state.isComplex) {
+                    advancedToggleBtn.classList.add('active');
+                    advancedControls.classList.remove('hidden');
+                } else {
+                    advancedToggleBtn.classList.remove('active');
+                    advancedControls.classList.add('hidden');
+                }
+
+                updateUI();
+            });
+
+            // --- Listeners ---
+            for (let key in sliders) {
+                sliders[key].addEventListener('input', updateUI);
+            }
+            showInjLeakToggle.addEventListener('change', updateUI);
+
+            // Initial Call
+            updateUI();
+        });
+    </script>
+</body>
+
+</html>
