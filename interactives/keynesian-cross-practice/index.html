@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keynesian Cross Practice Problems</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .page-layout {
+            display: flex;
+            gap: 20px;
+            max-width: 1260px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+        .container {
+            flex: 1;
+            min-width: 0;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            font-size: 1.6rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+
+        /* Difficulty selector */
+        .difficulty-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .diff-btn {
+            padding: 8px 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .diff-btn:hover { border-color: #007bff; color: #007bff; }
+        .diff-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        /* Custom / edit params */
+        .param-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .param-header h2 { margin-bottom: 0; }
+        .edit-params-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            color: #888;
+            font-size: 1rem;
+            line-height: 1;
+            transition: color 0.15s, background 0.15s;
+        }
+        .edit-params-btn:hover { color: #4338ca; background: #eef2ff; }
+        .edit-params-btn.active { color: #4338ca; }
+        .param.editing { border-color: #a5b4fc; background: #f0f4ff; }
+        .param.editing .value { display: none; }
+        .param .edit-input {
+            display: none;
+            width: 70px;
+            padding: 3px 6px;
+            border: 1px solid #a5b4fc;
+            border-radius: 4px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            background: white;
+        }
+        .param .edit-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+        }
+        .param.editing .edit-input { display: inline-block; }
+        .custom-apply-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .custom-apply-btn {
+            padding: 6px 18px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .custom-apply-btn:hover { background: #4f46e5; }
+        .custom-shock-edit {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .custom-shock-edit label {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 600;
+        }
+        .custom-shock-edit select,
+        .custom-shock-edit input {
+            padding: 4px 8px;
+            border: 1px solid #a5b4fc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        /* Problem display */
+        .problem-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .problem-card h2 {
+            font-size: 1.1rem;
+            color: #495057;
+            margin-bottom: 14px;
+        }
+        .given-params {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .param {
+            background: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+        }
+        .param .label { font-size: 0.8rem; color: #888; display: block; }
+        .param .value { font-size: 1.15rem; font-weight: 700; color: #2c3e50; }
+        .model-eq {
+            background: #e8f4fd;
+            border-left: 4px solid #007bff;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+        }
+        .scenario-text {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        /* Questions */
+        .questions {
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 18px;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .question-block.correct {
+            border-color: #28a745;
+            background: #f0fff0;
+        }
+        .question-block.incorrect {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .answer-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .answer-row input {
+            width: 140px;
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .answer-row input:focus { outline: none; border-color: #007bff; }
+        .answer-row input.correct { border-color: #28a745; background: #f0fff0; }
+        .answer-row input.incorrect { border-color: #dc3545; background: #fff5f5; }
+        .feedback {
+            font-size: 0.9rem;
+            font-weight: 600;
+            min-width: 40px;
+        }
+        .feedback.correct { color: #28a745; }
+        .feedback.incorrect { color: #dc3545; }
+        .btn-check-one, .btn-hint-one {
+            padding: 4px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+        .btn-check-one { background: #e8f8ec; color: #28a745; border-color: #28a745; }
+        .btn-check-one:hover { background: #28a745; color: white; }
+        .btn-hint-one { background: #fff8e1; color: #e0a800; border-color: #e0a800; }
+        .btn-hint-one:hover { background: #ffc107; color: #333; }
+        .inline-hint {
+            display: none;
+            margin-top: 8px;
+            padding: 10px 14px;
+            background: #fffdf0;
+            border-left: 3px solid #ffc107;
+            border-radius: 4px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .inline-hint.visible { display: block; }
+        .inline-hint .hint-math { margin: 4px 0; }
+        .inline-hint .hint-explain {
+            color: #666;
+            font-size: 0.83rem;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-outline { background: white; color: #007bff; border: 2px solid #007bff; }
+        .btn-outline:hover { background: #e8f4fd; }
+
+        /* Walkthrough */
+        .walkthrough {
+            display: none;
+            margin-top: 20px;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .walkthrough.visible { display: block; }
+        .wt-header {
+            background: #007bff;
+            color: white;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .wt-body { padding: 20px; }
+        .wt-step {
+            display: none;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .wt-step.visible { display: block; }
+        .wt-step.active { border-left-color: #ffc107; background: #fffdf0; }
+        .wt-step h3 {
+            font-size: 0.95rem;
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+        .wt-step .math-line {
+            margin: 8px 0;
+            font-size: 1.05rem;
+        }
+        .wt-step .explanation {
+            color: #666;
+            font-size: 0.9rem;
+            font-style: italic;
+            margin-top: 6px;
+        }
+        .wt-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border-top: 1px solid #dee2e6;
+        }
+        .step-counter { color: #888; font-weight: 600; }
+
+        /* Score tracker */
+        .score-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        .score-bar .streak { font-weight: 700; color: #007bff; }
+        .score-bar .accuracy { color: #28a745; font-weight: 600; }
+        .score-bar .level-info { color: #666; }
+
+        /* Calculator */
+        .calc-panel {
+            width: 320px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .calc-header {
+            background: #495057;
+            color: white;
+            padding: 8px 12px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+        .calc-display {
+            background: #1e2a38;
+            color: #4fc3f7;
+            font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
+            font-size: 1.35rem;
+            padding: 10px 12px;
+            text-align: right;
+            min-height: 44px;
+            word-break: break-all;
+            line-height: 1.3;
+        }
+        .calc-display .calc-expr {
+            font-size: 0.75rem;
+            color: #90a4ae;
+            display: block;
+            min-height: 14px;
+        }
+        .calc-body { padding: 8px; overflow: hidden; }
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .calc-grid button {
+            padding: 10px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            transition: background 0.1s;
+        }
+        .calc-grid button:hover { background: #e9ecef; }
+        .calc-grid button:active { background: #dee2e6; }
+        .calc-grid button.op { background: #e8f4fd; color: #007bff; }
+        .calc-grid button.op:hover { background: #d0e8fa; }
+        .calc-grid button.eq { background: #007bff; color: white; }
+        .calc-grid button.eq:hover { background: #0056b3; }
+        .calc-grid button.clr { background: #fff3cd; color: #856404; }
+        .calc-grid button.clr:hover { background: #ffe69c; }
+
+        .calc-save-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .calc-save-row input {
+            flex: 1;
+            min-width: 0;
+            padding: 5px 6px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .calc-save-row input:focus { outline: none; border-color: #007bff; }
+        .calc-save-row button {
+            flex: 0 0 auto;
+            padding: 5px 8px;
+            border: none;
+            border-radius: 5px;
+            background: #28a745;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .calc-save-row button:hover { background: #1e7e34; }
+
+        .calc-memory-label {
+            font-size: 0.7rem;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .calc-memory {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .mem-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .mem-chip:hover { background: #d0e8fa; border-color: #007bff; }
+        .mem-chip .mem-name { color: #007bff; }
+        .mem-chip .mem-val { color: #333; }
+        .mem-chip .mem-del {
+            color: #aaa;
+            font-size: 0.65rem;
+            margin-left: 2px;
+        }
+        .mem-chip .mem-del:hover { color: #dc3545; }
+        .calc-send-row {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #eee;
+        }
+        .calc-send-btn {
+            width: 100%;
+            padding: 6px 4px;
+            border: 2px dashed #28a745;
+            border-radius: 5px;
+            background: #f0fff0;
+            color: #28a745;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            line-height: 1.2;
+        }
+        .calc-send-btn:hover { background: #28a745; color: white; border-style: solid; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .page-layout { flex-direction: column; }
+            .calc-panel {
+                width: 100%;
+                position: static;
+                order: -1;
+            }
+            .calc-grid { grid-template-columns: repeat(8, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .container { padding: 16px; }
+            .given-params { grid-template-columns: repeat(2, 1fr); }
+            .answer-row input { width: 110px; }
+            .calc-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-layout">
+<div class="container">
+    <h1>Keynesian Cross Practice</h1>
+    <p class="subtitle">Solve for equilibrium output, compute multipliers, and analyze policy changes</p>
+
+    <div class="difficulty-bar">
+        <button class="diff-btn active" onclick="setDifficulty('simple')" id="diff-simple">Simple Model</button>
+        <button class="diff-btn" onclick="setDifficulty('government')" id="diff-government">With Government</button>
+        <button class="diff-btn" onclick="setDifficulty('full')" id="diff-full">Full Model</button>
+        <button class="diff-btn" onclick="setDifficulty('policy')" id="diff-policy">Policy Shocks</button>
+    </div>
+
+    <div class="score-bar">
+        <span class="level-info" id="level-info">Simple Model: AD = c&#8320; + c&#8321;Y + I</span>
+        <span><span class="streak" id="streak-display">0</span> in a row</span>
+        <span class="accuracy" id="accuracy-display">0 / 0</span>
+    </div>
+
+    <div id="problem-area"></div>
+
+    <div class="btn-row">
+        <button class="btn btn-success" onclick="checkAnswers()">Check My Answers</button>
+        <button class="btn btn-warning" onclick="toggleWalkthrough()">Show Me How</button>
+        <button class="btn btn-primary" onclick="newProblem()">New Problem</button>
+    </div>
+
+    <div id="walkthrough" class="walkthrough"></div>
+</div>
+
+<!-- Sticky Calculator -->
+<div class="calc-panel" id="calc-panel">
+    <div class="calc-header">Scratch Calculator</div>
+    <div class="calc-display">
+        <span class="calc-expr" id="calc-expr"></span>
+        <span id="calc-screen">0</span>
+    </div>
+    <div class="calc-body">
+        <div class="calc-grid">
+            <button class="clr" onclick="calcClear()">C</button>
+            <button class="clr" onclick="calcBackspace()">&larr;</button>
+            <button class="op" onclick="calcOp('/')">&divide;</button>
+            <button class="op" onclick="calcOp('*')">&times;</button>
+            <button onclick="calcDigit('7')">7</button>
+            <button onclick="calcDigit('8')">8</button>
+            <button onclick="calcDigit('9')">9</button>
+            <button class="op" onclick="calcOp('-')">&minus;</button>
+            <button onclick="calcDigit('4')">4</button>
+            <button onclick="calcDigit('5')">5</button>
+            <button onclick="calcDigit('6')">6</button>
+            <button class="op" onclick="calcOp('+')">+</button>
+            <button onclick="calcDigit('1')">1</button>
+            <button onclick="calcDigit('2')">2</button>
+            <button onclick="calcDigit('3')">3</button>
+            <button class="eq" onclick="calcEquals()" style="grid-row: span 2;">=</button>
+            <button onclick="calcDigit('0')" style="grid-column: span 2;">0</button>
+            <button onclick="calcDigit('.')">.</button>
+        </div>
+        <div class="calc-save-row">
+            <input type="text" id="calc-save-name" placeholder="name (e.g. A)" maxlength="10">
+            <button onclick="calcSave()">Save</button>
+        </div>
+        <div class="calc-memory-label">Saved Values <span style="color:#bbb;">(click to recall)</span></div>
+        <div class="calc-memory" id="calc-memory"></div>
+        <div class="calc-send-row">
+            <button class="calc-send-btn" id="calc-send-btn" onclick="calcSendToAnswer()">&darr; Paste into: A</button>
+        </div>
+    </div>
+    <div id="kc-graph" style="width:100%; height:280px; border-top:1px solid #dee2e6;"></div>
+</div>
+
+</div><!-- end page-layout -->
+
+<script>
+// ===== STATE =====
+let currentDifficulty = 'simple';
+let currentProblem = null;
+let streak = 0;
+let totalAttempts = 0;
+let totalCorrect = 0;
+let walkthroughVisible = false;
+let walkthroughStep = 0;
+let customMode = false;
+
+// ===== PROBLEM GENERATION =====
+function randInt(lo, hi) {
+    return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+}
+function randChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function round2(x) { return Math.round(x * 100) / 100; }
+
+function generateProblem() {
+    const d = currentDifficulty;
+    let p = {};
+
+    // Base parameters — always present
+    p.c0 = randInt(2, 8) * 50;           // 100..400
+    p.c1 = randChoice([0.5, 0.6, 0.7, 0.75, 0.8]);
+    p.I  = randInt(2, 6) * 50;            // 100..300
+
+    if (d === 'simple') {
+        p.type = 'simple';
+        // AD = c0 + c1*Y + I
+        p.multiplier = round2(1 / (1 - p.c1));
+        p.autonomous = p.c0 + p.I;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+        p.oneMinusC1 = round2(1 - p.c1);
+        p.Sstar = round2(-p.c0 + p.oneMinusC1 * p.Ystar);
+        p.questions = [
+            { id: 'auto', shortLabel: 'A', text: 'What is total autonomous spending (A)?', answer: p.autonomous, unit: '', hint: 'A = c\\textsubscript{0} + I' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '', hint: 'k = 1/(1 - c\\textsubscript{1})' },
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is equilibrium output (Y*)?', answer: p.Ystar, unit: '', hint: 'Y* = k &times; A' },
+            { id: 'Sstar', shortLabel: 'S*', text: 'What is saving at equilibrium (S*)?', answer: p.Sstar, unit: '', hint: '' }
+        ];
+    } else if (d === 'government') {
+        p.type = 'government';
+        p.G = randInt(2, 6) * 50;
+        p.t = randChoice([0.1, 0.2, 0.25, 0.3]);
+        // AD = c0 + c1(1-t)Y + I + G
+        p.oneMinusT = round2(1 - p.t);
+        p.slope = round2(p.c1 * p.oneMinusT);
+        p.multiplier = round2(1 / (1 - p.slope));
+        p.autonomous = p.c0 + p.I + p.G;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+        p.oneMinusC1 = round2(1 - p.c1);
+        p.savingSlope = round2(p.oneMinusC1 * p.oneMinusT);
+        p.Sstar = round2(-p.c0 + p.savingSlope * p.Ystar);
+        p.questions = [
+            { id: 'auto', shortLabel: 'A', text: 'What is total autonomous spending (A)?', answer: p.autonomous, unit: '', hint: 'A = c&#8320; + I + G' },
+            { id: 'oneMinusT', shortLabel: '1\u2212t', text: 'What is disposable income share (1 &minus; t)?', answer: p.oneMinusT, unit: '', hint: '' },
+            { id: 'slope', shortLabel: 'slope', text: 'What is the slope of the AD line: c&#8321; &times; (1 &minus; t)?', answer: p.slope, unit: '', hint: '' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '', hint: '' },
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is equilibrium output (Y*)?', answer: p.Ystar, unit: '', hint: '' },
+            { id: 'Sstar', shortLabel: 'S*', text: 'What is saving at equilibrium (S*)?', answer: p.Sstar, unit: '', hint: '' }
+        ];
+    } else if (d === 'full') {
+        p.type = 'full';
+        p.G = randInt(2, 6) * 50;
+        p.t = randChoice([0.1, 0.2, 0.25, 0.3]);
+        p.X = randInt(1, 4) * 50;
+        p.m = randChoice([0.05, 0.1, 0.15, 0.2]);
+        // AD = c0 + c1(1-t)Y + I + G + X - mY
+        p.oneMinusT = round2(1 - p.t);
+        p.c1oneMinusT = round2(p.c1 * p.oneMinusT);
+        p.slope = round2(p.c1oneMinusT - p.m);
+        p.multiplier = round2(1 / (1 - p.slope));
+        p.autonomous = p.c0 + p.I + p.G + p.X;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+        p.oneMinusC1 = round2(1 - p.c1);
+        p.savingSlope = round2(p.oneMinusC1 * p.oneMinusT);
+        p.Sstar = round2(-p.c0 + p.savingSlope * p.Ystar);
+        p.questions = [
+            { id: 'auto', shortLabel: 'A', text: 'What is total autonomous spending (A)?', answer: p.autonomous, unit: '', hint: '' },
+            { id: 'oneMinusT', shortLabel: '1\u2212t', text: 'What is disposable income share (1 &minus; t)?', answer: p.oneMinusT, unit: '', hint: '' },
+            { id: 'c1oneMinusT', shortLabel: 'c\u2081(1\u2212t)', text: 'What is c&#8321; &times; (1 &minus; t)?', answer: p.c1oneMinusT, unit: '', hint: '' },
+            { id: 'slope', shortLabel: 'slope', text: 'Now subtract imports: c&#8321;(1 &minus; t) &minus; m = slope of AD', answer: p.slope, unit: '', hint: '' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '', hint: '' },
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is equilibrium output (Y*)?', answer: p.Ystar, unit: '', hint: '' },
+            { id: 'Sstar', shortLabel: 'S*', text: 'What is saving at equilibrium (S*)?', answer: p.Sstar, unit: '', hint: '' }
+        ];
+    } else { // policy — simple model with G, no taxes or imports
+        p.type = 'policy';
+        p.G = randInt(2, 6) * 50;
+        // AD = c0 + c1*Y + I + G
+        p.slope = p.c1;
+        p.multiplier = round2(1 / (1 - p.c1));
+        p.autonomous = p.c0 + p.I + p.G;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+
+        // Generate a shock
+        const shockTypes = ['deltaG', 'deltaI', 'deltaC0'];
+        p.shockType = randChoice(shockTypes);
+        p.shockSize = randChoice([50, 100, -50, -100]);
+        const shockLabel = p.shockType === 'deltaG' ? 'G' : (p.shockType === 'deltaI' ? 'I' : 'c₀');
+        p.shockLabel = shockLabel;
+
+        p.newAutonomous = p.autonomous + p.shockSize;
+        p.deltaY = round2(p.shockSize * p.multiplier);
+        p.newYstar = round2(p.Ystar + p.deltaY);
+
+        p.questions = [
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is the initial equilibrium output (Y*)?', answer: p.Ystar, unit: '' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '' },
+            { id: 'deltaY', shortLabel: '\u0394Y', text: `If ${shockLabel} changes by ${p.shockSize > 0 ? '+' : ''}${p.shockSize}, what is the change in Y (\u0394Y)?`, answer: p.deltaY, unit: '' },
+            { id: 'newY', shortLabel: 'Y*new', text: 'What is the new equilibrium output?', answer: p.newYstar, unit: '' }
+        ];
+    }
+
+    return p;
+}
+
+// ===== HINT MAPPING =====
+// Returns an array of hint objects, one per question, pulled from the walkthrough steps
+function generateHintSteps() {
+    const p = currentProblem;
+    const all = generateWalkthroughSteps();
+    const hints = [];
+
+    if (p.type === 'simple') {
+        // Questions: A, k, Y*, S*
+        // Steps: 0=eq, 1=A, 2=collect, 3=k, 4=Y*, 5=S*
+        hints.push(all[1]); // A
+        hints.push(all[3]); // k
+        hints.push(all[4]); // Y*
+        hints.push(all[5]); // S*
+    } else if (p.type === 'government') {
+        // Questions: A, 1-t, slope, k, Y*, S*
+        // Steps: 0=eq, 1=A, 2=slope(1-t+slope), 3=collect, 4=k, 5=Y*, 6=S*
+        hints.push(all[1]); // A
+        hints.push(all[2]); // 1-t and slope (first line has 1-t)
+        hints.push(all[2]); // slope (same step, second line)
+        hints.push(all[4]); // k
+        hints.push(all[5]); // Y*
+        hints.push(all[6]); // S*
+    } else if (p.type === 'full') {
+        // Questions: A, 1-t, c1(1-t), slope, k, Y*, S*
+        // Steps: 0=eq, 1=A, 2=slope-part1, 3=slope-part2, 4=collect, 5=k, 6=Y*, 7=S*
+        hints.push(all[1]); // A
+        hints.push(all[2]); // 1-t
+        hints.push(all[2]); // c1(1-t) same step
+        hints.push(all[3]); // subtract m
+        hints.push(all[5]); // k
+        hints.push(all[6]); // Y*
+        hints.push(all[7]); // S*
+    } else { // policy — simple model, 5 walkthrough steps
+        // Questions: Y*, k, deltaY, newY
+        // Steps: 0=A, 1=k, 2=Y*, 3=shock, 4=newY
+        hints.push(all[2]); // Y*
+        hints.push(all[1]); // k
+        hints.push(all[3]); // deltaY
+        hints.push(all[4]); // newY
+    }
+    return hints;
+}
+
+// ===== RENDERING =====
+function renderProblem() {
+    const p = currentProblem;
+    const editing = customMode;
+    const editClass = editing ? ' editing' : '';
+    let html = '<div class="problem-card">';
+    html += '<div class="param-header">';
+    html += '<h2>Given Parameters</h2>';
+    html += `<button class="edit-params-btn${editing ? ' active' : ''}" onclick="toggleCustomMode()" title="Edit parameters">&#9998;</button>`;
+    html += '</div>';
+    html += '<div class="given-params">';
+
+    function paramCell(label, key, val, step) {
+        let h = `<div class="param${editClass}"><span class="label">${label}</span>`;
+        h += `<span class="value">${val}</span>`;
+        h += `<input class="edit-input" type="number" step="${step}" id="cp-${key}" value="${val}">`;
+        h += `</div>`;
+        return h;
+    }
+
+    html += paramCell('c&#8320; (autonomous C)', 'c0', p.c0, '50');
+    html += paramCell('c&#8321; (MPC)', 'c1', p.c1, '0.05');
+    html += paramCell('I (investment)', 'I', p.I, '50');
+    if (p.G !== undefined && p.type !== 'simple') {
+        html += paramCell('G (gov\'t spending)', 'G', p.G, '50');
+    }
+    if (p.t !== undefined && p.type !== 'simple') {
+        html += paramCell('t (tax rate)', 't', p.t, '0.05');
+    }
+    if (p.X !== undefined && p.X !== null) {
+        html += paramCell('X (exports)', 'X', p.X, '50');
+    }
+    if (p.m !== undefined && p.m !== null) {
+        html += paramCell('m (import propensity)', 'm', p.m, '0.05');
+    }
+    html += '</div>';
+
+    // In edit mode: show shock editor for policy + apply button
+    if (editing) {
+        if (p.type === 'policy') {
+            html += '<div class="custom-shock-edit">';
+            html += '<label>Shock:</label>';
+            html += `<select id="cp-shockType">`;
+            html += `<option value="deltaG"${p.shockType==='deltaG'?' selected':''}>G</option>`;
+            html += `<option value="deltaI"${p.shockType==='deltaI'?' selected':''}>I</option>`;
+            html += `<option value="deltaC0"${p.shockType==='deltaC0'?' selected':''}>c\u2080</option>`;
+            html += `</select>`;
+            html += `<label>by</label>`;
+            html += `<input type="number" id="cp-shockSize" value="${p.shockSize}" step="50" style="width:80px">`;
+            html += '</div>';
+        }
+        html += '<div class="custom-apply-row">';
+        html += '<button class="custom-apply-btn" onclick="generateCustomProblem()">Apply</button>';
+        html += '</div>';
+    }
+
+    // Show the model equation
+    html += '<div class="model-eq">';
+    if (p.type === 'simple') {
+        html += '<strong>Model:</strong> $$AD = c_0 + c_1 Y + I$$';
+        html += 'Equilibrium condition: $$Y = AD$$';
+    } else if (p.type === 'government') {
+        html += '<strong>Model:</strong> $$AD = c_0 + c_1(1-t)Y + I + G$$';
+        html += 'Equilibrium condition: $$Y = AD$$';
+    } else if (p.type === 'full') {
+        html += '<strong>Model:</strong> $$AD = c_0 + c_1(1-t)Y + I + G + X - mY$$';
+        html += 'Equilibrium condition: $$Y = AD$$';
+    } else {
+        // policy — simple model with G
+        html += '<strong>Model:</strong> $$AD = c_0 + c_1 Y + I + G$$';
+        html += 'Equilibrium condition: $$Y = AD$$';
+        html += '</div>';
+        // Shock scenario
+        html += '<div class="scenario-text">';
+        const dir = p.shockSize > 0 ? 'increases' : 'decreases';
+        html += `<strong>Policy Shock:</strong> ${p.shockLabel} ${dir} by ${Math.abs(p.shockSize)}. Find the initial equilibrium, the multiplier, the change in Y, and the new equilibrium.`;
+    }
+    html += '</div>';
+
+    html += '</div>'; // end problem-card
+
+    // Questions
+    const hintSteps = generateHintSteps();
+    html += '<div class="questions">';
+    p.questions.forEach((q, i) => {
+        html += `<div class="question-block" id="qblock-${i}">`;
+        html += `<div class="question-text">${i+1}. ${q.text}</div>`;
+        html += `<div class="answer-row">`;
+        html += `<input type="number" step="any" id="answer-${i}" data-index="${i}" data-label="${q.shortLabel}" placeholder="Your answer" onkeydown="if(event.key==='Enter') checkOne(${i})" oninput="updatePasteButton()">`;
+        html += `<button class="btn-check-one" onclick="checkOne(${i})">Check</button>`;
+        html += `<button class="btn-hint-one" onclick="showHintFor(${i})">Hint</button>`;
+        html += `<span class="feedback" id="feedback-${i}"></span>`;
+        html += `</div>`;
+        // Inline hint
+        const h = hintSteps[i];
+        if (h) {
+            html += `<div class="inline-hint" id="hint-${i}">`;
+            html += `<div class="hint-math">${h.math}</div>`;
+            html += `<div class="hint-math">${h.sub}</div>`;
+            if (h.explanation) html += `<div class="hint-explain">${h.explanation}</div>`;
+            html += `</div>`;
+        }
+        html += `</div>`;
+    });
+    html += '</div>';
+
+    document.getElementById('problem-area').innerHTML = html;
+
+    // Render LaTeX
+    renderMathInElement(document.getElementById('problem-area'), {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+        ]
+    });
+
+    // Focus first input, update paste button, and draw graph
+    setTimeout(() => {
+        const firstInput = document.getElementById('answer-0');
+        if (firstInput) firstInput.focus();
+        updatePasteButton();
+        activeQuestionId = p.questions[0] ? p.questions[0].id : null;
+        updateGraph();
+    }, 100);
+}
+
+// ===== CHECKING =====
+function checkOneResult(i) {
+    const p = currentProblem;
+    const q = p.questions[i];
+    const input = document.getElementById(`answer-${i}`);
+    const fb = document.getElementById(`feedback-${i}`);
+    const block = document.getElementById(`qblock-${i}`);
+    const val = parseFloat(input.value);
+
+    if (isNaN(val)) {
+        block.className = 'question-block';
+        input.className = '';
+        fb.textContent = '';
+        return null; // no answer
+    }
+    const tol = Math.max(Math.abs(q.answer) * 0.015, 0.5);
+    const correct = Math.abs(val - q.answer) <= tol;
+    if (correct) {
+        block.className = 'question-block correct';
+        input.className = 'correct';
+        fb.className = 'feedback correct';
+        fb.textContent = '\u2713 Correct!';
+    } else {
+        block.className = 'question-block incorrect';
+        input.className = 'incorrect';
+        fb.className = 'feedback incorrect';
+        fb.textContent = `\u2717 Answer: ${q.answer}`;
+    }
+    return correct;
+}
+
+function checkOne(i) {
+    const result = checkOneResult(i);
+    if (result !== null) updatePasteButton();
+}
+
+function checkAnswers() {
+    const p = currentProblem;
+    let allCorrect = true;
+    let anyFilled = false;
+
+    p.questions.forEach((q, i) => {
+        const result = checkOneResult(i);
+        if (result === null) { allCorrect = false; }
+        else { anyFilled = true; if (!result) allCorrect = false; }
+    });
+
+    if (!anyFilled) return;
+
+    totalAttempts++;
+    if (allCorrect) {
+        totalCorrect++;
+        streak++;
+    } else {
+        streak = 0;
+    }
+    updateScoreDisplay();
+    updatePasteButton();
+}
+
+function showHintFor(i) {
+    const el = document.getElementById(`hint-${i}`);
+    if (!el) return;
+    const isVisible = el.classList.contains('visible');
+    el.classList.toggle('visible');
+    if (!isVisible) {
+        // Render KaTeX on first show
+        renderMathInElement(el, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ]
+        });
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function updateScoreDisplay() {
+    document.getElementById('streak-display').textContent = streak;
+    document.getElementById('accuracy-display').textContent = `${totalCorrect} / ${totalAttempts}`;
+}
+
+// ===== WALKTHROUGH =====
+function generateWalkthroughSteps() {
+    const p = currentProblem;
+    const steps = [];
+
+    if (p.type === 'simple') {
+        steps.push({
+            title: 'Step 1: Write the equilibrium condition',
+            math: `$$Y = AD = c_0 + c_1 Y + I$$`,
+            sub: `$$Y = ${p.c0} + ${p.c1}Y + ${p.I}$$`,
+            explanation: 'In equilibrium, total output (Y) equals total spending (AD). Substitute the known values.'
+        });
+        steps.push({
+            title: 'Step 2: Identify autonomous spending (A)',
+            math: `$$A = c_0 + I = ${p.c0} + ${p.I} = ${p.autonomous}$$`,
+            sub: `So: $Y = ${p.autonomous} + ${p.c1}Y$`,
+            explanation: `Autonomous spending is everything that does NOT depend on Y. Here that's c\u2080 and I.`
+        });
+        steps.push({
+            title: 'Step 3: Collect Y terms on the left side',
+            math: `$$Y - ${p.c1}Y = ${p.autonomous}$$`,
+            sub: `$$Y(1 - ${p.c1}) = ${p.autonomous}$$`,
+            explanation: 'Move all terms with Y to the left. Factor out Y.'
+        });
+        steps.push({
+            title: 'Step 4: Identify the multiplier',
+            math: `$$k = \\frac{1}{1 - c_1} = \\frac{1}{1 - ${p.c1}} = \\frac{1}{${round2(1 - p.c1)}}$$`,
+            sub: `$$\\boxed{k = ${p.multiplier}}$$`,
+            explanation: `The coefficient on A when you divide both sides by (1 \u2212 c\u2081) is the multiplier. For every $1 increase in autonomous spending, Y increases by $${p.multiplier}.`
+        });
+        steps.push({
+            title: 'Step 5: Solve for Y',
+            math: `$$Y^* = \\frac{1}{1 - c_1} \\times A = k \\times A = ${p.multiplier} \\times ${p.autonomous}$$`,
+            sub: `$$\\boxed{Y^* = ${p.Ystar}}$$`,
+            explanation: `Multiply the multiplier by autonomous spending to get equilibrium output.`
+        });
+        steps.push({
+            title: 'Step 6: Saving at equilibrium',
+            math: `$$S = -c_0 + (1 - c_1)Y = -${p.c0} + ${p.oneMinusC1} \\times ${p.Ystar}$$`,
+            sub: `$$\\boxed{S^* = ${p.Sstar}}$$`,
+            explanation: `Check: S* should equal I = ${p.I}. Saving = investment in the simple model (the only leakage is saving).`
+        });
+
+    } else if (p.type === 'government') {
+        steps.push({
+            title: 'Step 1: Write the equilibrium condition',
+            math: `$$Y = c_0 + c_1(1-t)Y + I + G$$`,
+            sub: `$$Y = ${p.c0} + ${p.c1}(1-${p.t})Y + ${p.I} + ${p.G}$$`,
+            explanation: 'With taxes, consumption depends on disposable income: c\u2081(1\u2212t)Y instead of c\u2081Y.'
+        });
+        steps.push({
+            title: 'Step 2: Identify autonomous spending (A)',
+            math: `$$A = c_0 + I + G = ${p.c0} + ${p.I} + ${p.G}$$`,
+            sub: `$$\\boxed{A = ${p.autonomous}}$$`,
+            explanation: 'Autonomous spending is everything that does NOT depend on Y.'
+        });
+        steps.push({
+            title: 'Step 3: Compute the slope of the AD line',
+            math: `$$\\text{First: } 1 - t = 1 - ${p.t} = ${p.oneMinusT}$$`,
+            sub: `$$\\text{Slope} = c_1 \\times (1-t) = ${p.c1} \\times ${p.oneMinusT} = \\boxed{${p.slope}}$$`,
+            explanation: 'Taxes reduce the share of each dollar of income that gets spent. The slope is flatter than c\u2081 alone.'
+        });
+        steps.push({
+            title: 'Step 4: Collect Y terms',
+            math: `$$Y - ${p.slope}Y = ${p.autonomous}$$`,
+            sub: `$$Y(1 - ${p.slope}) = ${p.autonomous}$$`,
+            explanation: 'Move the income-dependent term to the left and factor out Y.'
+        });
+        steps.push({
+            title: 'Step 5: Identify the multiplier',
+            math: `$$k = \\frac{1}{1 - c_1(1-t)} = \\frac{1}{1 - ${p.slope}} = \\frac{1}{${round2(1 - p.slope)}}$$`,
+            sub: `$$\\boxed{k = ${p.multiplier}}$$`,
+            explanation: `The multiplier is smaller than 1/(1\u2212c\u2081) = ${round2(1/(1-p.c1))} because taxes act as a leakage.`
+        });
+        steps.push({
+            title: 'Step 6: Solve for Y',
+            math: `$$Y^* = k \\times A = ${p.multiplier} \\times ${p.autonomous}$$`,
+            sub: `$$\\boxed{Y^* = ${p.Ystar}}$$`,
+            explanation: `Multiply the multiplier by autonomous spending to get equilibrium output.`
+        });
+        steps.push({
+            title: 'Step 7: Saving at equilibrium',
+            math: `$$S = -c_0 + (1 - c_1)(1 - t)Y = -${p.c0} + ${p.oneMinusC1} \\times ${p.oneMinusT} \\times ${p.Ystar}$$`,
+            sub: `$$S = -${p.c0} + ${p.savingSlope} \\times ${p.Ystar} = \\boxed{${p.Sstar}}$$`,
+            explanation: `Saving depends on disposable income. With taxes, the marginal propensity to save out of total income is (1\u2212c\u2081)(1\u2212t) = ${p.savingSlope}.`
+        });
+
+    } else if (p.type === 'full') {
+        steps.push({
+            title: 'Step 1: Write the equilibrium condition',
+            math: `$$Y = c_0 + c_1(1-t)Y + I + G + X - mY$$`,
+            sub: `$$Y = ${p.c0} + ${p.c1}(1-${p.t})Y + ${p.I} + ${p.G} + ${p.X} - ${p.m}Y$$`,
+            explanation: 'The full model adds exports (X, autonomous) and imports (mY, income-dependent leakage).'
+        });
+        steps.push({
+            title: 'Step 2: Identify autonomous spending (A)',
+            math: `$$A = c_0 + I + G + X = ${p.c0} + ${p.I} + ${p.G} + ${p.X}$$`,
+            sub: `$$\\boxed{A = ${p.autonomous}}$$`,
+            explanation: 'Exports are autonomous (they don\u2019t depend on our Y). Imports do depend on Y, so they are NOT part of A.'
+        });
+        steps.push({
+            title: 'Step 3: Compute the slope of the AD line',
+            math: `$$\\text{First: } 1 - t = 1 - ${p.t} = ${p.oneMinusT}$$`,
+            sub: `$$c_1 \\times (1-t) = ${p.c1} \\times ${p.oneMinusT} = ${p.c1oneMinusT}$$`,
+            explanation: 'Start by computing the tax-adjusted MPC.'
+        });
+        steps.push({
+            title: 'Step 4: Subtract the import leakage',
+            math: `$$\\text{Slope} = c_1(1-t) - m = ${p.c1oneMinusT} - ${p.m}$$`,
+            sub: `$$\\boxed{\\text{Slope} = ${p.slope}}$$`,
+            explanation: 'Imports are another leakage \u2014 part of each dollar of income leaks out to buy foreign goods, reducing the slope further.'
+        });
+        steps.push({
+            title: 'Step 5: Collect Y terms',
+            math: `$$Y - ${p.slope}Y = ${p.autonomous}$$`,
+            sub: `$$Y(1 - ${p.slope}) = ${p.autonomous}$$`,
+            explanation: 'Group all income-dependent terms: c\u2081(1\u2212t)Y and \u2212mY are both on the right. Move them left.'
+        });
+        steps.push({
+            title: 'Step 6: Identify the multiplier',
+            math: `$$k = \\frac{1}{1 - c_1(1-t) + m} = \\frac{1}{1 - ${p.slope}} = \\frac{1}{${round2(1 - p.slope)}}$$`,
+            sub: `$$\\boxed{k = ${p.multiplier}}$$`,
+            explanation: `With all three leakages (saving, taxes, imports), the multiplier is much smaller. Compare: simple k = ${round2(1/(1-p.c1))}, now k = ${p.multiplier}.`
+        });
+        steps.push({
+            title: 'Step 7: Solve for Y',
+            math: `$$Y^* = k \\times A = ${p.multiplier} \\times ${p.autonomous}$$`,
+            sub: `$$\\boxed{Y^* = ${p.Ystar}}$$`,
+            explanation: `Multiply the multiplier by autonomous spending to get equilibrium output.`
+        });
+        steps.push({
+            title: 'Step 8: Saving at equilibrium',
+            math: `$$S = -c_0 + (1 - c_1)(1 - t)Y = -${p.c0} + ${p.oneMinusC1} \\times ${p.oneMinusT} \\times ${p.Ystar}$$`,
+            sub: `$$S = -${p.c0} + ${p.savingSlope} \\times ${p.Ystar} = \\boxed{${p.Sstar}}$$`,
+            explanation: `Household saving depends on disposable income. Imports are a separate leakage from the economy, not from household saving.`
+        });
+
+    } else { // policy — simple model with G, no taxes or imports
+        let stepNum = 0;
+
+        steps.push({
+            title: `Step ${++stepNum}: Write the model and find A`,
+            math: `$$Y = c_0 + c_1 Y + I + G$$`,
+            sub: `$$A = ${p.c0} + ${p.I} + ${p.G} = \\boxed{${p.autonomous}}$$`,
+            explanation: `Autonomous spending is everything that does NOT depend on Y.`
+        });
+        steps.push({
+            title: `Step ${++stepNum}: Compute the multiplier`,
+            math: `$$k = \\frac{1}{1 - c_1} = \\frac{1}{1 - ${p.c1}} = \\frac{1}{${round2(1 - p.c1)}}$$`,
+            sub: `$$\\boxed{k = ${p.multiplier}}$$`,
+            explanation: ''
+        });
+        steps.push({
+            title: `Step ${++stepNum}: Initial equilibrium output`,
+            math: `$$Y^* = k \\times A = ${p.multiplier} \\times ${p.autonomous}$$`,
+            sub: `$$\\boxed{Y^* = ${p.Ystar}}$$`,
+            explanation: ''
+        });
+        steps.push({
+            title: `Step ${++stepNum}: Apply the shock (\u0394${p.shockLabel} = ${p.shockSize > 0 ? '+' : ''}${p.shockSize})`,
+            math: `$$\\Delta Y = k \\times \\Delta A = k \\times \\Delta ${p.shockLabel}$$`,
+            sub: `$$\\Delta Y = ${p.multiplier} \\times (${p.shockSize}) = ${p.deltaY}$$`,
+            explanation: `Since ${p.shockLabel} is autonomous spending, a change in ${p.shockLabel} changes A by the same amount. The multiplier amplifies this.`
+        });
+        steps.push({
+            title: `Step ${++stepNum}: New equilibrium`,
+            math: `$$Y^*_{new} = Y^*_{old} + \\Delta Y = ${p.Ystar} + (${p.deltaY})$$`,
+            sub: `$$\\boxed{Y^*_{new} = ${p.newYstar}}$$`,
+            explanation: `Output ${p.deltaY > 0 ? 'increases' : 'decreases'} by ${Math.abs(p.deltaY)} \u2014 which is ${p.multiplier} times the original shock of ${Math.abs(p.shockSize)}.`
+        });
+    }
+
+    return steps;
+}
+
+function renderWalkthrough() {
+    const steps = generateWalkthroughSteps();
+    const container = document.getElementById('walkthrough');
+
+    let html = '<div class="wt-header"><span>Step-by-Step Solution</span><span id="wt-close" style="cursor:pointer;font-size:1.2rem;" onclick="toggleWalkthrough()">\u2715</span></div>';
+    html += '<div class="wt-body" id="wt-body">';
+    steps.forEach((s, i) => {
+        html += `<div class="wt-step" id="wt-step-${i}">`;
+        html += `<h3>${s.title}</h3>`;
+        html += `<div class="math-line">${s.math}</div>`;
+        html += `<div class="math-line">${s.sub}</div>`;
+        if (s.explanation) html += `<div class="explanation">${s.explanation}</div>`;
+        html += '</div>';
+    });
+    html += '</div>';
+    html += '<div class="wt-nav">';
+    html += `<button class="btn btn-outline" id="wt-prev" onclick="wtPrev()">\u2190 Previous</button>`;
+    html += `<span class="step-counter" id="wt-counter">Step 1 of ${steps.length}</span>`;
+    html += `<button class="btn btn-outline" id="wt-next" onclick="wtNext()">Next \u2192</button>`;
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    // Render math
+    renderMathInElement(container, {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+        ]
+    });
+
+    walkthroughStep = 0;
+    updateWTStep();
+}
+
+function updateWTStep() {
+    const steps = document.querySelectorAll('.wt-step');
+    const total = steps.length;
+    steps.forEach((s, i) => {
+        s.classList.remove('visible', 'active');
+        if (i <= walkthroughStep) s.classList.add('visible');
+        if (i === walkthroughStep) s.classList.add('active');
+    });
+    document.getElementById('wt-counter').textContent = `Step ${walkthroughStep + 1} of ${total}`;
+    document.getElementById('wt-prev').disabled = walkthroughStep === 0;
+    document.getElementById('wt-next').disabled = walkthroughStep === total - 1;
+
+    // Scroll the active step into view
+    const active = document.querySelector('.wt-step.active');
+    if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function wtNext() {
+    const total = document.querySelectorAll('.wt-step').length;
+    if (walkthroughStep < total - 1) {
+        walkthroughStep++;
+        updateWTStep();
+    }
+}
+function wtPrev() {
+    if (walkthroughStep > 0) {
+        walkthroughStep--;
+        updateWTStep();
+    }
+}
+
+function toggleWalkthrough() {
+    const el = document.getElementById('walkthrough');
+    walkthroughVisible = !walkthroughVisible;
+    if (walkthroughVisible) {
+        renderWalkthrough();
+        el.classList.add('visible');
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        el.classList.remove('visible');
+    }
+}
+
+// ===== CUSTOM MODE =====
+function toggleCustomMode() {
+    customMode = !customMode;
+    renderProblem();
+}
+
+function generateCustomProblem() {
+    const d = currentDifficulty;
+    let p = {};
+
+    // Read base params
+    p.c0 = parseFloat(document.getElementById('cp-c0').value) || 0;
+    p.c1 = parseFloat(document.getElementById('cp-c1').value) || 0;
+    p.I  = parseFloat(document.getElementById('cp-I').value) || 0;
+
+    if (d === 'simple') {
+        p.type = 'simple';
+        p.multiplier = round2(1 / (1 - p.c1));
+        p.autonomous = p.c0 + p.I;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+        p.oneMinusC1 = round2(1 - p.c1);
+        p.Sstar = round2(-p.c0 + p.oneMinusC1 * p.Ystar);
+        p.questions = [
+            { id: 'auto', shortLabel: 'A', text: 'What is total autonomous spending (A)?', answer: p.autonomous, unit: '', hint: 'A = c\\textsubscript{0} + I' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '', hint: 'k = 1/(1 - c\\textsubscript{1})' },
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is equilibrium output (Y*)?', answer: p.Ystar, unit: '', hint: 'Y* = k &times; A' },
+            { id: 'Sstar', shortLabel: 'S*', text: 'What is saving at equilibrium (S*)?', answer: p.Sstar, unit: '', hint: '' }
+        ];
+    } else if (d === 'government') {
+        p.type = 'government';
+        p.G = parseFloat(document.getElementById('cp-G').value) || 0;
+        p.t = parseFloat(document.getElementById('cp-t').value) || 0;
+        p.oneMinusT = round2(1 - p.t);
+        p.slope = round2(p.c1 * p.oneMinusT);
+        p.multiplier = round2(1 / (1 - p.slope));
+        p.autonomous = p.c0 + p.I + p.G;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+        p.oneMinusC1 = round2(1 - p.c1);
+        p.savingSlope = round2(p.oneMinusC1 * p.oneMinusT);
+        p.Sstar = round2(-p.c0 + p.savingSlope * p.Ystar);
+        p.questions = [
+            { id: 'auto', shortLabel: 'A', text: 'What is total autonomous spending (A)?', answer: p.autonomous, unit: '', hint: 'A = c&#8320; + I + G' },
+            { id: 'oneMinusT', shortLabel: '1\u2212t', text: 'What is disposable income share (1 &minus; t)?', answer: p.oneMinusT, unit: '', hint: '' },
+            { id: 'slope', shortLabel: 'slope', text: 'What is the slope of the AD line: c&#8321; &times; (1 &minus; t)?', answer: p.slope, unit: '', hint: '' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '', hint: '' },
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is equilibrium output (Y*)?', answer: p.Ystar, unit: '', hint: '' },
+            { id: 'Sstar', shortLabel: 'S*', text: 'What is saving at equilibrium (S*)?', answer: p.Sstar, unit: '', hint: '' }
+        ];
+    } else if (d === 'full') {
+        p.type = 'full';
+        p.G = parseFloat(document.getElementById('cp-G').value) || 0;
+        p.t = parseFloat(document.getElementById('cp-t').value) || 0;
+        p.X = parseFloat(document.getElementById('cp-X').value) || 0;
+        p.m = parseFloat(document.getElementById('cp-m').value) || 0;
+        p.oneMinusT = round2(1 - p.t);
+        p.c1oneMinusT = round2(p.c1 * p.oneMinusT);
+        p.slope = round2(p.c1oneMinusT - p.m);
+        p.multiplier = round2(1 / (1 - p.slope));
+        p.autonomous = p.c0 + p.I + p.G + p.X;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+        p.oneMinusC1 = round2(1 - p.c1);
+        p.savingSlope = round2(p.oneMinusC1 * p.oneMinusT);
+        p.Sstar = round2(-p.c0 + p.savingSlope * p.Ystar);
+        p.questions = [
+            { id: 'auto', shortLabel: 'A', text: 'What is total autonomous spending (A)?', answer: p.autonomous, unit: '', hint: '' },
+            { id: 'oneMinusT', shortLabel: '1\u2212t', text: 'What is disposable income share (1 &minus; t)?', answer: p.oneMinusT, unit: '', hint: '' },
+            { id: 'c1oneMinusT', shortLabel: 'c\u2081(1\u2212t)', text: 'What is c&#8321; &times; (1 &minus; t)?', answer: p.c1oneMinusT, unit: '', hint: '' },
+            { id: 'slope', shortLabel: 'slope', text: 'Now subtract imports: c&#8321;(1 &minus; t) &minus; m = slope of AD', answer: p.slope, unit: '', hint: '' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '', hint: '' },
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is equilibrium output (Y*)?', answer: p.Ystar, unit: '', hint: '' },
+            { id: 'Sstar', shortLabel: 'S*', text: 'What is saving at equilibrium (S*)?', answer: p.Sstar, unit: '', hint: '' }
+        ];
+    } else { // policy
+        p.type = 'policy';
+        p.G = parseFloat(document.getElementById('cp-G').value) || 0;
+        p.slope = p.c1;
+        p.multiplier = round2(1 / (1 - p.c1));
+        p.autonomous = p.c0 + p.I + p.G;
+        p.Ystar = round2(p.autonomous * p.multiplier);
+
+        const shockSelect = document.getElementById('cp-shockType');
+        const shockSizeEl = document.getElementById('cp-shockSize');
+        p.shockType = shockSelect ? shockSelect.value : 'deltaG';
+        p.shockSize = shockSizeEl ? (parseFloat(shockSizeEl.value) || 0) : 100;
+        const shockLabel = p.shockType === 'deltaG' ? 'G' : (p.shockType === 'deltaI' ? 'I' : 'c\u2080');
+        p.shockLabel = shockLabel;
+
+        p.newAutonomous = p.autonomous + p.shockSize;
+        p.deltaY = round2(p.shockSize * p.multiplier);
+        p.newYstar = round2(p.Ystar + p.deltaY);
+
+        p.questions = [
+            { id: 'Ystar', shortLabel: 'Y*', text: 'What is the initial equilibrium output (Y*)?', answer: p.Ystar, unit: '' },
+            { id: 'mult', shortLabel: 'k', text: 'What is the multiplier (k)?', answer: p.multiplier, unit: '' },
+            { id: 'deltaY', shortLabel: '\u0394Y', text: `If ${shockLabel} changes by ${p.shockSize > 0 ? '+' : ''}${p.shockSize}, what is the change in Y (\u0394Y)?`, answer: p.deltaY, unit: '' },
+            { id: 'newY', shortLabel: 'Y*new', text: 'What is the new equilibrium output?', answer: p.newYstar, unit: '' }
+        ];
+    }
+
+    // Use this problem
+    walkthroughVisible = false;
+    document.getElementById('walkthrough').classList.remove('visible');
+    currentProblem = p;
+    renderProblem();
+}
+
+// ===== DIFFICULTY =====
+function setDifficulty(d) {
+    currentDifficulty = d;
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('diff-' + d).classList.add('active');
+
+    const labels = {
+        simple: 'Simple Model: AD = c\u2080 + c\u2081Y + I',
+        government: 'With Government: AD = c\u2080 + c\u2081(1\u2212t)Y + I + G',
+        full: 'Full Model: AD = c\u2080 + c\u2081(1\u2212t)Y + I + G + X \u2212 mY',
+        policy: 'Policy Shocks: Find \u0394Y from a change in autonomous spending'
+    };
+    document.getElementById('level-info').textContent = labels[d];
+    newProblem();
+}
+
+// ===== NEW PROBLEM =====
+function newProblem() {
+    walkthroughVisible = false;
+    document.getElementById('walkthrough').classList.remove('visible');
+    currentProblem = generateProblem();
+    renderProblem();
+}
+
+// ===== CALCULATOR =====
+let calcInput = '0';
+let calcResult = null;
+let calcOper = null;
+let calcNewInput = true;
+let calcExpr = '';
+let calcMemory = {};  // name -> value
+let lastFocusedAnswer = null;
+let activeQuestionId = null;
+
+// Track which answer input was last focused
+document.addEventListener('focusin', (e) => {
+    if (e.target.matches('.answer-row input[type="number"]')) {
+        lastFocusedAnswer = e.target;
+        const idx = parseInt(e.target.dataset.index);
+        if (currentProblem && currentProblem.questions[idx]) {
+            activeQuestionId = currentProblem.questions[idx].id;
+            updateGraph();
+        }
+    }
+});
+
+function calcUpdateScreen() {
+    document.getElementById('calc-screen').textContent = calcInput;
+    document.getElementById('calc-expr').textContent = calcExpr;
+}
+
+function calcClear() {
+    calcInput = '0';
+    calcResult = null;
+    calcOper = null;
+    calcNewInput = true;
+    calcExpr = '';
+    calcUpdateScreen();
+}
+
+function calcBackspace() {
+    if (calcNewInput) return;
+    calcInput = calcInput.length > 1 ? calcInput.slice(0, -1) : '0';
+    if (calcInput === '' || calcInput === '-') calcInput = '0';
+    calcUpdateScreen();
+}
+
+function calcDigit(d) {
+    if (calcNewInput) {
+        calcInput = d === '.' ? '0.' : d;
+        calcNewInput = false;
+    } else {
+        if (d === '.' && calcInput.includes('.')) return;
+        if (calcInput === '0' && d !== '.') calcInput = d;
+        else calcInput += d;
+    }
+    calcUpdateScreen();
+}
+
+function calcOp(op) {
+    const val = parseFloat(calcInput);
+    if (calcResult !== null && calcOper && !calcNewInput) {
+        calcResult = calcCompute(calcResult, val, calcOper);
+        calcInput = String(round2(calcResult));
+    } else {
+        calcResult = val;
+    }
+    const opSymbol = {'+':'+', '-':'\u2212', '*':'\u00d7', '/':'\u00f7'}[op];
+    calcExpr = `${round2(calcResult)} ${opSymbol}`;
+    calcOper = op;
+    calcNewInput = true;
+    calcUpdateScreen();
+}
+
+function calcCompute(a, b, op) {
+    switch(op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': return b !== 0 ? a / b : 0;
+    }
+    return b;
+}
+
+function calcEquals() {
+    if (calcResult !== null && calcOper) {
+        const val = parseFloat(calcInput);
+        const result = calcCompute(calcResult, val, calcOper);
+        const opSymbols = {"+":"+", "-":"\u2212", "*":"\u00d7", "/":"\u00f7"};
+        calcExpr = round2(calcResult) + " " + opSymbols[calcOper] + " " + round2(val) + " =";
+        calcResult = null;
+        calcOper = null;
+        calcInput = String(round2(result));
+        calcNewInput = true;
+        calcUpdateScreen();
+    }
+}
+
+function calcSave() {
+    const nameInput = document.getElementById('calc-save-name');
+    let name = nameInput.value.trim();
+    if (!name) {
+        // Auto-suggest next name
+        const used = Object.keys(calcMemory);
+        const suggestions = ['A', 'k', 'slope', 'Y*', '1-t'];
+        name = suggestions.find(s => !used.includes(s)) || 'v' + (used.length + 1);
+    }
+    calcMemory[name] = parseFloat(calcInput);
+    nameInput.value = '';
+    renderCalcMemory();
+}
+
+function calcRecall(name) {
+    calcInput = String(calcMemory[name]);
+    calcNewInput = true;
+    calcUpdateScreen();
+}
+
+function calcDeleteMem(name, e) {
+    e.stopPropagation();
+    delete calcMemory[name];
+    renderCalcMemory();
+}
+
+function renderCalcMemory() {
+    const container = document.getElementById('calc-memory');
+    if (Object.keys(calcMemory).length === 0) {
+        container.innerHTML = '<span style="font-size:0.7rem;color:#bbb;">No saved values yet</span>';
+        return;
+    }
+    let html = '';
+    for (const [name, val] of Object.entries(calcMemory)) {
+        html += `<span class="mem-chip" onclick="calcRecall('${name}')">`;
+        html += `<span class="mem-name">${name}</span> = <span class="mem-val">${round2(val)}</span>`;
+        html += `<span class="mem-del" onclick="calcDeleteMem('${name}', event)">\u2715</span>`;
+        html += `</span>`;
+    }
+    container.innerHTML = html;
+}
+
+function getNextUnanswered() {
+    const p = currentProblem;
+    if (!p) return null;
+    for (let i = 0; i < p.questions.length; i++) {
+        const input = document.getElementById(`answer-${i}`);
+        if (input && input.value.trim() === '') {
+            return { input, index: i, label: p.questions[i].shortLabel };
+        }
+    }
+    return null;
+}
+
+function updatePasteButton() {
+    const btn = document.getElementById('calc-send-btn');
+    if (!btn) return;
+    const target = getNextUnanswered();
+    if (target) {
+        btn.textContent = '\u2193 Paste into: ' + target.label;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    } else {
+        btn.textContent = '\u2713 All answered';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+    }
+}
+
+function calcSendToAnswer() {
+    const target = getNextUnanswered();
+    if (target) {
+        target.input.value = round2(parseFloat(calcInput));
+        target.input.focus();
+        target.input.style.borderColor = '#28a745';
+        setTimeout(() => { target.input.style.borderColor = ''; }, 600);
+        // Update paste button to next unanswered after a brief delay
+        setTimeout(updatePasteButton, 100);
+    }
+}
+
+// Clear memory on new problem
+const origNewProblem = newProblem;
+newProblem = function() {
+    calcMemory = {};
+    renderCalcMemory();
+    calcClear();
+    origNewProblem();
+};
+
+// ===== KEYNESIAN CROSS GRAPH =====
+function updateGraph() {
+    const p = currentProblem;
+    if (!p) return;
+    const graphDiv = document.getElementById('kc-graph');
+    if (!graphDiv) return;
+
+    const A = p.autonomous;
+    const slope = (p.type === 'simple') ? p.c1 : p.slope;
+    const Ystar = p.Ystar;
+    const maxY = (p.type === 'policy' && p.newYstar) ? Math.max(Ystar, p.newYstar) : Ystar;
+    const Ymax = Math.ceil(maxY * 1.3 / 100) * 100;
+
+    const traces = [];
+    const shapes = [];
+    const annotations = [];
+    const qid = activeQuestionId;
+
+    // Base traces: 45-degree line + AD line + equilibrium point
+    traces.push({
+        x: [0, Ymax], y: [0, Ymax],
+        mode: 'lines',
+        line: { color: '#94a3b8', width: 1.5, dash: 'dash' },
+        name: '45°',
+        hoverinfo: 'skip',
+        showlegend: false
+    });
+    traces.push({
+        x: [0, Ymax], y: [A, A + slope * Ymax],
+        mode: 'lines',
+        line: { color: '#ef4444', width: 2.5 },
+        name: 'AD',
+        hoverinfo: 'skip',
+        showlegend: false
+    });
+    traces.push({
+        x: [Ystar], y: [Ystar],
+        mode: 'markers',
+        marker: { color: '#ef4444', size: 7, line: { color: 'white', width: 1.5 } },
+        hoverinfo: 'skip',
+        showlegend: false
+    });
+
+    // --- Context-aware highlighting ---
+
+    if (qid === 'auto') {
+        // Stack autonomous components at the Y-intercept
+        const components = [];
+        components.push({ val: p.c0, label: 'c\u2080', color: 'rgba(59,130,246,0.6)' });
+        components.push({ val: p.I, label: 'I', color: 'rgba(16,185,129,0.6)' });
+        if (p.G !== undefined && p.type !== 'simple')
+            components.push({ val: p.G, label: 'G', color: 'rgba(245,158,11,0.6)' });
+        if (p.X !== undefined && p.X !== null)
+            components.push({ val: p.X, label: 'X', color: 'rgba(139,92,246,0.6)' });
+
+        let cum = 0;
+        const barW = Ymax * 0.04;
+        components.forEach(c => {
+            shapes.push({
+                type: 'rect',
+                x0: -barW, x1: barW,
+                y0: cum, y1: cum + c.val,
+                fillcolor: c.color,
+                line: { width: 1, color: c.color.replace('0.6', '1') }
+            });
+            annotations.push({
+                x: barW + Ymax * 0.02, y: cum + c.val / 2,
+                text: c.label,
+                showarrow: false,
+                font: { size: 9, color: '#333' },
+                xanchor: 'left'
+            });
+            cum += c.val;
+        });
+        // A marker
+        traces.push({
+            x: [0], y: [A],
+            mode: 'markers',
+            marker: { color: '#f59e0b', size: 10, symbol: 'diamond' },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        annotations.push({
+            x: barW + Ymax * 0.02, y: A,
+            text: '<b>A = ?</b>',
+            showarrow: false,
+            font: { size: 10, color: '#b45309' },
+            xanchor: 'left'
+        });
+    }
+
+    if (['slope', 'oneMinusT', 'c1oneMinusT'].includes(qid)) {
+        // Show rise/run triangle
+        const midX = Ystar * 0.35;
+        const runLen = Ymax * 0.2;
+        const y0 = A + slope * midX;
+        const y1 = A + slope * (midX + runLen);
+        // horizontal line (run)
+        traces.push({
+            x: [midX, midX + runLen],
+            y: [y0, y0],
+            mode: 'lines',
+            line: { color: '#f59e0b', width: 2, dash: 'dot' },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        // vertical line (rise)
+        traces.push({
+            x: [midX + runLen, midX + runLen],
+            y: [y0, y1],
+            mode: 'lines',
+            line: { color: '#f59e0b', width: 2, dash: 'dot' },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        // slope label
+        annotations.push({
+            x: midX + runLen + Ymax * 0.01,
+            y: (y0 + y1) / 2,
+            text: 'slope = ?',
+            showarrow: false,
+            font: { size: 10, color: '#b45309', weight: 'bold' },
+            xanchor: 'left'
+        });
+        annotations.push({
+            x: midX + runLen / 2,
+            y: y0 - Ymax * 0.03,
+            text: 'run',
+            showarrow: false,
+            font: { size: 9, color: '#92400e' }
+        });
+        annotations.push({
+            x: midX + runLen + Ymax * 0.01,
+            y: y0 + (y1 - y0) * 0.15,
+            text: 'rise',
+            showarrow: false,
+            font: { size: 9, color: '#92400e' },
+            xanchor: 'left'
+        });
+    }
+
+    if (qid === 'mult') {
+        // Show multiplier annotation near equilibrium
+        annotations.push({
+            x: Ystar, y: Ystar + Ymax * 0.06,
+            text: 'k = 1/(1\u2212slope)',
+            showarrow: true,
+            arrowhead: 2,
+            ax: 0, ay: -30,
+            font: { size: 10, color: '#007bff', weight: 'bold' },
+            bgcolor: '#e8f4fd',
+            bordercolor: '#007bff',
+            borderwidth: 1
+        });
+    }
+
+    if (['Ystar', 'newY', 'Sstar'].includes(qid)) {
+        // Dashed drop-lines from equilibrium to axes
+        shapes.push({
+            type: 'line',
+            x0: Ystar, y0: 0, x1: Ystar, y1: Ystar,
+            line: { color: '#ef4444', width: 1.5, dash: 'dot' }
+        });
+        shapes.push({
+            type: 'line',
+            x0: 0, y0: Ystar, x1: Ystar, y1: Ystar,
+            line: { color: '#ef4444', width: 1.5, dash: 'dot' }
+        });
+        annotations.push({
+            x: Ystar, y: -Ymax * 0.04,
+            text: 'Y*',
+            showarrow: false,
+            font: { size: 9, color: '#ef4444' }
+        });
+    }
+
+    if (qid === 'Sstar') {
+        // Show saving line: S = -c0 + (1-c1)Y  or  S = -c0 + (1-c1)(1-t)Y
+        const sSlope = (p.type === 'simple') ? p.oneMinusC1 : p.savingSlope;
+        const sIntercept = -p.c0;
+        traces.push({
+            x: [0, Ymax], y: [sIntercept, sIntercept + sSlope * Ymax],
+            mode: 'lines',
+            line: { color: '#8b5cf6', width: 2.5 },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        // Label the saving line
+        const sLabelX = Ymax * 0.8;
+        const sAtLabel = sIntercept + sSlope * sLabelX;
+        annotations.push({
+            x: sLabelX, y: sAtLabel + Math.abs(sAtLabel) * 0.08 + 10,
+            text: 'S',
+            showarrow: false,
+            font: { size: 10, color: '#8b5cf6', weight: 'bold' }
+        });
+        // Mark -c0 intercept
+        traces.push({
+            x: [0], y: [sIntercept],
+            mode: 'markers',
+            marker: { color: '#8b5cf6', size: 7 },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        annotations.push({
+            x: Ymax * 0.03, y: sIntercept,
+            text: '\u2212c\u2080',
+            showarrow: false,
+            font: { size: 9, color: '#8b5cf6' },
+            xanchor: 'left'
+        });
+
+        // Injection lines (horizontal, autonomous)
+        // Simple: I only. Government: I + G. Full: I + G + X.
+        let injTotal = p.I;
+        let injLabel = 'I';
+        let injComponents = [{ val: p.I, label: 'I', color: 'rgba(16,185,129,0.6)' }];
+        if (p.type !== 'simple' && p.G !== undefined) {
+            injTotal += p.G;
+            injLabel = 'I + G';
+            injComponents.push({ val: p.G, label: 'G', color: 'rgba(245,158,11,0.6)' });
+        }
+        if (p.X !== undefined && p.X !== null) {
+            injTotal += p.X;
+            injLabel = 'I + G + X';
+            injComponents.push({ val: p.X, label: 'X', color: 'rgba(139,92,246,0.4)' });
+        }
+
+        // Draw injection line
+        traces.push({
+            x: [0, Ymax], y: [injTotal, injTotal],
+            mode: 'lines',
+            line: { color: '#16a34a', width: 2, dash: 'dash' },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        annotations.push({
+            x: Ymax * 0.92, y: injTotal + injTotal * 0.08,
+            text: injLabel,
+            showarrow: false,
+            font: { size: 9, color: '#16a34a', weight: 'bold' }
+        });
+
+        // Stacked injection bars at left edge
+        let injCum = 0;
+        const injBarW = Ymax * 0.03;
+        injComponents.forEach(ic => {
+            shapes.push({
+                type: 'rect',
+                x0: -injBarW, x1: injBarW,
+                y0: injCum, y1: injCum + ic.val,
+                fillcolor: ic.color,
+                line: { width: 1, color: ic.color.replace('0.6', '1').replace('0.4', '1') }
+            });
+            annotations.push({
+                x: injBarW + Ymax * 0.015, y: injCum + ic.val / 2,
+                text: ic.label,
+                showarrow: false,
+                font: { size: 8, color: '#333' },
+                xanchor: 'left'
+            });
+            injCum += ic.val;
+        });
+
+        // Mark where S crosses injection line (S* = injections at Y*)
+        const crossX = (injTotal - sIntercept) / sSlope; // where S = injTotal
+        traces.push({
+            x: [crossX], y: [injTotal],
+            mode: 'markers',
+            marker: { color: '#ef4444', size: 8, line: { color: 'white', width: 1.5 } },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+    }
+
+    // Policy: show shifted AD line for deltaY / newY
+    if (p.type === 'policy' && ['deltaY', 'newY'].includes(qid)) {
+        const newA = p.newAutonomous;
+        // New AD line
+        traces.push({
+            x: [0, Ymax], y: [newA, newA + slope * Ymax],
+            mode: 'lines',
+            line: { color: '#3b82f6', width: 2, dash: 'dot' },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        // New equilibrium
+        traces.push({
+            x: [p.newYstar], y: [p.newYstar],
+            mode: 'markers',
+            marker: { color: '#3b82f6', size: 7, line: { color: 'white', width: 1.5 } },
+            hoverinfo: 'skip',
+            showlegend: false
+        });
+        // Dashed drop-lines for new equilibrium
+        shapes.push({
+            type: 'line',
+            x0: p.newYstar, y0: 0, x1: p.newYstar, y1: p.newYstar,
+            line: { color: '#3b82f6', width: 1.5, dash: 'dot' }
+        });
+        // Labels for new and old equilibrium (no numeric answers)
+        annotations.push({
+            x: p.newYstar, y: -Ymax * 0.04,
+            text: "Y*'",
+            showarrow: false,
+            font: { size: 9, color: '#3b82f6' }
+        });
+        annotations.push({
+            x: (Ystar + p.newYstar) / 2,
+            y: -Ymax * 0.09,
+            text: '\u0394Y = ?',
+            showarrow: false,
+            font: { size: 9, color: '#16a34a', weight: 'bold' },
+            bgcolor: '#f0fff0'
+        });
+        // Also show old Y* drop-lines
+        shapes.push({
+            type: 'line',
+            x0: Ystar, y0: 0, x1: Ystar, y1: Ystar,
+            line: { color: '#ef4444', width: 1.5, dash: 'dot' }
+        });
+        annotations.push({
+            x: Ystar, y: -Ymax * 0.04,
+            text: 'Y*',
+            showarrow: false,
+            font: { size: 9, color: '#ef4444' }
+        });
+    }
+
+    // AD and 45° labels (always shown)
+    annotations.push({
+        x: Ymax * 0.92, y: Ymax * 0.92 + Ymax * 0.03,
+        text: '45°',
+        showarrow: false,
+        font: { size: 9, color: '#94a3b8' }
+    });
+    annotations.push({
+        x: Ymax * 0.92, y: A + slope * Ymax * 0.92 + Ymax * 0.03,
+        text: 'AD',
+        showarrow: false,
+        font: { size: 10, color: '#ef4444', weight: 'bold' }
+    });
+
+    // Extend y-axis down for saving diagram to show -c0
+    const yMin = (qid === 'Sstar') ? -p.c0 * 1.3 : -Ymax * 0.1;
+    const yRange = [yMin, Ymax];
+
+    const layout = {
+        width: 308,
+        height: 270,
+        margin: { l: 38, r: 8, t: 8, b: 35 },
+        xaxis: {
+            title: { text: 'Y (Output)', font: { size: 10 } },
+            range: [-Ymax * 0.05, Ymax],
+            showgrid: true,
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#ccc'
+        },
+        yaxis: {
+            title: { text: 'AD', font: { size: 10 } },
+            range: yRange,
+            showgrid: true,
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#ccc'
+        },
+        shapes: shapes,
+        annotations: annotations,
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white',
+        font: { size: 9 }
+    };
+
+    const config = {
+        displayModeBar: false,
+        staticPlot: true
+    };
+
+    Plotly.react(graphDiv, traces, layout, config);
+}
+
+// ===== INIT =====
+window.addEventListener('load', () => {
+    newProblem();
+    renderCalcMemory();
+});
+</script>
+
+</body>
+</html>
