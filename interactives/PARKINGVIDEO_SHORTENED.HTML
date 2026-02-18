@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Town: Parking Laws (Part 1)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #222;
+            color: #fff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: #333;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #4db6ac;
+        }
+
+        #player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #444;
+            border-radius: 8px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .status {
+            color: #80cbc4;
+        }
+
+        .speed-indicator {
+            background: #00695c;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .segment-list {
+            font-size: 0.9em;
+            color: #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #555;
+            padding-top: 10px;
+        }
+
+        .segment-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            transition: background 0.2s;
+        }
+
+        .segment-item:hover {
+            background: #555;
+        }
+
+        .current-segment {
+            background-color: #00796b;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #333;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Climate Town: Parking Laws (Part 1 - Ends at 22:27)</h2>
+        <div id="player"></div>
+
+        <div class="controls">
+            <div class="status-bar">
+                <span class="status" id="status">Loading Player...</span>
+                <span class="speed-indicator">Speed: 1.25x</span>
+            </div>
+            <div class="segment-list" id="segmentList"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION: The "Director's Cut v7" ---
+        // STOPS AT 22:27 (1347 seconds)
+
+        const segments = [
+            { start: 0, end: 145, label: "Intro: The 1 Billion Spot Problem" },
+            { start: 158, end: 328, label: "History Part 1: Early Cars & Park-and-Rides" },
+            { start: 347, end: 432, label: "History Part 2: The Parking Crisis (1947)" },
+            { start: 454, end: 665, label: "The Absurdity: Based on Nothing & Crazy Laws" },
+            { start: 665, end: 705, label: "The ITE Attempt to Use Science" },
+
+            // ITE Data Analysis (Junk Science)
+            { start: 746, end: 968, label: "The Junk Science: Bad Data & R-Squared" },
+
+            // Reaction, Space View, Costs, Housing
+            { start: 968, end: 1227, label: "The Impact: Visible from Space & High Rents" },
+
+            // Downtown Blight (Ends at 22:27)
+            { start: 1281, end: 1347, label: "Downtown Blight: The 'Gap Tooth' Effect" }
+        ];
+
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        var currentSegIndex = 0;
+        var checkInterval;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                videoId: 'OUNXFHpUhu8',
+                playerVars: { 'playsinline': 1, 'controls': 1, 'rel': 0 },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            document.getElementById('status').innerText = "Ready. Press Play.";
+            renderSegmentList();
+
+            // Cue the first segment
+            player.cueVideoById({
+                videoId: 'OUNXFHpUhu8',
+                startSeconds: segments[0].start,
+                endSeconds: segments[0].end
+            });
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.PLAYING) {
+                // FORCE 1.25x SPEED
+                player.setPlaybackRate(1.25);
+
+                document.getElementById('status').innerText = "Playing: " + segments[currentSegIndex].label;
+                startMonitoring();
+                updateUI();
+            } else if (event.data == YT.PlayerState.ENDED) {
+                nextSegment();
+            } else if (event.data == YT.PlayerState.PAUSED) {
+                document.getElementById('status').innerText = "Paused.";
+            } else {
+                clearInterval(checkInterval);
+            }
+        }
+
+        function startMonitoring() {
+            clearInterval(checkInterval);
+            checkInterval = setInterval(() => {
+                if (!player || !player.getCurrentTime) return;
+
+                let currentTime = player.getCurrentTime();
+                let endTime = segments[currentSegIndex].end;
+
+                // Buffer of 0.5s to ensure smooth transition
+                if (currentTime >= endTime - 0.5) {
+                    nextSegment();
+                }
+            }, 250);
+        }
+
+        function nextSegment() {
+            if (currentSegIndex < segments.length - 1) {
+                currentSegIndex++;
+                player.loadVideoById({
+                    videoId: 'OUNXFHpUhu8',
+                    startSeconds: segments[currentSegIndex].start,
+                    endSeconds: segments[currentSegIndex].end
+                });
+                player.setPlaybackRate(1.25);
+            } else {
+                document.getElementById('status').innerText = "Finished (To be continued...).";
+                player.stopVideo();
+            }
+        }
+
+        function renderSegmentList() {
+            const list = document.getElementById('segmentList');
+            list.innerHTML = '';
+            segments.forEach((seg, index) => {
+                const div = document.createElement('div');
+                div.className = 'segment-item ' + (index === currentSegIndex ? 'current-segment' : '');
+                div.innerText = `${index + 1}. ${seg.label} (${formatTime(seg.start)} - ${formatTime(seg.end)})`;
+                div.onclick = () => {
+                    currentSegIndex = index;
+                    player.loadVideoById({ videoId: 'OUNXFHpUhu8', startSeconds: seg.start, endSeconds: seg.end });
+                    player.setPlaybackRate(1.25);
+                };
+                list.appendChild(div);
+            });
+        }
+
+        function formatTime(seconds) {
+            let m = Math.floor(seconds / 60);
+            let s = Math.floor(seconds % 60);
+            return m + ":" + (s < 10 ? "0" : "") + s;
+        }
+    </script>
+
+</body>
+
+</html>
