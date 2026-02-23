@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Parking Economics</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme-link">
+    <style>
+        /* ── Theme Variables ────────────────────────────────── */
+        :root,
+        :root[data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-blue: #2563eb;
+            --accent-red: #dc2626;
+            --accent-green: #16a34a;
+            --chart-bg: #ffffff;
+            --chart-grid: #e2e8f0;
+            --chart-axis: #334155;
+            --chart-text: #334155;
+            --dwl-fill: rgba(156, 163, 175, 0.30);
+            --dwl-stroke: rgba(107, 114, 128, 0.55);
+            --heading-color: #0f172a;
+            --toggle-bg: #e2e8f0;
+            --toggle-hover: #cbd5e1;
+            --card-bg: #f1f5f9;
+            --card-border: #e2e8f0;
+            --highlight-bg: rgba(37, 99, 235, 0.08);
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        :root[data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #60a5fa;
+            --accent-red: #f87171;
+            --accent-green: #4ade80;
+            --chart-bg: #1e293b;
+            --chart-grid: #334155;
+            --chart-axis: #cbd5e1;
+            --chart-text: #cbd5e1;
+            --dwl-fill: rgba(156, 163, 175, 0.22);
+            --dwl-stroke: rgba(148, 163, 184, 0.45);
+            --heading-color: #f1f5f9;
+            --toggle-bg: #334155;
+            --toggle-hover: #475569;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --highlight-bg: rgba(96, 165, 250, 0.12);
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* ── Reveal.js Overrides ────────────────────────────── */
+        .reveal-viewport {
+            background: var(--bg-primary) !important;
+        }
+
+        .reveal {
+            color: var(--text-primary);
+        }
+
+        .reveal .slides section {
+            color: var(--text-primary);
+            padding: 0.3em 0.6em !important;
+        }
+
+        .reveal h1,
+        .reveal h2,
+        .reveal h3 {
+            color: var(--heading-color) !important;
+            font-weight: 700;
+            text-transform: none;
+        }
+
+        .reveal h2 {
+            font-size: 1.3em;
+            border-bottom: 3px solid var(--accent-blue);
+            display: inline-block;
+            padding-bottom: 0.1em;
+            margin-bottom: 0.3em;
+        }
+
+        .reveal ul {
+            list-style: disc;
+            margin-left: 1.2em;
+            text-align: left;
+        }
+
+        .reveal li {
+            margin-bottom: 0.25em;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .reveal strong {
+            color: var(--heading-color);
+        }
+
+        .reveal .controls button {
+            color: var(--accent-blue) !important;
+        }
+
+        .reveal .progress span {
+            background: var(--accent-blue) !important;
+        }
+
+        /* ── Theme Toggle ───────────────────────────────────── */
+        #theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 200;
+            background: var(--toggle-bg);
+            border: none;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        #theme-toggle:hover {
+            background: var(--toggle-hover);
+            transform: scale(1.08);
+        }
+
+        .icon-sun {
+            display: none;
+            width: 22px;
+            height: 22px;
+            fill: var(--text-primary);
+        }
+
+        .icon-moon {
+            display: block;
+            width: 22px;
+            height: 22px;
+            fill: var(--text-primary);
+        }
+
+        [data-theme="dark"] .icon-sun {
+            display: block;
+        }
+
+        [data-theme="dark"] .icon-moon {
+            display: none;
+        }
+
+        /* ── Custom Components ──────────────────────────────── */
+        .slide-image {
+            max-width: 90%;
+            max-height: 500px;
+            border-radius: 6px;
+            box-shadow: 0 4px 16px var(--shadow);
+            margin: 0.2em auto;
+            display: block;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            margin: 0.15em 0;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+
+        .two-col {
+            display: flex;
+            gap: 1.5em;
+            align-items: flex-start;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .headline-number {
+            font-size: 2.5em;
+            font-weight: 800;
+            color: var(--accent-red);
+            margin: 0.2em 0;
+            line-height: 1;
+        }
+
+        .activity-box {
+            background: var(--highlight-bg);
+            border-left: 6px solid var(--accent-blue);
+            padding: 0.5em 1em;
+            margin: 0.5em 0;
+            border-radius: 4px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .comparison-table {
+            font-size: 0.55em;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.4em 0.5em;
+            border: 1px solid var(--card-border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .comparison-table thead th {
+            background: var(--highlight-bg);
+            font-weight: 700;
+        }
+
+        .comparison-table tbody td:first-child {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="theme-toggle" aria-label="Toggle dark mode">
+        <svg class="icon-moon" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+    </button>
+
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Title Slide -->
+            <section style="padding-top: 20% !important;">
+                <h1>Parking Economics</h1>
+                <p class="subtitle" style="color: var(--text-secondary);">Active Learning Module</p>
+            </section><!-- ═══════════════════════════════════════════════════
+     OPPORTUNITY COST SECTION
+     ═══════════════════════════════════════════════════ -->
+
+            <!-- Slide: Define Opportunity Cost -->
+            <section>
+                <h2>What Is Opportunity Cost?</h2>
+                <ul>
+                    <li><strong>Opportunity cost</strong> is the value of the next best alternative you give up when
+                        making a choice.</li>
+                    <li>Every resource (time, money, land) has competing uses.</li>
+                    <li>Choosing one option means sacrificing the benefits of another.</li>
+                </ul>
+            </section>
+
+            <!-- Slide: OC Applied to Parking -->
+            <section>
+                <h2>Opportunity Cost of Parking</h2>
+                <ul>
+                    <li>Land used for parking <strong>cannot</strong> be used for housing, offices, parks, or shops.
+                    </li>
+                    <li>Every parking spot has a hidden price tag: the value of what <strong>could have been
+                            built</strong> instead.</li>
+                    <li>When cities <strong>mandate</strong> minimum parking, they are choosing parking over every other
+                        possible use of that land.</li>
+                </ul>
+            </section>
+
+            <!-- Slide: Hudson Yards — What Was Built -->
+            <section>
+                <h2>Hudson Yards, NYC</h2>
+                <div class="two-col">
+                    <div class="col" style="flex: 2;">
+                        <ul>
+                            <li>Largest private real-estate development in U.S. history.</li>
+                            <li>Housing, offices, retail, cultural space.</li>
+                            <li><strong>$19 billion</strong> in annual GDP.</li>
+                        </ul>
+                        <p style="margin-top:0.8em; color: var(--text-secondary);">What would happen if this site had to
+                            follow typical U.S. parking mandates?</p>
+                    </div>
+                    <div class="col" style="flex: 3;">
+                        <img src="hudson_yards.jpg" class="slide-image" style="max-height: 550px;">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide: Hudson Yards with Louisville Parking Requirements -->
+            <section>
+                <h2>Hudson Yards + Louisville Parking Laws</h2>
+                <div class="two-col">
+                    <div class="col" style="flex: 2;">
+                        <ul>
+                            <li>Louisville's parking minimums would require <strong>160,000 spots</strong>.</li>
+                            <li><strong>As surface lots:</strong> would cover the entire site and far beyond.</li>
+                            <li>The development as we know it would be <strong>impossible</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="col" style="flex: 3;">
+                        <img src="HudsonYark_with_Louisville_Parking_Requirements.jpeg" class="slide-image"
+                            style="max-height: 550px;">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide: Even with Structured Parking -->
+            <section>
+                <h2>Even with Structured Parking</h2>
+                <div class="two-col">
+                    <div class="col" style="flex: 2;">
+                        <ul>
+                            <li>Even with <strong>6-story parking garages</strong>...</li>
+                            <li>It would still require <strong>16x the land area</strong> of the project itself.</li>
+                            <li>The economics simply do not work with mandates.</li>
+                        </ul>
+                    </div>
+                    <div class="col" style="flex: 3;">
+                        <img src="HudsonYards_with_LousvilleParking_16x_this.jpeg" class="slide-image"
+                            style="max-height: 550px;">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide: Define Tragedy of the Commons -->
+            <section>
+                <h2>What Is the Tragedy of the Commons?</h2>
+                <ul>
+                    <li>A <strong>commons</strong> is a shared resource that is free to use.</li>
+                    <li>When a resource is both <strong>rivalrous</strong> (my use reduces yours) and
+                        <strong>non-excludable</strong> (no one can be kept out), it tends to be
+                        <strong>overused</strong>.</li>
+                    <li>Each individual has an incentive to consume more, but the costs are shared by everyone.</li>
+                    <li>Classic examples: overfishing, overgrazing, traffic congestion.</li>
+                </ul>
+            </section>
+
+            <!-- Slide: Parking as a Commons -->
+            <section>
+                <h2>Parking as a Commons</h2>
+                <ul>
+                    <li><strong>Rivalrous:</strong> One car in a spot prevents another from parking.</li>
+                    <li><strong>Non-Excludable:</strong> We <em>choose</em> not to exclude &mdash; street and commercial
+                        parking is provided free as a <strong>policy choice</strong>, not a law of nature.</li>
+                    <li><strong>Result:</strong> Overuse, congestion, drivers cruising for spots.</li>
+                    <li><strong>Solution:</strong> Pricing or management.</li>
+                </ul>
+            </section>
+
+            <!-- Slide: The Commons Paradox -->
+            <section>
+                <h2>The Parking Paradox</h2>
+                <ul>
+                    <li>We treat parking as a <strong>commons</strong> &mdash; provided free to all.</li>
+                    <li>Then we worry it will be <strong>overused</strong> (because it is).</li>
+                    <li>So we <strong>mandate building more</strong> of these free commons.</li>
+                    <li>But we never ask: <strong>what is the opportunity cost</strong> of all that land?</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.8em; color: var(--accent-red);"><strong>We are trying
+                        to solve overuse by creating more of the thing we give away for free.</strong></p>
+            </section>
+
+            <!-- Slide: The Argument FOR Mandates -->
+            <section>
+                <h2>The Argument for Mandates</h2>
+                <ul>
+                    <li>Suppose a business builds <strong>less parking</strong> than its customers drive.</li>
+                    <li>Excess cars spill onto the <strong>street</strong> or into <strong>neighboring lots</strong>.
+                    </li>
+                    <li>If those neighbors <strong>charged</strong> for parking, the spillover is just more business for
+                        them.</li>
+                    <li>But since street and neighbor parking is <strong>free</strong>, the original business
+                        <strong>externalizes</strong> its parking cost onto everyone else.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.8em;">Mandates force each business to
+                    <strong>internalize</strong> its own parking demand.</p>
+                <p class="fragment fade-in" style="color: var(--text-secondary);">But is there a better way?</p>
+            </section>
+
+            <!-- Slide: The Tokyo Alternative -->
+            <section>
+                <h2>The Tokyo Alternative</h2>
+                <p>Tokyo solves the same externality problem <strong>without mandates</strong>:</p>
+                <ul>
+                    <li><strong>No parking minimums:</strong> Developers build as much or as little parking as they
+                        choose.</li>
+                    <li><strong>No free street parking:</strong> Overnight on-street parking is <strong>banned</strong>
+                        &mdash; the commons is eliminated.</li>
+                    <li><strong>Proof-of-parking law:</strong> You must prove you own or rent a parking spot
+                        <strong>before you can register a car</strong>.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.6em;">The cost of parking falls on the
+                    <strong>driver</strong>, not on every renter, shopper, and taxpayer.</p>
+            </section>
+
+            <!-- Slide: Why Tokyo Works -->
+            <section>
+                <h2>Why Does This Work?</h2>
+                <ul>
+                    <li>No free commons &rarr; <strong>no overuse</strong> to solve.</li>
+                    <li>No mandate &rarr; <strong>no opportunity cost</strong> forced onto landowners.</li>
+                    <li>Parking becomes a <strong>private good</strong> &mdash; rivalrous <em>and</em> excludable.</li>
+                    <li>The market decides how much parking to build based on <strong>actual willingness to
+                            pay</strong>.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.6em; color: var(--accent-green);">
+                    <strong>Result:</strong> Dense, walkable neighborhoods &mdash; and car owners still find parking,
+                    they just pay for it.</p>
+            </section>
+
+            <!-- Slide: The Amsterdam Approach -->
+            <section>
+                <h2>The Amsterdam Approach</h2>
+                <p>Amsterdam takes a third path &mdash; <strong>reduce and price</strong>:</p>
+                <ul>
+                    <li><strong>Parking maximums:</strong> New developments face a <strong>cap</strong> on how many
+                        spots they can build &mdash; the opposite of U.S. minimums.</li>
+                    <li><strong>Expensive street parking:</strong> Meters and permits at <strong>market rates</strong>
+                        &mdash; among the highest in the world.</li>
+                    <li><strong>Removing spaces:</strong> The city is actively <strong>eliminating</strong> thousands of
+                        on-street spots, replacing them with bike lanes, greenery, and caf&eacute; terraces.</li>
+                </ul>
+            </section>
+
+            <!-- Slide: Why Amsterdam Works -->
+            <section>
+                <h2>Why Does Amsterdam Work?</h2>
+                <ul>
+                    <li>High prices &rarr; only those who <strong>truly need</strong> a car drive into the center.</li>
+                    <li>Freed-up space &rarr; invested in <strong>cycling infrastructure</strong> and public transit.
+                    </li>
+                    <li>Revenue from parking &rarr; funds the <strong>alternatives</strong> (bikes, trams, walkability).
+                    </li>
+                    <li>No mandate &rarr; developers respond to <strong>actual demand</strong>, not a legal formula.
+                    </li>
+                </ul>
+                <p style="margin-top: 0.6em; color: var(--accent-green);"><strong>Result:</strong> Over 60% of trips in
+                    the city center are by bike.</p>
+            </section>
+
+            <!-- Slide: Maximums & Externalities -->
+            <section>
+                <h2>Why Maximums?</h2>
+                <p>Maximums help account for the <strong>negative externalities of cars</strong> (pollution, congestion,
+                    noise) not captured in the private cost of building parking.</p>
+                <ul>
+                    <li>Building more parking &rarr; <strong>more driving</strong> &rarr; more pollution, congestion,
+                        crashes.</li>
+                    <li>These costs fall on <strong>everyone</strong>, not just drivers.</li>
+                    <li>A cap on parking supply forces developers to <strong>internalize</strong> some of these external
+                        costs.</li>
+                </ul>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════ ACTIVE LEARNING MODULE ═══════════════════════════════════════════════════ -->
+            <section data-background-color="var(--bg-secondary)">
+                <h1>Activity: Graphing the Market</h1>
+                <p>Please take out your worksheets.</p>
+                <p>We will build the economic model step-by-step.</p>
+            </section><!-- Step 1 -->
+            <section>
+                <h2>Step 1: Set the Stage</h2>
+                <div class="activity-box"><span class="activity-title">Your Turn:</span>Draw the Axes on your
+                    chart.<br>1. Label the Y-Axis: <strong>Benefits / Costs</strong><br>2. Label the X-Axis:
+                    <strong>Quantity of Parking (Q)</strong></div>
+                <div class="chart-container"><!-- Showing Blank Chart with just grid/frame --><canvas id="act-1"
+                        data-level="A0" width="800" height="400"></canvas></div>
+            </section>
+            <section>
+                <h2>Step 1: Solution</h2>
+                <p>Your graph should look like this.</p>
+                <div class="chart-container"><canvas id="act-1-sol" data-level="A1" width="800" height="400"></canvas>
+                </div>
+            </section><!-- Step 2a: Why MB slopes down -->
+            <section>
+                <h2>Step 2a: Marginal Benefit (MB)</h2>
+                <ul>
+                    <li><strong>Marginal Benefit</strong> = the value of <em>one more</em> parking spot to society.</li>
+                    <li>The first few spots near a store are extremely valuable &mdash; customers need them.</li>
+                    <li>The 50th spot is less critical. The 500th? Almost worthless.</li>
+                    <li>So MB <strong>slopes downward</strong>: each additional spot adds less value than the last.</li>
+                </ul>
+            </section>
+
+            <!-- Step 2a: Draw it -->
+            <section>
+                <h2>Step 2a: Draw the MB Curve</h2>
+                <div class="activity-box">
+                    <span class="activity-title">Your Turn:</span> Draw a <strong>downward-sloping</strong> line labeled
+                    <strong>MB</strong>.<br>
+                    It should start high on the left (high value) and fall toward the right (low value).
+                </div>
+                <div class="chart-container"><canvas id="act-2a" data-level="A1" width="800" height="400"></canvas>
+                </div>
+            </section>
+
+            <!-- Step 2a: Solution -->
+            <section>
+                <h2>Step 2a: Solution</h2>
+                <p>Your MB curve should look like this.</p>
+                <div class="chart-container"><canvas id="act-2a-sol" data-level="A1MB" width="800"
+                        height="400"></canvas></div>
+            </section>
+
+            <!-- Step 2b: Why MC slopes up -->
+            <section>
+                <h2>Step 2b: Marginal Cost (MC)</h2>
+                <ul>
+                    <li><strong>Marginal Cost</strong> = the cost to society of providing <em>one more</em> parking
+                        spot.</li>
+                    <li>The first spots are cheap &mdash; pave a small patch of unused land.</li>
+                    <li>But as you build more, you must use <strong>increasingly valuable land</strong> (or build
+                        expensive garages).</li>
+                    <li>This is the <strong>opportunity cost</strong> rising &mdash; each spot sacrifices more valuable
+                        alternatives.</li>
+                    <li>So MC <strong>slopes upward</strong>: each additional spot costs more than the last.</li>
+                </ul>
+            </section>
+
+            <!-- Step 2b: Draw it -->
+            <section>
+                <h2>Step 2b: Draw the MC Curve</h2>
+                <div class="activity-box">
+                    <span class="activity-title">Your Turn:</span> On the same graph, draw an
+                    <strong>upward-sloping</strong> line labeled <strong>MC</strong>.<br>
+                    It should start low on the left (cheap) and rise toward the right (expensive).
+                </div>
+                <div class="chart-container"><canvas id="act-2b" data-level="A1MB" width="800" height="400"></canvas>
+                </div>
+            </section>
+
+            <!-- Step 2b: Solution -->
+            <section>
+                <h2>Step 2b: Solution</h2>
+                <p>Your graph should now have both curves.</p>
+                <div class="chart-container"><canvas id="act-2b-sol" data-level="A2" width="800" height="400"></canvas>
+                </div>
+            </section><!-- Step 3 -->
+            <section>
+                <h2>Step 3: The Ideal World</h2>
+                <div class="activity-box"><span class="activity-title">Your Turn:</span>Identify the <strong>Social
+                        Optimum</strong>.<br>Mark the quantity where society's benefit equals the cost (MB = MC).<br>
+                    Label it <strong>Q<sub>opt</sub></strong>. </div>
+                <div class="chart-container"><canvas id="act-3" data-level="A2" width="800" height="400"></canvas></div>
+            </section>
+            <section>
+                <h2>Step 3: Solution</h2>
+                <div class="chart-container"><canvas id="act-3-sol" data-level="A3" width="800" height="400"></canvas>
+                </div>
+                <p class="fragment fade-in">This is the efficient amount of parking.</p>
+            </section><!-- Step 4 -->
+            <section>
+                <h2>Step 4: The Reality (Free Parking)</h2>
+                <div class="activity-box"><span class="activity-title">Your Turn:</span>What happens when parking is
+                    free?<br> Mark the quantity demanded when MB = 0 (no more benefit from another spot).<br>Label it
+                    <strong>Q<sub>free</sub></strong>. </div>
+                <div class="chart-container"><canvas id="act-4" data-level="A3" width="800" height="400"></canvas></div>
+            </section>
+            <section>
+                <h2>Step 4: Solution</h2>
+                <div class="chart-container"><canvas id="act-4-sol" data-level="A4" width="800" height="400"></canvas>
+                </div>
+                <p class="fragment fade-in">People consume parking until it has no value (MB=0).</p>
+            </section><!-- Step 5 -->
+            <section>
+                <h2>Step 5: Counting the Cost</h2>
+                <div class="activity-box"><span class="activity-title">Your Turn:</span>Identify the <strong>Deadweight
+                        Loss (DWL)</strong>.<br>Mandates often force supply to match Q<sub>free</sub> (or
+                    higher).<br>Shade the area where <strong>Cost>Benefit</strong>(MC > MB). </div>
+                <div class="chart-container"><canvas id="act-5" data-level="A4" width="800" height="400"></canvas></div>
+            </section>
+            <section>
+                <h2>Step 5: Solution</h2>
+                <div class="chart-container"><canvas id="act-5-sol" data-level="A5" width="800" height="400"></canvas>
+                </div>
+                <p class="fragment fade-in" style="color: var(--accent-red);"><strong>This shaded area is destroyed
+                        value.</strong><br>Resources spent on parking that people value less than the cost to build it.
+                </p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════
+                 STEP 6: PEAK DAY MANDATES
+                 ═══════════════════════════════════════════════════ -->
+
+            <!-- Step 6: Intro -->
+            <section data-background-color="var(--bg-secondary)">
+                <h2>Step 6: But It Gets Worse</h2>
+                <p>Many U.S. parking mandates were designed to provide enough parking for the <strong>20th busiest day
+                        of the year</strong>.</p>
+                <p>Our MB curve represents an <strong>average day</strong>.</p>
+                <p class="fragment fade-in">On the 20th busiest day, demand is <strong>much higher</strong> &mdash; the
+                    MB curve shifts up.</p>
+                <p class="fragment fade-in" style="color: var(--accent-red);">How much bigger is the waste?</p>
+            </section>
+
+            <!-- Step 6: Redraw full graph -->
+            <section>
+                <h2>Step 6: Start Fresh</h2>
+                <div class="activity-box">
+                    <span class="activity-title">Your Turn:</span> Draw the full graph again from memory &mdash; axes,
+                    MB, MC, Q<sub>opt</sub>, Q<sub>free</sub>, and DWL.
+                </div>
+                <div class="chart-container"><canvas id="act-6-base" data-level="A1" width="800" height="400"></canvas>
+                </div>
+            </section>
+
+            <section>
+                <h2>Step 6: Your Graph</h2>
+                <p>It should look like this.</p>
+                <div class="chart-container"><canvas id="act-6-base-sol" data-level="A5" width="800"
+                        height="400"></canvas></div>
+            </section>
+
+            <!-- Step 6a: Add peak MB -->
+            <section>
+                <h2>Step 6a: Add the Peak-Day MB</h2>
+                <div class="activity-box">
+                    <span class="activity-title">Your Turn:</span> Draw a second, <strong>higher</strong> MB curve
+                    (dashed).<br>
+                    This represents demand on the 20th busiest day &mdash; same slope, but shifted up because more
+                    people want to park.
+                </div>
+                <div class="chart-container"><canvas id="act-6a" data-level="A5" width="800" height="400"></canvas>
+                </div>
+            </section>
+
+            <section>
+                <h2>Step 6a: Solution</h2>
+                <div class="chart-container"><canvas id="act-6a-sol" data-level="A6MB" width="800"
+                        height="400"></canvas></div>
+            </section>
+
+            <!-- Step 6b: Find Q_peak -->
+            <section>
+                <h2>Step 6b: Find Q<sub>peak</sub></h2>
+                <div class="activity-box">
+                    <span class="activity-title">Your Turn:</span> On the peak-day MB curve, find where MB = 0.<br>
+                    This is Q<sub>peak</sub> &mdash; the amount of parking mandates require.
+                </div>
+                <div class="chart-container"><canvas id="act-6b" data-level="A6MB" width="800" height="400"></canvas>
+                </div>
+            </section>
+
+            <section>
+                <h2>Step 6b: Solution</h2>
+                <div class="chart-container"><canvas id="act-6b-sol" data-level="A6Q" width="800" height="400"></canvas>
+                </div>
+                <p class="fragment fade-in">Mandates force Q<sub>peak</sub> spots to be built &mdash; far more than even
+                    Q<sub>free</sub> on an average day.</p>
+            </section>
+
+            <!-- Step 6c: Find DWL for peak mandates -->
+            <section>
+                <h2>Step 6c: The Real DWL</h2>
+                <div class="activity-box">
+                    <span class="activity-title">Your Turn:</span> On an <strong>average day</strong>, shade the area
+                    where MC &gt; MB from Q<sub>opt</sub> all the way to Q<sub>peak</sub>.<br>
+                    Past Q<sub>free</sub>, the average-day MB is <strong>zero</strong> &mdash; that parking has no value
+                    at all.
+                </div>
+                <div class="chart-container"><canvas id="act-6c" data-level="A6Q" width="800" height="400"></canvas>
+                </div>
+            </section>
+
+            <section>
+                <h2>Step 6c: Solution</h2>
+                <div class="chart-container"><canvas id="act-6c-sol" data-level="A6DWL" width="800"
+                        height="400"></canvas></div>
+                <p class="fragment fade-in" style="color: var(--accent-red);"><strong>This is the true deadweight loss
+                        of parking mandates.</strong><br>
+                    Built for the 20th busiest day, wasted on every other day of the year.</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════ THE HIGH COST OF PARKING ═══════════════════════════════════════════════════ -->
+            <section>
+                <h2>The High Cost of Parking</h2>
+                <p style="color: var(--text-secondary); font-size: 0.8em;">Shoup (2005) estimated the annual subsidy for
+                    off-street parking in the U.S.</p>
+                <table class="comparison-table" style="width: 80%; margin: 0.5em auto;">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>2002 (Shoup original)</th>
+                            <th>2025 (CPI-adjusted)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Low estimate</strong></td>
+                            <td>$127B</td>
+                            <td><strong>~$230B</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>High estimate</strong></td>
+                            <td>$374B</td>
+                            <td><strong>~$670B</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>In 2002, this was comparable to federal Medicare spending ($231B) or the military budget
+                        ($349B).</li>
+                    <li>Every year, we spend more subsidizing car storage than on many major social programs.</li>
+                </ul>
+            </section>
+            <!-- ═══════════════════════════════════════════════════ THE ACADEMIC EVIDENCE ═══════════════════════════════════════════════════ -->
+            <section>
+                <h2>The Evidence: Opportunity Cost</h2>
+                <p><strong>Gabbe,
+                        Osman & Manville (2021)</strong>- Silicon Valley</p>
+                <ul>
+                    <li><strong>13%</strong>of total land area devoted to parking.</li>
+                    <li>Over half of commercial parcels are parking space.</li>
+                    <li><strong>Simulation:</strong>Reducing requirements since 2000 could have: <ul>
+                            <li>Added space for <strong>13,
+                                    000 jobs</strong>(37% increase).</li>
+                            <li>Created <strong>$1+ billion</strong>in annual payroll.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+            <section>
+                <h2>The Evidence: Induced Driving</h2>
+                <p><strong>McCahill et al. (2016)</strong></p>
+                <ul>
+                    <li>Found strong <strong>causal</strong> link between parking supply and driving.</li>
+                    <li>Increase from 0.1 to 0.5 parking spaces per person...</li>
+                    <li>...Associated with <strong>30 percentage point increase</strong> in auto mode share.</li>
+                    <li>More parking doesn't just accommodate driving &mdash; it <strong>causes</strong> it.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Parking &amp; Driving: Cross-Section</h2>
+                <p style="font-size: 0.8em; color: var(--text-secondary);">More parking spaces &rarr; higher automobile
+                    mode share (R&sup2; = 0.87)</p><img src="parkingCausation2.png" class="slide-image"
+                    style="max-height: 480px;">
+            </section>
+
+            <section>
+                <h2>Parking &amp; Driving: The Causal Evidence</h2>
+                <p style="font-size: 0.8em; color: var(--text-secondary);">Cities that added more parking
+                    ('60&ndash;'80) saw bigger increases in driving ('80&ndash;'00). R&sup2; = 0.86</p><img
+                    src="parkingCausation.png" class="slide-image" style="max-height: 480px;">
+            </section>
+            <section>
+                <h2>The Evidence: Density & Sprawl</h2>
+                <p><strong>Manville,
+                        Beata & Shoup (2013)</strong>- LA vs NYC</p>
+                <ul>
+                    <li>In NYC,
+                        a <strong>10% increase</strong>in parking requirements is associated with: <ul>
+                            <li>5% increase in vehicle density.</li>
+                            <li>6% <strong>reduction</strong>in population/housing density.</li>
+                        </ul>
+                    </li>
+                    <li>Conclusion: NYC shifts less driving cost into the housing market than LA does.</li>
+                </ul>
+            </section>
+            <section>
+                <h2>The Evidence: Behavior</h2>
+                <p><strong>Millard-Ball et al. (2020)</strong>- San Francisco Housing Lotteries</p>
+                <div class="activity-box" style="background: var(--bg-secondary); border-color: var(--accent-green);">
+                    <p>Natural Experiment using random assignment of housing.</p>
+                </div>
+                <ul>
+                    <li><strong>On-site parking availability significantly affects:</strong>
+                        <ul>
+                            <li>Car ownership decisions.</li>
+                            <li>Driving frequency.</li>
+                            <li>Substitution away from public transit.</li>
+                        </ul>
+                    </li>
+                    <li>It does <strong>NOT</strong>affect employment or job mobility.</li>
+                </ul>
+            </section>
+            <!-- ═══════════════════════════════════════════════════ POLICY COMPARISON ═══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Parking Policy: Three Models</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>🇺🇸 USA (Mandates)</th>
+                            <th>🇯🇵 Tokyo (Market)</th>
+                            <th>🇳🇱 Amsterdam (Reduce &amp; Price)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>New Development</strong></td>
+                            <td>Mandatory <strong>minimums</strong></td>
+                            <td><strong>No</strong> minimums</td>
+                            <td>Parking <strong>maximums</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Street Parking</strong></td>
+                            <td>Free or cheap</td>
+                            <td>Overnight parking <strong>banned</strong></td>
+                            <td>Heavily <strong>priced</strong>; spaces being removed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Who Pays?</strong></td>
+                            <td>Everyone &mdash; cost hidden in rent &amp; goods</td>
+                            <td>The driver &mdash; must prove parking to register a car</td>
+                            <td>The driver &mdash; market-rate permits &amp; meters</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Result</strong></td>
+                            <td>Sprawl, hidden costs, overconsumption</td>
+                            <td>Dense, walkable, market-priced</td>
+                            <td>Cycling-first, reclaimed public space</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════
+                 JUSTICE & EQUITY
+                 ═══════════════════════════════════════════════════ -->
+
+            <section>
+                <h2>A Question of Justice</h2>
+                <ul>
+                    <li>Our MB and MC curves are based on people's <strong>willingness to pay</strong>.</li>
+                    <li>But willingness to pay depends on <strong>ability to pay</strong>.</li>
+                    <li>So our "optimal" outcome is efficient <em>for a given distribution of income</em>.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.8em; color: var(--accent-red);"><strong>How does
+                        charging for parking impact low-income people?</strong></p>
+            </section>
+
+            <section>
+                <h2>Two Identical Apartments</h2>
+                <p>You own <strong>two cars</strong>. Which is the better deal?</p>
+                <div class="two-col" style="margin-top: 0.6em;">
+                    <div class="col"
+                        style="background: var(--card-bg); border-radius: 8px; padding: 0.8em; border: 2px solid var(--card-border);">
+                        <h3 style="margin: 0 0 0.3em; font-size: 1em;">Option A</h3>
+                        <p style="font-size: 0.85em;"><strong>$2,000</strong>/month rent</p>
+                        <p style="font-size: 0.85em;">Includes 2 parking spaces</p>
+                    </div>
+                    <div class="col"
+                        style="background: var(--card-bg); border-radius: 8px; padding: 0.8em; border: 2px solid var(--card-border);">
+                        <h3 style="margin: 0 0 0.3em; font-size: 1em;">Option B</h3>
+                        <p style="font-size: 0.85em;"><strong>$1,600</strong>/month rent</p>
+                        <p style="font-size: 0.85em;">Parking available at <strong>$200</strong>/space/month</p>
+                    </div>
+                </div>
+                <p class="fragment fade-in" style="margin-top: 0.6em; color: var(--text-secondary);">With two cars, both
+                    cost $2,000. So what's the difference?</p>
+            </section>
+
+            <section>
+                <h2>The Power of Choice</h2>
+                <ul>
+                    <li>Option B lets you <strong>drop a car and save $200/month</strong>.</li>
+                    <li>Or get a third car for $200 more.</li>
+                    <li>Option A forces you to pay for 2 spaces <strong>whether you use them or not</strong>.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.6em; color: var(--text-secondary);">Of course they
+                    wouldn't <em>truly</em> be identical &mdash; Option A has more parking, more traffic, potentially
+                    different ambiance and walkability.</p>
+                <p class="fragment fade-in" style="margin-top: 0.6em;"><strong>Should the government outlaw Option
+                        B?</strong></p>
+                <p class="fragment fade-in"><strong>Should the government outlaw Option A?</strong></p>
+            </section>
+
+            <section>
+                <h2>A Different Offer</h2>
+                <p style="font-size: 0.85em;">It costs the city <strong>$2 per trip</strong> to provide parking in the
+                    city center.</p>
+                <p style="font-size: 0.85em;">A low-income resident makes <strong>25 trips per month</strong>.</p>
+                <div class="two-col" style="margin-top: 0.6em;">
+                    <div class="col"
+                        style="background: var(--card-bg); border-radius: 8px; padding: 0.8em; border: 2px solid var(--card-border);">
+                        <h3 style="margin: 0 0 0.3em; font-size: 1em;">Option A</h3>
+                        <p style="font-size: 0.85em;"><strong>Free parking</strong> every month</p>
+                    </div>
+                    <div class="col"
+                        style="background: var(--card-bg); border-radius: 8px; padding: 0.8em; border: 2px solid var(--card-border);">
+                        <h3 style="margin: 0 0 0.3em; font-size: 1em;">Option B</h3>
+                        <p style="font-size: 0.85em;"><strong>$50 cash</strong> every month</p>
+                    </div>
+                </div>
+                <p class="fragment fade-in" style="margin-top: 0.6em;"><strong>Which is the better deal?</strong></p>
+            </section>
+
+            <section>
+                <h2>Better for the Person</h2>
+                <ul>
+                    <li>Free parking is worth exactly $50 &mdash; <strong>if</strong> you drive every trip.</li>
+                    <li>$50 cash gives you the <strong>option</strong> to bus, bike, walk, or skip a trip.</li>
+                    <li>Every trip you don't drive, you <strong>keep the $2</strong>.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.6em; color: var(--accent-green);"><strong>Cash &ge;
+                        free parking.</strong> It's worth at least as much, and more if you have any flexibility.</p>
+            </section>
+
+            <section>
+                <h2>Better for Society</h2>
+                <ul>
+                    <li>Every time the person uses the parking, that is a <strong>real economic cost</strong> of $2.
+                    </li>
+                    <li>The $50 is a <strong>transfer</strong> &mdash; it moves money but does not use up resources.
+                    </li>
+                    <li>Every trip they choose <em>not</em> to drive saves $2 in real resources.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.6em; color: var(--accent-green);"><strong>That $2
+                        saving is a transfer to a poor person to reduce poverty &mdash; at zero economic cost.</strong>
+                </p>
+            </section>
+
+            <section>
+                <h2>Who Does Free Parking Help?</h2>
+                <ul>
+                    <li><strong>$50 cash</strong> can be targeted to <strong>poverty</strong>.</li>
+                    <li><strong>Free parking</strong> is targeted by <strong>car ownership</strong>.</li>
+                    <li>Car owners are disproportionately <strong>higher income</strong>.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.6em; color: var(--accent-red);"><strong>Free parking is
+                        a subsidy that mostly flows to those who need it least.</strong></p>
+            </section>
+
+            <section>
+                <h2>Key Takeaways</h2>
+                <div class="activity-box" style="background: var(--card-bg); border-color: var(--accent-green);">
+                    <ul>
+                        <li><strong>Parking is not free.</strong>The cost is just hidden in rent and goods.</li>
+                        <li><strong>Mandates create DWL.</strong>They force over-supply of a costly asset.</li>
+                        <li><strong>Pricing>Mandates.</strong>Managing demand (Tokyo) is more efficient than forcing
+                            supply (USA).</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Slide: Markets vs. Maximums (closing thought) -->
+            <section>
+                <h2>Markets vs. Maximums</h2>
+                <ul>
+                    <li>The <strong>Tokyo model</strong> lets the market set the quantity of parking &mdash; efficient,
+                        but it does <strong>not address the negative externalities of driving</strong> (pollution,
+                        congestion, crashes, emissions).</li>
+                    <li>The <strong>Amsterdam model</strong> caps parking supply, effectively making car users
+                        <strong>bear more of those external costs</strong>.</li>
+                </ul>
+                <p class="fragment fade-in" style="margin-top: 0.6em;">There is a policy argument for
+                    <strong>maximums</strong> &mdash; they act as a corrective for externalities the market ignores.</p>
+                <p class="fragment fade-in" style="color: var(--accent-red);"><strong>Minimums need to go.</strong> They
+                    push in exactly the wrong direction.</p>
+            </section>
+
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script> // Init Reveal
+
+        Reveal.initialize({
+            hash: true, slideNumber: true, transition: 'slide', width: 1100, height: 700
+        }).then(() => redrawAllCharts());
+
+        Reveal.on('slidechanged', event => {
+            const canvas = event.currentSlide.querySelector('canvas[data-level]');
+            if (canvas) drawParkingChart(canvas.id, canvas.dataset.level);
+        });
+
+        // Theme Toggle
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const root = document.documentElement;
+            const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+            root.dataset.theme = next;
+            redrawAllCharts();
+        });
+
+        // Chart Logic
+        function getColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        function mb(x) {
+            return 12 - 0.75 * x;
+        }
+
+        function mc(x) {
+            return 2 + 0.5 * x;
+        }
+
+        // Peak-day MB: same slope, higher intercept (20th busiest day)
+        function mb_peak(x) {
+            return 15 - 0.75 * x;
+        }
+
+        // Draw text with subscript on canvas
+        function fillTextSub(ctx, base, sub, x, y) {
+            var baseFont = ctx.font;
+            var size = parseInt(baseFont) || 14;
+            ctx.font = size + 'px sans-serif';
+            ctx.fillText(base, x, y);
+            var baseW = ctx.measureText(base).width;
+            ctx.font = Math.round(size * 0.7) + 'px sans-serif';
+            ctx.fillText(sub, x + baseW, y + Math.round(size * 0.3));
+            ctx.font = baseFont;
+        }
+
+        // Configs for Active Learning Steps
+        const CONFIGS = {
+            'A0': { showAxes: false, showMB: false, showMC: false, showOpt: false, showFree: false, showDWL: false }, // Blank
+            'A1': { showMB: false, showMC: false, showOpt: false, showFree: false, showDWL: false },                  // Axes Only
+            'A1MB': { showMB: true, showMC: false, showOpt: false, showFree: false, showDWL: false },                  // Axes + MB
+            'A2': { showMB: true, showMC: true, showOpt: false, showFree: false, showDWL: false },                  // Axes + Both Curves
+            'A3': { showMB: true, showMC: true, showOpt: true, showFree: false, showDWL: false },                  // + Optimum
+            'A4': { showMB: true, showMC: true, showOpt: true, showFree: true, showDWL: false },                  // + Free Q
+            'A5': { showMB: true, showMC: true, showOpt: true, showFree: true, showDWL: true },                  // + DWL
+            'A6MB': { showMB: true, showMC: true, showOpt: true, showFree: true, showDWL: true, showPeakMB: true },   // + Peak MB
+            'A6Q': { showMB: true, showMC: true, showOpt: true, showFree: true, showDWL: true, showPeakMB: true, showPeakFree: true },  // + Peak Q
+            'A6DWL': { showMB: true, showMC: true, showOpt: true, showFree: true, showDWL: false, showPeakMB: true, showPeakFree: true, showPeakDWL: true }, // Peak DWL
+        };
+
+        function drawParkingChart(canvasId, level) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            var cfg = CONFIGS[level] || CONFIGS['A5']; // Default to full
+            var ctx = canvas.getContext('2d');
+
+            // Dimensions
+            var dpr = window.devicePixelRatio || 1;
+            var W = 800,
+                H = 320;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.scale(dpr, dpr);
+
+            // Layout
+            var ml = 40,
+                mr = 30,
+                mt = 40,
+                mb_margin = 50;
+            var pw = W - ml - mr,
+                ph = H - mt - mb_margin;
+            var xMax = 20,
+                yMax = 12;
+
+            function toX(x) {
+                return ml + (x / xMax) * pw;
+            }
+
+            function toY(y) {
+                return mt + ((yMax - y) / yMax) * ph;
+            }
+
+            // Clear & Background
+            ctx.fillStyle = getColor('--chart-bg');
+            ctx.fillRect(0, 0, W, H);
+
+            // Grid
+            ctx.strokeStyle = getColor('--chart-grid');
+            ctx.lineWidth = 1;
+
+            for (var i = 0; i <= yMax; i += 2) {
+                ctx.beginPath();
+                ctx.moveTo(ml, toY(i));
+                ctx.lineTo(W - mr, toY(i));
+                ctx.stroke();
+            }
+
+            for (var j = 0; j <= xMax; j += 4) {
+                ctx.beginPath();
+                ctx.moveTo(toX(j), mt);
+                ctx.lineTo(toX(j), H - mb_margin);
+                ctx.stroke();
+            }
+
+            // Axes & Labels
+            if (cfg.showAxes !== false) {
+                // Axes
+                ctx.strokeStyle = getColor('--chart-axis');
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(ml, mt);
+                ctx.lineTo(ml, H - mb_margin);
+                ctx.lineTo(W - mr, H - mb_margin);
+                ctx.stroke();
+
+                // Labels
+                ctx.fillStyle = getColor('--chart-text');
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText("Quantity (Q)", ml + pw / 2, H - 15);
+                ctx.textAlign = 'left';
+                ctx.fillText("Benefits / Costs", ml, mt - 12);
+                ctx.textAlign = 'center';
+            }
+
+            if (!cfg.showMB && !cfg.showMC) return;
+
+            // MB Curve
+            if (cfg.showMB) {
+                ctx.strokeStyle = getColor('--accent-blue');
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (var x = 0; x <= 16; x += 0.5) {
+                    var y = mb(x);
+                    if (y < 0) break;
+                    if (x == 0) ctx.moveTo(toX(x), toY(y));
+                    else ctx.lineTo(toX(x), toY(y));
+                }
+                ctx.stroke();
+                ctx.fillStyle = getColor('--accent-blue');
+                ctx.fillText("MB", toX(16), H - mb_margin - 10);
+            }
+
+            // MC Curve
+            if (cfg.showMC) {
+                ctx.strokeStyle = getColor('--accent-red');
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (var x = 0; x <= 20; x += 0.5) {
+                    var y = mc(x);
+                    if (y > yMax) break;
+                    if (x == 0) ctx.moveTo(toX(x), toY(y));
+                    else ctx.lineTo(toX(x), toY(y));
+                }
+                ctx.stroke();
+                ctx.fillStyle = getColor('--accent-red');
+                ctx.fillText("MC", toX(19), toY(mc(19)) - 10);
+            }
+
+            // Optimum
+            if (cfg.showOpt) {
+                var qOpt = 8;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = getColor('--accent-green');
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(toX(qOpt), toY(mc(qOpt)));
+                ctx.lineTo(toX(qOpt), H - mb_margin);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = getColor('--accent-green');
+                ctx.beginPath();
+                ctx.arc(toX(qOpt), toY(mc(qOpt)), 6, 0, 2 * Math.PI);
+                ctx.fill();
+                fillTextSub(ctx, "Q", "opt", toX(qOpt) - 10, H - mb_margin + 20);
+            }
+
+            // Free
+            if (cfg.showFree) {
+                var qFree = 16; // MB=0 at 16
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = getColor('--text-secondary');
+                ctx.beginPath();
+                ctx.moveTo(toX(qFree), toY(0));
+                ctx.lineTo(toX(qFree), H - mb_margin);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = getColor('--text-secondary');
+                fillTextSub(ctx, "Q", "free", toX(qFree) - 10, H - mb_margin + 20);
+            }
+
+            // DWL
+            if (cfg.showDWL) {
+                ctx.save();
+                ctx.beginPath();
+                var qStart = 8,
+                    qEnd = 16;
+
+                // Trace MC
+                for (var x = qStart; x <= qEnd; x += 0.1) {
+                    var y = mc(x);
+                    if (x == qStart) ctx.moveTo(toX(x), toY(y));
+                    else ctx.lineTo(toX(x), toY(y));
+                }
+
+                // Trace MB back
+                for (var x = qEnd; x >= qStart; x -= 0.1) {
+                    var y = mb(x);
+                    ctx.lineTo(toX(x), toY(y));
+                }
+
+                ctx.closePath();
+                ctx.fillStyle = getColor('--dwl-fill');
+                ctx.fill();
+                ctx.strokeStyle = getColor('--dwl-stroke');
+                ctx.stroke();
+                ctx.restore();
+                ctx.fillStyle = getColor('--accent-red');
+                ctx.font = "bold 16px sans-serif";
+                ctx.fillText("DWL", toX(12), toY(8));
+            }
+
+            // Peak MB Curve (dashed)
+            if (cfg.showPeakMB) {
+                ctx.strokeStyle = getColor('--accent-blue');
+                ctx.lineWidth = 2;
+                ctx.setLineDash([8, 4]);
+                ctx.beginPath();
+                var started = false;
+                for (var x = 0; x <= 20; x += 0.5) {
+                    var y = mb_peak(x);
+                    if (y > yMax) continue;
+                    if (y < 0) break;
+                    if (!started) { ctx.moveTo(toX(x), toY(y)); started = true; }
+                    else ctx.lineTo(toX(x), toY(y));
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = getColor('--accent-blue');
+                ctx.font = '13px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText("MB (peak day)", toX(5), toY(mb_peak(5)) - 10);
+                ctx.textAlign = 'center';
+            }
+
+            // Peak Q_free
+            if (cfg.showPeakFree) {
+                var qPeak = 20;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = getColor('--accent-red');
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(toX(qPeak), toY(0));
+                ctx.lineTo(toX(qPeak), H - mb_margin);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = getColor('--accent-red');
+                ctx.font = '14px sans-serif';
+                fillTextSub(ctx, "Q", "peak", toX(qPeak) - 14, H - mb_margin + 20);
+            }
+
+            // Peak DWL (Q_opt to Q_peak — much larger)
+            if (cfg.showPeakDWL) {
+                ctx.save();
+                ctx.beginPath();
+                var qS = 8, qE = 20;
+                // Trace MC from Q_opt to Q_peak
+                for (var x = qS; x <= qE; x += 0.1) {
+                    var y = Math.min(mc(x), yMax);
+                    if (x == qS) ctx.moveTo(toX(x), toY(y));
+                    else ctx.lineTo(toX(x), toY(y));
+                }
+                // Trace back along MB (clamped at 0) from Q_peak to Q_opt
+                for (var x = qE; x >= qS; x -= 0.1) {
+                    var y = Math.max(mb(x), 0);
+                    ctx.lineTo(toX(x), toY(y));
+                }
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(220, 38, 38, 0.18)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(220, 38, 38, 0.45)';
+                ctx.stroke();
+                ctx.restore();
+                ctx.fillStyle = getColor('--accent-red');
+                ctx.font = "bold 16px sans-serif";
+                ctx.fillText("DWL", toX(14), toY(7));
+            }
+        }
+
+        function redrawAllCharts() {
+            document.querySelectorAll('canvas[data-level]').forEach(c => drawParkingChart(c.id, c.dataset.level));
+        }
+
+    </script>
+</body>
+
+</html>
