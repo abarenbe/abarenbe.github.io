@@ -61,15 +61,81 @@
             width: 100%;
         }
 
-        select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--gray-200);
-            border-radius: 8px;
-            font-size: 1rem;
-            background-color: white;
+        /* Stepper Styles */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--gray-200);
+            z-index: 0;
+        }
+
+        .step-item {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             cursor: pointer;
-            margin-bottom: 1rem;
+            flex: 1;
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: white;
+            border: 2px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--gray-800);
+        }
+
+        .step-item.active .step-dot {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .step-item.completed .step-dot {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            color: #6b7280;
+            transition: color 0.3s;
+            max-width: 80px;
+        }
+
+        .step-item.active .step-label {
+            color: var(--primary);
+        }
+
+        .step-item.completed .step-label {
+            color: var(--success);
         }
 
         .description {
@@ -363,6 +429,16 @@
             box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
             z-index: 5;
         }
+
+        .tutorial-highlight {
+            outline: 4px solid #eab308;
+            outline-offset: -4px;
+            z-index: 10;
+        }
+
+        #prevBtn {
+            margin-top: 1rem;
+        }
     </style>
 </head>
 
@@ -371,9 +447,9 @@
     <div class="scenario-selector container" style="grid-template-columns: 1fr;">
         <div class="card">
             <h1>Game Theory: Best Responses & Nash Equilibrium</h1>
-            <select id="gameSelect">
+            <div class="stepper" id="stepper">
                 <!-- Populated by JS -->
-            </select>
+            </div>
             <div id="gameDescription" class="description"></div>
         </div>
     </div>
@@ -431,8 +507,13 @@
             <div class="options" id="optionsContainer">
                 <!-- Buttons injected by JS -->
             </div>
-            <button id="nextBtn" class="btn-primary" style="display: none; margin-top: 1rem;">Next Step</button>
-            <button id="resetBtn" style="display: none; margin-top: 1rem;">Reset Game</button>
+            <div style="display: flex; gap: 1rem;">
+                <button id="prevBtn" style="display: none; flex: 1;">Back</button>
+                <button id="nextBtn" class="btn-primary" style="display: none; flex: 1;">Next Step</button>
+            </div>
+            <button id="resetBtn" style="display: none; margin-top: 1rem; width: 100%;">Reset Game</button>
+            <button id="startGamesBtn" class="btn-primary" style="display: none; margin-top: 1rem; width: 100%;">Start
+                Practicing</button>
         </div>
 
     </div>
@@ -440,8 +521,85 @@
     <script>
         const games = [
             {
+                id: "tutorial",
+                name: "Introduction: How to Read the Matrix",
+                shortName: "Tutorial",
+                isTutorial: true,
+                description: "This tutorial will walk you through how to read a payoff matrix and define the core concepts of Game Theory.",
+                playerA: "Player A",
+                playerB: "Player B",
+                strategiesA: ["Top", "Bottom"],
+                strategiesB: ["Left", "Right"],
+                payoffs: [
+                    [[10, 5], [2, 0]],
+                    [[0, 2], [5, 10]]
+                ],
+                slides: [
+                    {
+                        title: "1. The Players & Strategies",
+                        content: "<p>A <b>payoff matrix</b> shows the outcomes for two players based on their combined decisions.</p><p><span style='color:var(--secondary);font-weight:bold'>Player A</span> (the row player) chooses between <b>Top</b> and <b>Bottom</b>.</p><p><span style='color:var(--primary);font-weight:bold'>Player B</span> (the column player) chooses between <b>Left</b> and <b>Right</b>.</p>",
+                        highlight: null
+                    },
+                    {
+                        title: "2. Reading the Payoffs",
+                        content: "<p>Inside each box are two numbers. <b>The first number is for the row player (Player A)</b>, and the <b>second number is for the column player (Player B)</b>.</p><p>For example, if A plays Top and B plays Left, A gets <span style='color:var(--secondary);font-weight:bold'>10</span> and B gets <span style='color:var(--primary);font-weight:bold'>5</span>.</p>",
+                        highlight: "cell-0-0"
+                    },
+                    {
+                        title: "3. Dominant Strategy",
+                        content: "<p>A <b>Dominant Strategy</b> is a choice that is best for a player <i>no matter what the other person does</i>.</p><p>If Player A always gets a higher payoff by choosing 'Top' (whether B plays Left or Right), then 'Top' is a dominant strategy.</p>",
+                        highlight: null
+                    },
+                    {
+                        title: "4. Nash Equilibrium",
+                        content: "<p>An outcome is a <b>Nash Equilibrium</b> if <i>neither</i> player wants to change their decision unilaterally, given what the other is doing.</p><p>In simple terms: if both players look at their choice and say 'I'm happy with this, as long as you're doing that,' you're in equilibrium.</p>",
+                        highlight: null
+                    },
+                    {
+                        title: "5. Misconception: Symmetrical Payoffs",
+                        content: "<p><b>Common Mistake:</b> Students often think that if payoffs are the same (like 10, 10), it must be an equilibrium. <b>This is false!</b></p><p>A (10, 10) outcome is only an equilibrium if neither player can get a <i>better</i> payoff by switching. If A could switch and get 15, they will!</p>",
+                        highlight: "cell-0-0"
+                    },
+                    {
+                        title: "6. Misconception: 'Winning'",
+                        content: "<p><b>Common Mistake:</b> Thinking you want to get <i>more than the other person</i>. In game theory, you only care about <b>maximizing your own payoff</b>.</p><p>You would rather have (5, 5) than (2, 0), even though in (2, 0) you 'won' by more. Your goal is the highest number for <i>yourself</i>.</p>",
+                        highlight: "cell-1-1"
+                    },
+                    {
+                        title: "Knowledge Check: Reading Payoffs",
+                        content: "<p>If the <b>row player (Player A)</b> chooses <b>Top</b> and the <b>column player (Player B)</b> chooses <b>Left</b>, what is the payoff for <b>Player B</b>?</p>",
+                        highlight: "cell-0-0",
+                        choices: [
+                            { text: "10", isCorrect: false, feedback: "Incorrect. 10 is the payoff for the row player (Player A)." },
+                            { text: "5", isCorrect: true, feedback: "Correct! The second number in the pair belongs to the column player." }
+                        ]
+                    },
+                    {
+                        title: "Knowledge Check: Dominant Strategy",
+                        content: "<p>Look at <b>Player A</b>'s payoffs in the matrix. If Player B plays Left, A prefers Top (10 > 0). But if Player B plays Right, A prefers Bottom (5 > 2).</p><p>Does Player A have a dominant strategy in this specific game?</p>",
+                        highlight: null,
+                        choices: [
+                            { text: "Yes", isCorrect: false, feedback: "Incorrect. Since A's best choice changes depending on what B does, they do NOT have a dominant strategy." },
+                            { text: "No", isCorrect: true, feedback: "Correct! To have a dominant strategy, the SAME choice would have to be best regardless of the other player." }
+                        ]
+                    },
+                    {
+                        title: "Knowledge Check: Finding Equilibrium",
+                        content: "<p>To find an equilibrium we find:</p>",
+                        highlight: null,
+                        choices: [
+                            { text: "Box(es) where both players get the same amount", isCorrect: false, feedback: "Incorrect. Symmetrical payoffs (like 10, 10) are NOT necessarily an equilibrium." },
+                            { text: "Box(es) where we get more than the other player", isCorrect: false, feedback: "Incorrect. Game theory is about maximizing your OWN payoff, not 'winning' by beating the other person." },
+                            { text: "Box(es) where neither player would be better off by changing their strategy", isCorrect: true, feedback: "Correct! That is the definition of a Nash Equilibrium." }
+                        ]
+                    }
+                ],
+                explanation: "<p>Excellent! You've finished the tutorial. You're ready to start practicing with real scenarios.</p><p>Click <b>Start Practicing</b> below to begin with the Prisoner's Dilemma.</p>"
+            },
+            {
                 id: "prisoner",
                 name: "Prisoner's Dilemma",
+                shortName: "Prisoner's",
                 description: "Two suspects are arrested. If both confess (Defect), they serve 5 years each. If both stay silent (Cooperate), they serve 1 year each. If one confesses and the other stays silent, the confessor goes free (0 years) and the silent one serves 20 years. (Payoffs are in negative years, so a higher number like 0 is better than -5).",
                 playerA: "Suspect A",
                 playerB: "Suspect B",
@@ -459,6 +617,7 @@
             {
                 id: "advertising",
                 name: "Advertising (Cigarette Companies)",
+                shortName: "Advertising",
                 description: "Two companies are deciding whether to Advertise. If both advertise, they split the market but spend money on ads (profit 10 each). If neither advertises, they split but save money (profit 20 each). If one advertises and the other doesn't, the advertiser steals the market (profit 30) while the other loses out (profit 0).",
                 playerA: "Company A",
                 playerB: "Company B",
@@ -476,6 +635,7 @@
             {
                 id: "battle",
                 name: "Battle of the Sexes",
+                shortName: "Battle",
                 description: "A couple wants to go out together. Person A prefers the Ballet, and Person B prefers Boxing. However, they both prefer being together over going alone. If they go to different events, they both get 0. If they go together, the one at their preferred event gets 3, the other gets 2.",
                 playerA: "Person A",
                 playerB: "Person B",
@@ -493,6 +653,7 @@
             {
                 id: "chicken",
                 name: "Game of Chicken (Hawk-Dove)",
+                shortName: "Chicken",
                 description: "Two drivers are speeding towards each other. If both swerve, nobody gets hurt but they tie (0, 0). If one swerves and the other goes straight, the one who went straight 'wins' the prestige (1) while the swerver loses face (-1). If neither swerves, they crash disastrously (-10, -10).",
                 playerA: "Driver A",
                 playerB: "Driver B",
@@ -510,6 +671,7 @@
             {
                 id: "penalty",
                 name: "Penalty Kick (Zero Sum)",
+                shortName: "Soccer",
                 description: "A soccer kicker is taking a penalty kick against a goalie. The kicker wants to kick to the opposite side the goalie dives. If they guess the same side, the goalie blocks it (+1 for Goalie, -1 for Kicker). If they guess different sides, the Kicker scores (+1 for Kicker, -1 for Goalie).",
                 playerA: "Kicker",
                 playerB: "Goalie",
@@ -527,6 +689,7 @@
             {
                 id: "staghunt",
                 name: "Stag Hunt (Trust Game)",
+                shortName: "Stag Hunt",
                 description: "Two hunters can choose to hunt a Stag together or hunt Hares individually. If both hunt the Stag, they catch it and share a massive feast (10, 10). If one hunts the Stag but the other hunts Hares, the Stag hunter gets nothing (0) while the Hare hunter catches a hare (2). If both hunt Hares, they both get a hare (2, 2).",
                 playerA: "Hunter A",
                 playerB: "Hunter B",
@@ -544,12 +707,14 @@
         ];
 
         let currentGame = games[0];
-        let currentStep = 0; // 0-3 for questions, 4 for summary, 5 for explanation
+        let currentStep = 0; // for games: 0-3 for questions, 4 for summary, 5 for explanation
+        let currentSlide = 0; // for tutorial
+        let completedGames = new Set();
         let arrows = [];
         let equilibria = [];
 
         const DOM = {
-            select: document.getElementById('gameSelect'),
+            stepper: document.getElementById('stepper'),
             desc: document.getElementById('gameDescription'),
             pA: document.getElementById('playerAName'),
             pB: document.getElementById('playerBName'),
@@ -557,33 +722,50 @@
             options: document.getElementById('optionsContainer'),
             feedback: document.getElementById('feedbackMsg'),
             nextBtn: document.getElementById('nextBtn'),
+            prevBtn: document.getElementById('prevBtn'),
             resetBtn: document.getElementById('resetBtn'),
+            startGamesBtn: document.getElementById('startGamesBtn'),
             step: document.getElementById('stepIndicator'),
             svg: document.getElementById('svgOverlay')
         };
 
         function init() {
-            games.forEach((g, i) => {
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.textContent = g.name;
-                DOM.select.appendChild(opt);
-            });
-
-            DOM.select.addEventListener('change', (e) => {
-                loadGame(games[e.target.value]);
-            });
+            renderStepper();
 
             DOM.nextBtn.addEventListener('click', proceedToNextStep);
+            DOM.prevBtn.addEventListener('click', proceedToPrevStep);
             DOM.resetBtn.addEventListener('click', () => loadGame(currentGame));
+            DOM.startGamesBtn.addEventListener('click', () => {
+                loadGame(games[1]);
+            });
 
             loadGame(games[0]);
+        }
+
+        function renderStepper() {
+            DOM.stepper.innerHTML = '';
+            games.forEach((game, index) => {
+                const stepItem = document.createElement('div');
+                stepItem.className = 'step-item';
+                if (game === currentGame) stepItem.classList.add('active');
+                if (completedGames.has(game.id)) stepItem.classList.add('completed');
+
+                stepItem.innerHTML = `
+                    <div class="step-dot">${completedGames.has(game.id) ? '✓' : index + 1}</div>
+                    <div class="step-label">${game.shortName || game.name}</div>
+                `;
+
+                stepItem.addEventListener('click', () => loadGame(game));
+                DOM.stepper.appendChild(stepItem);
+            });
         }
 
         function loadGame(game) {
             currentGame = game;
             currentStep = 0;
+            currentSlide = 0;
             arrows = [];
+            renderStepper();
 
             DOM.desc.textContent = game.description;
             DOM.pA.textContent = game.playerA;
@@ -614,6 +796,7 @@
             findEquilibria();
             setupStep();
             DOM.resetBtn.style.display = 'none';
+            DOM.startGamesBtn.style.display = 'none';
         }
 
         function findEquilibria() {
@@ -638,11 +821,17 @@
             });
         }
 
+        function markGameCompleted() {
+            completedGames.add(currentGame.id);
+            renderStepper();
+        }
+
         function setupStep() {
             DOM.feedback.style.display = 'none';
             DOM.feedback.className = 'feedback';
             DOM.nextBtn.style.display = 'none';
             DOM.nextBtn.textContent = 'Next Step';
+            DOM.prevBtn.style.display = 'none';
             DOM.options.innerHTML = '';
 
             // clear highlights
@@ -650,11 +839,50 @@
                 document.getElementById(`label-a-${i}`).style.backgroundColor = 'transparent';
                 document.getElementById(`label-b-${i}`).style.backgroundColor = 'transparent';
                 for (let c = 0; c < 2; c++) {
+                    const cell = document.getElementById(`cell-${i}-${c}`);
                     const payA = document.getElementById(`payoff-a-${i}-${c}`);
                     const payB = document.getElementById(`payoff-b-${i}-${c}`);
                     payA.classList.remove('highlight-payoff');
                     payB.classList.remove('highlight-payoff');
-                    document.getElementById(`cell-${i}-${c}`).style.backgroundColor = 'white';
+                    cell.style.backgroundColor = 'white';
+                    cell.classList.remove('tutorial-highlight');
+                }
+            }
+
+            if (currentGame.isTutorial) {
+                const slide = currentGame.slides[currentSlide];
+                DOM.step.textContent = `Intro Slide ${currentSlide + 1} of ${currentGame.slides.length}`;
+                DOM.question.innerHTML = `<h3>${slide.title}</h3>${slide.content}`;
+
+                if (slide.highlight) {
+                    document.getElementById(slide.highlight).classList.add('tutorial-highlight');
+                }
+
+                if (slide.choices) {
+                    slide.choices.forEach((choice, idx) => {
+                        createOptionBtn(choice.text, () => handleTutorialQuiz(choice));
+                    });
+                    DOM.nextBtn.style.display = 'none'; // Must answer first
+                } else {
+                    DOM.nextBtn.style.display = 'block';
+                    DOM.nextBtn.textContent = currentSlide === currentGame.slides.length - 1 ? 'Finish Tutorial' : 'Next';
+                }
+                DOM.prevBtn.style.display = currentSlide > 0 ? 'block' : 'none';
+                return;
+            }
+
+            function handleTutorialQuiz(choice) {
+                Array.from(DOM.options.children).forEach(b => b.disabled = true);
+                DOM.feedback.style.display = 'block';
+                DOM.feedback.textContent = choice.feedback;
+                DOM.feedback.className = choice.isCorrect ? 'feedback success' : 'feedback error';
+
+                if (choice.isCorrect) {
+                    DOM.nextBtn.style.display = 'block';
+                } else {
+                    setTimeout(() => {
+                        Array.from(DOM.options.children).forEach(b => b.disabled = false);
+                    }, 1500);
                 }
             }
 
@@ -713,11 +941,13 @@
                 DOM.nextBtn.textContent = 'See Explanation';
                 DOM.nextBtn.style.display = 'block';
                 DOM.resetBtn.style.display = 'none';
-            } else {
+            } else if (currentStep === 5) {
                 DOM.step.textContent = "Game Implications";
                 DOM.question.innerHTML = currentGame.explanation;
                 DOM.nextBtn.style.display = 'none';
                 DOM.resetBtn.style.display = 'block';
+                DOM.startGamesBtn.style.display = (currentGame.id === 'tutorial') ? 'block' : 'none';
+                markGameCompleted();
             }
         }
 
@@ -788,8 +1018,32 @@
         }
 
         function proceedToNextStep() {
+            if (currentGame.isTutorial) {
+                if (currentSlide < currentGame.slides.length - 1) {
+                    currentSlide++;
+                    setupStep();
+                } else {
+                    markGameCompleted();
+                    currentStep = 5; // Jump to end state logic or just move to games
+                    const nextGame = games[games.indexOf(currentGame) + 1];
+                    if (nextGame) loadGame(nextGame);
+                }
+                return;
+            }
+            if (currentStep === 4) {
+                currentStep = 5;
+                setupStep();
+                return;
+            }
             currentStep++;
             setupStep();
+        }
+
+        function proceedToPrevStep() {
+            if (currentGame.isTutorial && currentSlide > 0) {
+                currentSlide--;
+                setupStep();
+            }
         }
 
         function drawArrow(fromId, toId, type) {
