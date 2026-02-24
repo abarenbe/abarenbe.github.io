@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Theory: Finding Nash Equilibrium</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --secondary: #dc2626;
+            --secondary-light: #fef2f2;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-800: #1f2937;
+            --success: #16a34a;
+            --error: #ea580c;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 800px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        h1,
+        h2 {
+            margin-top: 0;
+            color: var(--gray-800);
+        }
+
+        .scenario-selector {
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #4b5563;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: var(--primary-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* Matrix Styles */
+        .matrix-container {
+            display: grid;
+            grid-template-columns: auto auto 1fr 1fr;
+            grid-template-rows: auto auto 1fr 1fr;
+            gap: 0;
+            margin: 2rem auto;
+            position: relative;
+            width: fit-content;
+        }
+
+        .header-player-b {
+            grid-column: 3 / 5;
+            grid-row: 1;
+            text-align: center;
+            font-weight: bold;
+            padding-bottom: 0.5rem;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .header-player-a {
+            grid-column: 1;
+            grid-row: 3 / 5;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            text-align: center;
+            font-weight: bold;
+            padding-right: 1rem;
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+
+        .label-b {
+            text-align: center;
+            font-weight: 600;
+            padding: 0.5rem;
+            color: var(--primary);
+        }
+
+        .label-a {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 1rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .cell {
+            border: 2px solid #cbd5e1;
+            width: 140px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .cell-0-0 {
+            border-top-left-radius: 8px;
+        }
+
+        .cell-0-1 {
+            border-top-right-radius: 8px;
+        }
+
+        .cell-1-0 {
+            border-bottom-left-radius: 8px;
+        }
+
+        .cell-1-1 {
+            border-bottom-right-radius: 8px;
+        }
+
+        .payoff-a {
+            color: var(--secondary);
+            font-weight: bold;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .payoff-b {
+            color: var(--primary);
+            font-weight: bold;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .comma {
+            color: var(--gray-800);
+            margin: 0 0.5rem;
+        }
+
+        /* Interactive states */
+        .highlight-col .cell:nth-child(even),
+        .highlight-col .label-b {
+            background-color: var(--primary-light);
+        }
+
+        .highlight-row {
+            background-color: var(--secondary-light);
+        }
+
+        .highlight-payoff {
+            animation: pulse-error 1.5s infinite;
+            background-color: #fee2e2;
+        }
+
+        @keyframes pulse-error {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .best-response-circle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .best-response-circle.a {
+            border-color: var(--secondary);
+            left: 15%;
+        }
+
+        .best-response-circle.b {
+            border-color: var(--primary);
+            right: 15%;
+        }
+
+        .show-circle {
+            opacity: 1 !important;
+        }
+
+        /* Arrows */
+        .svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            overflow: visible;
+        }
+
+        .arrow-path {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+
+        .arrow-path.a {
+            stroke: var(--secondary);
+        }
+
+        .arrow-path.b {
+            stroke: var(--primary);
+        }
+
+        .arrow-head {
+            stroke-width: 0;
+        }
+
+        .arrow-head.a {
+            fill: var(--secondary);
+        }
+
+        .arrow-head.b {
+            fill: var(--primary);
+        }
+
+        /* Question Panel */
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .step-indicator {
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .options {
+            display: flex;
+            gap: 1rem;
+            flex-direction: column;
+        }
+
+        button {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: white;
+            border: 2px solid var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        button:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        button.btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        button.btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .feedback {
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .feedback.error {
+            display: block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .feedback.success {
+            display: block;
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .eq-highlight {
+            background-color: #fef08a !important;
+            /* Yellow for Nash Eq */
+            border-color: #eab308 !important;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+            z-index: 5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scenario-selector container" style="grid-template-columns: 1fr;">
+        <div class="card">
+            <h1>Game Theory: Best Responses & Nash Equilibrium</h1>
+            <select id="gameSelect">
+                <!-- Populated by JS -->
+            </select>
+            <div id="gameDescription" class="description"></div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="card"
+            style="display: flex; justify-content: center; align-items: flex-start; overflow: hidden; padding-top: 3rem;">
+            <div class="matrix-container" id="matrixContainer">
+                <!-- Dynamic grid -->
+                <div class="header-player-b" id="playerBName">Player B</div>
+                <div class="header-player-a" id="playerAName">Player A</div>
+
+                <!-- Col labels -->
+                <div class="label-b" id="label-b-0" style="grid-column: 3; grid-row: 2;">Left</div>
+                <div class="label-b" id="label-b-1" style="grid-column: 4; grid-row: 2;">Right</div>
+
+                <!-- Row labels & cells -->
+                <div class="label-a" id="label-a-0" style="grid-column: 2; grid-row: 3;">Top</div>
+                <div class="cell cell-0-0" id="cell-0-0" style="grid-column: 3; grid-row: 3;">
+                    <div class="best-response-circle a" id="circle-a-0-0"></div>
+                    <div class="best-response-circle b" id="circle-b-0-0"></div>
+                    <span class="payoff-a" id="payoff-a-0-0">0</span><span class="comma">,</span><span class="payoff-b"
+                        id="payoff-b-0-0">0</span>
+                </div>
+                <div class="cell cell-0-1" id="cell-0-1" style="grid-column: 4; grid-row: 3;">
+                    <div class="best-response-circle a" id="circle-a-0-1"></div>
+                    <div class="best-response-circle b" id="circle-b-0-1"></div>
+                    <span class="payoff-a" id="payoff-a-0-1">0</span><span class="comma">,</span><span class="payoff-b"
+                        id="payoff-b-0-1">0</span>
+                </div>
+
+                <div class="label-a" id="label-a-1" style="grid-column: 2; grid-row: 4;">Bottom</div>
+                <div class="cell cell-1-0" id="cell-1-0" style="grid-column: 3; grid-row: 4;">
+                    <div class="best-response-circle a" id="circle-a-1-0"></div>
+                    <div class="best-response-circle b" id="circle-b-1-0"></div>
+                    <span class="payoff-a" id="payoff-a-1-0">0</span><span class="comma">,</span><span class="payoff-b"
+                        id="payoff-b-1-0">0</span>
+                </div>
+                <div class="cell cell-1-1" id="cell-1-1" style="grid-column: 4; grid-row: 4;">
+                    <div class="best-response-circle a" id="circle-a-1-1"></div>
+                    <div class="best-response-circle b" id="circle-b-1-1"></div>
+                    <span class="payoff-a" id="payoff-a-1-1">0</span><span class="comma">,</span><span class="payoff-b"
+                        id="payoff-b-1-1">0</span>
+                </div>
+
+                <svg class="svg-overlay" id="svgOverlay"></svg>
+            </div>
+        </div>
+
+        <div class="card panel">
+            <div class="step-indicator" id="stepIndicator">Step 1 of 4</div>
+            <div class="question-text" id="questionText">Loading...</div>
+            <div class="feedback" id="feedbackMsg"></div>
+            <div class="options" id="optionsContainer">
+                <!-- Buttons injected by JS -->
+            </div>
+            <button id="nextBtn" class="btn-primary" style="display: none; margin-top: 1rem;">Next Step</button>
+            <button id="resetBtn" style="display: none; margin-top: 1rem;">Reset Game</button>
+        </div>
+
+    </div>
+
+    <script>
+        const games = [
+            {
+                id: "prisoner",
+                name: "Prisoner's Dilemma",
+                description: "Two suspects are arrested. If both confess (Defect), they serve 5 years each. If both stay silent (Cooperate), they serve 1 year each. If one confesses and the other stays silent, the confessor goes free (0 years) and the silent one serves 20 years. (Payoffs are in negative years, so a higher number like 0 is better than -5).",
+                playerA: "Suspect A",
+                playerB: "Suspect B",
+                strategiesA: ["Cooperate", "Defect"],
+                strategiesB: ["Cooperate", "Defect"],
+                payoffs: [
+                    [[-1, -1], [-20, 0]],
+                    [[0, -20], [-5, -5]]
+                ],
+                explanation: `<p>In this scenario, all players playing their best strategy leads to a sub-optimal outcome.</p>
+<p>If they played <b>Cooperate</b>, they would have gotten only 1 year in prison each. But each has an incentive to <b>Defect</b> to try and get 0 years (go free) or avoid serving 20 years.</p>
+<p>In this type of scenario, the outcome can be improved by building trust, making binding agreements, or having an outside enforcer (like the mob) punish those who defect.</p>
+<p><b>Examples of real world scenarios like this are:</b> Arms races between countries, athletes using performance-enhancing drugs, and firms deciding whether to pollute the environment rather than invest in clean tech.</p>`
+            },
+            {
+                id: "advertising",
+                name: "Advertising (Cigarette Companies)",
+                description: "Two companies are deciding whether to Advertise. If both advertise, they split the market but spend money on ads (profit 10 each). If neither advertises, they split but save money (profit 20 each). If one advertises and the other doesn't, the advertiser steals the market (profit 30) while the other loses out (profit 0).",
+                playerA: "Company A",
+                playerB: "Company B",
+                strategiesA: ["Advertise", "Don't Ad"],
+                strategiesB: ["Advertise", "Don't Ad"],
+                payoffs: [
+                    [[10, 10], [30, 0]],
+                    [[0, 30], [20, 20]]
+                ],
+                explanation: `<p>In this scenario, both players playing their best strategy leads to a sub-optimal outcome.</p>
+<p>If they played <b>Don't Ad</b>, they would have gotten a higher profit (20 each). But each has an incentive to <b>Advertise</b> to steal the whole market (profit 30), forcing the other to advertise just to defend their share.</p>
+<p>In this type of scenario, the outcome can be improved by government regulation (e.g., banning ads) or creating an industry-wide truce. Note that when the US banned cigarette TV ads, tobacco profits actually went up because they were freed from this trap!</p>
+<p><b>Examples of real world scenarios like this are:</b> Political campaign spending (where both candidates spend millions just to stay tied) and companies offering deep discounts on Black Friday.</p>`
+            },
+            {
+                id: "battle",
+                name: "Battle of the Sexes",
+                description: "A couple wants to go out together. Person A prefers the Ballet, and Person B prefers Boxing. However, they both prefer being together over going alone. If they go to different events, they both get 0. If they go together, the one at their preferred event gets 3, the other gets 2.",
+                playerA: "Person A",
+                playerB: "Person B",
+                strategiesA: ["Ballet", "Boxing"],
+                strategiesB: ["Ballet", "Boxing"],
+                payoffs: [
+                    [[3, 2], [0, 0]],
+                    [[0, 0], [2, 3]]
+                ],
+                explanation: `<p>Unlike the Prisoner's Dilemma, playing best responses here doesn't necessarily lead to a universally sub-optimal outcome, but it causes a <b>coordination problem</b>.</p>
+<p>If they guess incorrectly, they both get 0. Each has an incentive to hold out for their preferred event, but they risk missing out entirely if they don't coordinate.</p>
+<p>In this type of scenario, the outcome can be improved by communication before the game starts, or establishing a social convention (e.g., "Person A gets to choose this week").</p>
+<p><b>Examples of real world scenarios like this are:</b> Two companies deciding on a technology standard (like USB-C vs Lightning), or a group of friends trying to agree on where to eat for dinner.</p>`
+            },
+            {
+                id: "chicken",
+                name: "Game of Chicken (Hawk-Dove)",
+                description: "Two drivers are speeding towards each other. If both swerve, nobody gets hurt but they tie (0, 0). If one swerves and the other goes straight, the one who went straight 'wins' the prestige (1) while the swerver loses face (-1). If neither swerves, they crash disastrously (-10, -10).",
+                playerA: "Driver A",
+                playerB: "Driver B",
+                strategiesA: ["Swerve", "Straight"],
+                strategiesB: ["Swerve", "Straight"],
+                payoffs: [
+                    [[0, 0], [-1, 1]],
+                    [[1, -1], [-10, -10]]
+                ],
+                explanation: `<p>This is an <b>anti-coordination game</b>. The players want to do the opposite of what the other person does.</p>
+<p>There are two Nash Equilibria, but they are asymmetrical: one player 'wins' by going straight and the other 'loses' by swerving to avoid the crash. No player wants to be the one who swerves, but going straight is extremely dangerous if the other player doesn't back down.</p>
+<p>In this type of scenario, players often try to win by <b>credibly committing</b> to not backing down, for instance by visibly throwing their steering wheel out the window, forcing the other to swerve.</p>
+<p><b>Examples of real world scenarios like this are:</b> Nuclear brinkmanship between nations, or labor union strikes versus management lockouts.</p>`
+            },
+            {
+                id: "penalty",
+                name: "Penalty Kick (Zero Sum)",
+                description: "A soccer kicker is taking a penalty kick against a goalie. The kicker wants to kick to the opposite side the goalie dives. If they guess the same side, the goalie blocks it (+1 for Goalie, -1 for Kicker). If they guess different sides, the Kicker scores (+1 for Kicker, -1 for Goalie).",
+                playerA: "Kicker",
+                playerB: "Goalie",
+                strategiesA: ["Kick Left", "Kick Right"],
+                strategiesB: ["Dive Left", "Dive Right"],
+                payoffs: [
+                    [[-1, 1], [1, -1]],
+                    [[1, -1], [-1, 1]]
+                ],
+                explanation: `<p>This is a strictly competitive <b>Zero-Sum Game</b>, also known mathematically as 'Matching Pennies'. One player's gain is exactly the other's loss.</p>
+<p>Notice that there are <b>no arrows pointing into any single box</b>. If you look closely, no matter what box they are in, someone always has an incentive to switch! Therefore, there is <b>no pure strategy Nash Equilibrium</b>.</p>
+<p>In this type of scenario, the only rational way to play is to be completely unpredictable (a 'mixed strategy'), such as randomly choosing Left or Right 50% of the time, so the opponent cannot exploit your habits.</p>
+<p><b>Examples of real world scenarios like this are:</b> Pitching vs Batting in baseball, auditing taxpayers vs tax evasion, or military attack vs defense deployments.</p>`
+            },
+            {
+                id: "staghunt",
+                name: "Stag Hunt (Trust Game)",
+                description: "Two hunters can choose to hunt a Stag together or hunt Hares individually. If both hunt the Stag, they catch it and share a massive feast (10, 10). If one hunts the Stag but the other hunts Hares, the Stag hunter gets nothing (0) while the Hare hunter catches a hare (2). If both hunt Hares, they both get a hare (2, 2).",
+                playerA: "Hunter A",
+                playerB: "Hunter B",
+                strategiesA: ["Hunt Stag", "Hunt Hare"],
+                strategiesB: ["Hunt Stag", "Hunt Hare"],
+                payoffs: [
+                    [[10, 10], [0, 2]],
+                    [[2, 0], [2, 2]]
+                ],
+                explanation: `<p>The Stag Hunt is a game of <b>trust and social cooperation</b>. There are two Nash Equilibria: (Stag, Stag) and (Hare, Hare).</p>
+<p>(Stag, Stag) is clearly the best outcome for everyone, known as the <b>Payoff-Dominant Equilibrium</b>. However, (Hare, Hare) is the safe bet, known as the <b>Risk-Dominant Equilibrium</b>. Hunting the stag is risky because if the other player flakes out, you get nothing.</p>
+<p>Unlike the Prisoner's Dilemma, players actually <i>want</i> to cooperate, but they might fail to do so simply out of fear that the other person won't.</p>
+<p><b>Examples of real world scenarios like this are:</b> Adopting a new communication technology (useless if you are the only one), or joining a political protest (dangerous if no one else shows up, powerful if everyone does).</p>`
+            }
+        ];
+
+        let currentGame = games[0];
+        let currentStep = 0; // 0-3 for questions, 4 for summary, 5 for explanation
+        let arrows = [];
+        let equilibria = [];
+
+        const DOM = {
+            select: document.getElementById('gameSelect'),
+            desc: document.getElementById('gameDescription'),
+            pA: document.getElementById('playerAName'),
+            pB: document.getElementById('playerBName'),
+            question: document.getElementById('questionText'),
+            options: document.getElementById('optionsContainer'),
+            feedback: document.getElementById('feedbackMsg'),
+            nextBtn: document.getElementById('nextBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            step: document.getElementById('stepIndicator'),
+            svg: document.getElementById('svgOverlay')
+        };
+
+        function init() {
+            games.forEach((g, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = g.name;
+                DOM.select.appendChild(opt);
+            });
+
+            DOM.select.addEventListener('change', (e) => {
+                loadGame(games[e.target.value]);
+            });
+
+            DOM.nextBtn.addEventListener('click', proceedToNextStep);
+            DOM.resetBtn.addEventListener('click', () => loadGame(currentGame));
+
+            loadGame(games[0]);
+        }
+
+        function loadGame(game) {
+            currentGame = game;
+            currentStep = 0;
+            arrows = [];
+
+            DOM.desc.textContent = game.description;
+            DOM.pA.textContent = game.playerA;
+            DOM.pB.textContent = game.playerB;
+
+            document.getElementById('label-a-0').textContent = game.strategiesA[0];
+            document.getElementById('label-a-1').textContent = game.strategiesA[1];
+            document.getElementById('label-b-0').textContent = game.strategiesB[0];
+            document.getElementById('label-b-1').textContent = game.strategiesB[1];
+
+            for (let r = 0; r < 2; r++) {
+                for (let c = 0; c < 2; c++) {
+                    const payA = document.getElementById(`payoff-a-${r}-${c}`);
+                    const payB = document.getElementById(`payoff-b-${r}-${c}`);
+                    payA.textContent = game.payoffs[r][c][0];
+                    payB.textContent = game.payoffs[r][c][1];
+
+                    // clear visual states
+                    document.getElementById(`cell-${r}-${c}`).className = `cell cell-${r}-${c}`;
+                    document.getElementById(`circle-a-${r}-${c}`).classList.remove('show-circle');
+                    document.getElementById(`circle-b-${r}-${c}`).classList.remove('show-circle');
+                    payA.classList.remove('highlight-payoff');
+                    payB.classList.remove('highlight-payoff');
+                }
+            }
+
+            clearArrows();
+            findEquilibria();
+            setupStep();
+            DOM.resetBtn.style.display = 'none';
+        }
+
+        function findEquilibria() {
+            equilibria = [];
+            // simple check: if best response for both
+            const g = currentGame;
+            const brA = []; // for each col, what is best row(s)
+            const brB = []; // for each row, what is best col(s)
+
+            for (let c = 0; c < 2; c++) {
+                let maxA = Math.max(g.payoffs[0][c][0], g.payoffs[1][c][0]);
+                for (let r = 0; r < 2; r++) if (g.payoffs[r][c][0] === maxA) brA.push({ r, c });
+            }
+
+            for (let r = 0; r < 2; r++) {
+                let maxB = Math.max(g.payoffs[r][0][1], g.payoffs[r][1][1]);
+                for (let c = 0; c < 2; c++) if (g.payoffs[r][c][1] === maxB) brB.push({ r, c });
+            }
+
+            brA.forEach(a => {
+                if (brB.find(b => b.r === a.r && b.c === a.c)) equilibria.push(a);
+            });
+        }
+
+        function setupStep() {
+            DOM.feedback.style.display = 'none';
+            DOM.feedback.className = 'feedback';
+            DOM.nextBtn.style.display = 'none';
+            DOM.nextBtn.textContent = 'Next Step';
+            DOM.options.innerHTML = '';
+
+            // clear highlights
+            for (let i = 0; i < 2; i++) {
+                document.getElementById(`label-a-${i}`).style.backgroundColor = 'transparent';
+                document.getElementById(`label-b-${i}`).style.backgroundColor = 'transparent';
+                for (let c = 0; c < 2; c++) {
+                    const payA = document.getElementById(`payoff-a-${i}-${c}`);
+                    const payB = document.getElementById(`payoff-b-${i}-${c}`);
+                    payA.classList.remove('highlight-payoff');
+                    payB.classList.remove('highlight-payoff');
+                    document.getElementById(`cell-${i}-${c}`).style.backgroundColor = 'white';
+                }
+            }
+
+            if (currentStep < 4) {
+                DOM.step.textContent = `Step ${currentStep + 1} of 4: Analyzing Best Responses`;
+                let isPlayerA = currentStep < 2; // Step 0,1 for A; Step 2,3 for B
+                let index = currentStep % 2; // 0 for first col/row, 1 for second
+
+                let qText = "";
+                if (isPlayerA) {
+                    let col = index;
+                    document.getElementById(`label-b-${col}`).style.backgroundColor = 'var(--primary-light)';
+                    document.getElementById(`cell-0-${col}`).style.backgroundColor = '#f8fafc';
+                    document.getElementById(`cell-1-${col}`).style.backgroundColor = '#f8fafc';
+
+                    qText = `Suppose <span style="color:var(--primary);font-weight:bold">${currentGame.playerB}</span> plays <b>${currentGame.strategiesB[col]}</b>. <br>
+                             Look at <span style="color:var(--secondary);font-weight:bold">${currentGame.playerA}</span>'s payoffs (the first number, in red). <br>
+                             If ${currentGame.playerA} were currently playing <b>${currentGame.strategiesA[1 - index]}</b>, would they want to switch or stay? What is their best response?`;
+
+                    let p0 = currentGame.payoffs[0][col][0];
+                    let p1 = currentGame.payoffs[1][col][0];
+
+                    createOptionBtn(currentGame.strategiesA[0], () => handleAnswer(isPlayerA, col, 0, p0 >= p1));
+                    createOptionBtn(currentGame.strategiesA[1], () => handleAnswer(isPlayerA, col, 1, p1 >= p0));
+                } else {
+                    let row = index;
+                    document.getElementById(`label-a-${row}`).style.backgroundColor = 'var(--secondary-light)';
+                    document.getElementById(`cell-${row}-0`).style.backgroundColor = '#fff1f2';
+                    document.getElementById(`cell-${row}-1`).style.backgroundColor = '#fff1f2';
+
+                    qText = `Suppose <span style="color:var(--secondary);font-weight:bold">${currentGame.playerA}</span> plays <b>${currentGame.strategiesA[row]}</b>. <br>
+                             Look at <span style="color:var(--primary);font-weight:bold">${currentGame.playerB}</span>'s payoffs (the second number, in blue). <br>
+                             What is ${currentGame.playerB}'s best response?`;
+
+                    let p0 = currentGame.payoffs[row][0][1];
+                    let p1 = currentGame.payoffs[row][1][1];
+
+                    createOptionBtn(currentGame.strategiesB[0], () => handleAnswer(isPlayerA, row, 0, p0 >= p1));
+                    createOptionBtn(currentGame.strategiesB[1], () => handleAnswer(isPlayerA, row, 1, p1 >= p0));
+                }
+                DOM.question.innerHTML = qText;
+            } else if (currentStep === 4) {
+                DOM.step.textContent = "Analysis Complete";
+                DOM.question.innerHTML = `All best responses are marked! <br>
+                    Notice the cells where no arrows point OUT (or where both players have a circle). 
+                    These are the <b>Nash Equilibria</b>. Neither player wants to change their strategy unilaterally.`;
+
+                equilibria.forEach(eq => {
+                    document.getElementById(`cell-${eq.r}-${eq.c}`).classList.add('eq-highlight');
+                });
+
+                if (equilibria.length === 0) {
+                    DOM.question.innerHTML += "<br><br><i>This game has no pure strategy Nash Equilibrium.</i>";
+                }
+
+                DOM.nextBtn.textContent = 'See Explanation';
+                DOM.nextBtn.style.display = 'block';
+                DOM.resetBtn.style.display = 'none';
+            } else {
+                DOM.step.textContent = "Game Implications";
+                DOM.question.innerHTML = currentGame.explanation;
+                DOM.nextBtn.style.display = 'none';
+                DOM.resetBtn.style.display = 'block';
+            }
+        }
+
+        function createOptionBtn(text, onClick) {
+            const btn = document.createElement('button');
+            btn.textContent = text;
+            btn.onclick = onClick;
+            DOM.options.appendChild(btn);
+        }
+
+        function handleAnswer(isPlayerA, fixedIndex, chosenIndex, isCorrect) {
+            // disable options
+            Array.from(DOM.options.children).forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                DOM.feedback.textContent = "Correct! That is the best response.";
+                DOM.feedback.className = 'feedback success';
+
+                // Draw arrow and circle
+                if (isPlayerA) {
+                    let col = fixedIndex;
+                    let bestRow = chosenIndex;
+                    let otherRow = 1 - chosenIndex;
+
+                    document.getElementById(`circle-a-${bestRow}-${col}`).classList.add('show-circle');
+
+                    let pBest = currentGame.payoffs[bestRow][col][0];
+                    let pOther = currentGame.payoffs[otherRow][col][0];
+                    if (pBest > pOther) {
+                        drawArrow(`cell-${otherRow}-${col}`, `cell-${bestRow}-${col}`, 'a');
+                    }
+                } else {
+                    let row = fixedIndex;
+                    let bestCol = chosenIndex;
+                    let otherCol = 1 - chosenIndex;
+
+                    document.getElementById(`circle-b-${row}-${bestCol}`).classList.add('show-circle');
+
+                    let pBest = currentGame.payoffs[row][bestCol][1];
+                    let pOther = currentGame.payoffs[row][otherCol][1];
+                    if (pBest > pOther) {
+                        drawArrow(`cell-${row}-${otherCol}`, `cell-${row}-${bestCol}`, 'b');
+                    }
+                }
+
+                DOM.nextBtn.style.display = 'block';
+
+            } else {
+                DOM.feedback.innerHTML = "Not quite. Look closely at the highlighted numbers.<br>Would you rather have the higher payoff?";
+                DOM.feedback.className = 'feedback error';
+
+                if (isPlayerA) {
+                    let col = fixedIndex;
+                    document.getElementById(`payoff-a-0-${col}`).classList.add('highlight-payoff');
+                    document.getElementById(`payoff-a-1-${col}`).classList.add('highlight-payoff');
+                } else {
+                    let row = fixedIndex;
+                    document.getElementById(`payoff-b-${row}-0`).classList.add('highlight-payoff');
+                    document.getElementById(`payoff-b-${row}-1`).classList.add('highlight-payoff');
+                }
+
+                // Re-enable options so they can try again
+                setTimeout(() => {
+                    Array.from(DOM.options.children).forEach(b => b.disabled = false);
+                    document.querySelectorAll('.highlight-payoff').forEach(el => el.classList.remove('highlight-payoff'));
+                }, 2500);
+            }
+        }
+
+        function proceedToNextStep() {
+            currentStep++;
+            setupStep();
+        }
+
+        function drawArrow(fromId, toId, type) {
+            const fromEl = document.getElementById(fromId);
+            const toEl = document.getElementById(toId);
+            const svg = DOM.svg;
+
+            const fromRect = fromEl.getBoundingClientRect();
+            const toRect = toEl.getBoundingClientRect();
+            const svgRect = svg.getBoundingClientRect();
+
+            let x1, y1, x2, y2;
+
+            if (type === 'a') {
+                // Vertical arrow (Player A changing rows)
+                x1 = (fromRect.left - svgRect.left) + fromRect.width * 0.25; // Left side of cell
+                x2 = x1;
+                if (fromRect.top < toRect.top) { // Down
+                    y1 = (fromRect.bottom - svgRect.top) - 10;
+                    y2 = (toRect.top - svgRect.top) + 10;
+                } else { // Up
+                    y1 = (fromRect.top - svgRect.top) + 10;
+                    y2 = (toRect.bottom - svgRect.top) - 10;
+                }
+            } else {
+                // Horizontal arrow (Player B changing cols)
+                y1 = (fromRect.top - svgRect.top) + fromRect.height * 0.75; // Bottom side of cell
+                y2 = y1;
+                if (fromRect.left < toRect.left) { // Right
+                    x1 = (fromRect.right - svgRect.left) - 10;
+                    x2 = (toRect.left - svgRect.left) + 10;
+                } else { // Left
+                    x1 = (fromRect.left - svgRect.left) + 10;
+                    x2 = (toRect.right - svgRect.left) - 10;
+                }
+            }
+
+            // Arrowhead calculations
+            const headlen = 12;
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M${x1},${y1} L${x2},${y2}`);
+            path.setAttribute('class', `arrow-path ${type}`);
+
+            const head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const hx1 = x2 - headlen * Math.cos(angle - Math.PI / 6);
+            const hy1 = y2 - headlen * Math.sin(angle - Math.PI / 6);
+            const hx2 = x2 - headlen * Math.cos(angle + Math.PI / 6);
+            const hy2 = y2 - headlen * Math.sin(angle + Math.PI / 6);
+            head.setAttribute('points', `${x2},${y2} ${hx1},${hy1} ${hx2},${hy2}`);
+            head.setAttribute('class', `arrow-head ${type}`);
+
+            svg.appendChild(path);
+            svg.appendChild(head);
+        }
+
+        function clearArrows() {
+            DOM.svg.innerHTML = '';
+        }
+
+        // Handle window resize for repainting arrows
+        window.addEventListener('resize', () => {
+            // To easily repaint, we could store arrows and redraw. 
+            // For simplicity, we just clear during resize if we were complex.
+            // given the static matrix container, it doesn't shift much within the container itself.
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
