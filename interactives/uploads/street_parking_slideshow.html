@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economics of Street Parking</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        /* =============== CSS VARIABLES =============== */
+        :root {
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --secondary: #dc2626;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-800: #1f2937;
+            --success: #16a34a;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --supply-green: #2ca02c;
+            --demand-blue: #1f77b4;
+            --revenue-red: #d62728;
+            --shortage-orange: #ff7f0e;
+        }
+
+        [data-theme="dark"] {
+            --bg: #111827;
+            --card-bg: #1f2937;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --primary: #60a5fa;
+            --primary-light: #1e3a5f;
+            --gray-100: #374151;
+            --gray-200: #4b5563;
+            --gray-800: #f3f4f6;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --supply-green: #4ade80;
+            --demand-blue: #60a5fa;
+            --revenue-red: #f87171;
+            --shortage-orange: #fbbf24;
+        }
+
+        /* =============== RESET & BASE =============== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* =============== HEADER =============== */
+        .header-card {
+            background: var(--card-bg);
+            box-shadow: var(--card-shadow);
+            padding: 16px 24px;
+            position: relative;
+        }
+
+        .header-title {
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        /* =============== THEME TOGGLE =============== */
+        .theme-toggle {
+            position: absolute;
+            top: 14px;
+            right: 20px;
+            width: 48px;
+            height: 26px;
+            background: var(--gray-200);
+            border-radius: 13px;
+            cursor: pointer;
+            border: none;
+            padding: 0;
+            transition: background 0.3s;
+        }
+
+        .theme-toggle .toggle-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: var(--card-bg);
+            border-radius: 50%;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: #4b5563;
+        }
+
+        [data-theme="dark"] .theme-toggle .toggle-knob {
+            transform: translateX(22px);
+        }
+
+        /* =============== STEPPER =============== */
+        .stepper {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            min-width: 80px;
+        }
+
+        .step-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--gray-200);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .step-item.active .step-dot {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .step-item.completed .step-dot {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .step-label {
+            font-size: 10px;
+            margin-top: 2px;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 90px;
+        }
+
+        /* =============== MAIN LAYOUT =============== */
+        .slide-body {
+            display: flex;
+            flex: 1;
+            padding: 16px;
+            gap: 16px;
+            max-height: calc(100vh - 100px);
+        }
+
+        .chart-panel {
+            flex: 0 0 55%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chart-panel > div {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            padding: 8px;
+        }
+
+        #chart-top {
+            flex: 1;
+            min-height: 300px;
+        }
+
+        #chart-bottom {
+            flex: 1;
+            min-height: 200px;
+            display: none;
+        }
+
+        .content-panel {
+            flex: 0 0 45%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide-counter {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .slide-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .slide-content {
+            flex: 1;
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+
+        .slide-content p {
+            margin-bottom: 10px;
+        }
+
+        /* =============== HIGHLIGHT BOX =============== */
+        .highlight-box {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 12px 14px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 0.92rem;
+        }
+
+        /* =============== INFO PANEL =============== */
+        .info-panel {
+            background: var(--gray-100);
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+
+        /* =============== QUIZ =============== */
+        .quiz-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .quiz-area button {
+            flex: 1 1 45%;
+            padding: 8px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.88rem;
+            min-width: 120px;
+            transition: all 0.2s;
+        }
+
+        .quiz-area button:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .quiz-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            display: none;
+            margin: 6px 0;
+        }
+
+        .feedback.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .feedback.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        [data-theme="dark"] .feedback.success {
+            background: #14532d;
+            color: #bbf7d0;
+            border-color: #166534;
+        }
+
+        [data-theme="dark"] .feedback.error {
+            background: #450a0a;
+            color: #fecaca;
+            border-color: #991b1b;
+        }
+
+        /* =============== SLIDER =============== */
+        .slider-area {
+            display: none;
+            margin: 10px 0;
+            padding: 10px;
+            background: var(--gray-100);
+            border-radius: 6px;
+        }
+
+        .slider-area label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .slider-area input[type=range] {
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .slider-value {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        /* =============== NAVIGATION =============== */
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 12px;
+        }
+
+        .btn-back,
+        .btn-next,
+        .btn-clear {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-next {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-next:hover {
+            opacity: 0.9;
+        }
+
+        .btn-back {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-back:hover {
+            background: var(--gray-100);
+        }
+
+        .btn-clear {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--secondary);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- =============== HEADER =============== -->
+    <div class="header-card">
+        <div class="header-title">Economics of Street Parking</div>
+        <button class="theme-toggle" id="themeToggle">
+            <span class="toggle-knob" id="toggleKnob">&#9728;&#65039;</span>
+        </button>
+        <div class="stepper" id="stepper"></div>
+    </div>
+
+    <!-- =============== SLIDE BODY =============== -->
+    <div class="slide-body">
+        <div class="chart-panel">
+            <div id="chart-top"></div>
+            <div id="chart-bottom"></div>
+        </div>
+        <div class="content-panel">
+            <div class="content-card">
+                <div class="slide-counter" id="slideCounter"></div>
+                <div class="slide-title" id="slideTitle"></div>
+                <div class="slide-content" id="slideContent"></div>
+                <div class="info-panel" id="infoPanel" style="display:none"></div>
+                <div class="quiz-area" id="quizArea"></div>
+                <div class="feedback" id="feedback"></div>
+                <div class="slider-area" id="sliderArea">
+                    <label>Set the meter price: <span class="slider-value" id="sliderVal">$1.00</span></label>
+                    <input type="range" id="mainSlider" min="0" max="300" step="25" value="100">
+                    <button class="btn-clear" id="clearBtn">Clear Points</button>
+                </div>
+                <div class="nav-buttons">
+                    <button class="btn-back" id="prevBtn" onclick="prevSlide()">Back</button>
+                    <button class="btn-next" id="nextBtn" onclick="nextSlide()">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============== STATE ===============
+        let currentSlide = 0;
+        let currentSubstep = 0;
+        let quizAnswered = false;
+        let priceHistory = [];
+
+        // =============== DOM ===============
+        const DOM = {
+            stepper: document.getElementById('stepper'),
+            counter: document.getElementById('slideCounter'),
+            title: document.getElementById('slideTitle'),
+            content: document.getElementById('slideContent'),
+            infoPanel: document.getElementById('infoPanel'),
+            quizArea: document.getElementById('quizArea'),
+            feedback: document.getElementById('feedback'),
+            sliderArea: document.getElementById('sliderArea'),
+            mainSlider: document.getElementById('mainSlider'),
+            sliderVal: document.getElementById('sliderVal'),
+            clearBtn: document.getElementById('clearBtn'),
+            chartBottom: document.getElementById('chart-bottom'),
+            prevBtn: document.getElementById('prevBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+        };
+
+        const plotCfg = { responsive: true, displayModeBar: false };
+
+        // =============== THEME ===============
+        function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+        function plotTheme() {
+            const dark = isDark();
+            return {
+                paper_bgcolor: dark ? '#1f2937' : '#ffffff',
+                plot_bgcolor: dark ? '#1f2937' : '#ffffff',
+                font: { color: dark ? '#e5e7eb' : '#1f2937' },
+                xaxis_gridcolor: dark ? '#4b5563' : '#e5e7eb',
+                yaxis_gridcolor: dark ? '#4b5563' : '#e5e7eb',
+                xaxis_zerolinecolor: dark ? '#6b7280' : '#d1d5db',
+                yaxis_zerolinecolor: dark ? '#6b7280' : '#d1d5db',
+                legend_font_color: dark ? '#e5e7eb' : '#1f2937'
+            };
+        }
+
+        // =============== ECONOMICS HELPERS ===============
+        // Street parking model:
+        // Supply = 100 spaces (fixed, vertical)
+        // Demand: Qd = maxDemand - slope * Price
+        // We use occupancy rate (0-100%) as our quantity
+
+        const SUPPLY = 100; // total spaces
+
+        // Demand function: at price P, demand = intercept - slope*P
+        // Low demand: intercept=80, slope=40 (doesn't fill up even at $0)
+        // Medium demand: intercept=120, slope=40
+        // High demand: intercept=160, slope=40
+
+        function demandQd(price, intercept) {
+            return Math.max(0, intercept - 40 * price);
+        }
+
+        function occupancyAt(price, intercept) {
+            const qd = demandQd(price, intercept);
+            return Math.min(qd, SUPPLY); // can't exceed supply
+        }
+
+        function occupancyPct(price, intercept) {
+            return occupancyAt(price, intercept);
+        }
+
+        function revenueAt(price, intercept) {
+            return price * occupancyAt(price, intercept);
+        }
+
+        function equilibriumPrice(intercept) {
+            // Where demand = supply: intercept - 40*P = 100 => P = (intercept - 100)/40
+            const p = (intercept - 100) / 40;
+            return Math.max(0, p);
+        }
+
+        // =============== CHART DRAWING FUNCTIONS ===============
+
+        function drawIntroChart() {
+            const t = plotTheme();
+            // Simple bar chart showing % of downtown traffic that is cruising
+            const cities = ['New York', 'San Francisco', 'Los Angeles', 'Detroit', 'Sydney'];
+            const cruisingPct = [28, 30, 45, 34, 25];
+
+            Plotly.react('chart-top', [{
+                x: cities,
+                y: cruisingPct,
+                type: 'bar',
+                marker: {
+                    color: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'],
+                },
+                text: cruisingPct.map(v => v + '%'),
+                textposition: 'outside',
+            }], {
+                title: { text: 'Estimated % of Downtown Traffic<br>Cruising for Parking', font: { size: 14, color: t.font.color } },
+                xaxis: { gridcolor: t.xaxis_gridcolor, color: t.font.color },
+                yaxis: { title: '% of traffic', range: [0, 55], gridcolor: t.yaxis_gridcolor, color: t.font.color, zerolinecolor: t.xaxis_zerolinecolor },
+                margin: { t: 60, b: 40, l: 50, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+            }, plotCfg);
+        }
+
+        function drawVerticalSupply() {
+            const t = plotTheme();
+            const supplyColor = isDark() ? '#4ade80' : '#2ca02c';
+
+            Plotly.react('chart-top', [
+                // Supply curve (vertical at Q=100)
+                {
+                    x: [100, 100], y: [0, 4],
+                    mode: 'lines', name: 'Supply',
+                    line: { color: supplyColor, width: 3 },
+                },
+                // Supply label
+                {
+                    x: [100], y: [3.8],
+                    mode: 'text', text: ['S'],
+                    textfont: { size: 16, color: supplyColor },
+                    showlegend: false,
+                }
+            ], {
+                title: { text: 'Street Parking: Fixed Supply', font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Number of Parking Spaces', range: [0, 160], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price per Hour ($)', range: [0, 4.2], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                showlegend: false,
+            }, plotCfg);
+        }
+
+        function drawThreeDemandCurves(step) {
+            if (step === undefined) step = 3;
+            const t = plotTheme();
+            const supplyColor = isDark() ? '#4ade80' : '#2ca02c';
+            const demandColor = isDark() ? '#60a5fa' : '#1f77b4';
+
+            // Generate demand curve points
+            const prices = [];
+            for (let p = 0; p <= 4; p += 0.1) prices.push(p);
+
+            const d1 = prices.map(p => demandQd(p, 80));   // low
+            const d2 = prices.map(p => demandQd(p, 120));  // medium
+            const d3 = prices.map(p => demandQd(p, 160));  // high
+
+            const eqP2 = equilibriumPrice(120);
+            const eqP3 = equilibriumPrice(160);
+
+            // Build traces progressively based on step
+            const traces = [
+                // Supply always shown
+                { x: [100, 100], y: [0, 4], mode: 'lines', name: 'Supply (S)', line: { color: supplyColor, width: 3 } },
+            ];
+            const annotations = [];
+
+            if (step >= 1) {
+                traces.push({ x: d1, y: prices, mode: 'lines', name: 'D\u2081 (Low)', line: { color: demandColor, width: 2, dash: 'dot' } });
+            }
+            if (step >= 2) {
+                traces.push({ x: d2, y: prices, mode: 'lines', name: 'D\u2082 (Medium)', line: { color: demandColor, width: 2 } });
+                traces.push({ x: [100], y: [eqP2], mode: 'markers', name: 'Equilibrium',
+                  marker: { color: isDark() ? '#f87171' : '#d62728', size: 10 } });
+                traces.push({ x: [0, 100], y: [eqP2, eqP2], mode: 'lines', showlegend: false,
+                  line: { color: isDark() ? '#9ca3af' : '#6b7280', width: 1, dash: 'dash' } });
+                annotations.push({ x: 0, y: eqP2, xref: 'x', yref: 'y', text: 'P\u2082', showarrow: false, xanchor: 'right', xshift: -5, font: { size: 12, color: t.font.color } });
+            }
+            if (step >= 3) {
+                traces.push({ x: d3, y: prices, mode: 'lines', name: 'D\u2083 (High)', line: { color: demandColor, width: 2, dash: 'dash' } });
+                traces.push({ x: [100], y: [eqP3], mode: 'markers', showlegend: false,
+                  marker: { color: isDark() ? '#f87171' : '#d62728', size: 10 } });
+                traces.push({ x: [0, 100], y: [eqP3, eqP3], mode: 'lines', showlegend: false,
+                  line: { color: isDark() ? '#9ca3af' : '#6b7280', width: 1, dash: 'dash' } });
+                annotations.push({ x: 0, y: eqP3, xref: 'x', yref: 'y', text: 'P\u2083', showarrow: false, xanchor: 'right', xshift: -5, font: { size: 12, color: t.font.color } });
+            }
+
+            Plotly.react('chart-top', traces, {
+                title: { text: 'Fixed Supply with Variable Demand', font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Parking Spaces', range: [0, 170], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price per Hour ($)', range: [0, 4.2], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.6, y: 0.95, font: { color: t.legend_font_color } },
+                annotations: annotations,
+            }, plotCfg);
+        }
+
+        function drawShoupTarget() {
+            const t = plotTheme();
+            const supplyColor = isDark() ? '#4ade80' : '#2ca02c';
+            const demandColor = isDark() ? '#60a5fa' : '#1f77b4';
+
+            const prices = [];
+            for (let p = 0; p <= 4; p += 0.1) prices.push(p);
+            const d2 = prices.map(p => demandQd(p, 120));
+
+            const eqP = equilibriumPrice(120);
+            // 85% occupancy = 85 spaces used
+            const price85 = (120 - 85) / 40; // = 0.875
+
+            Plotly.react('chart-top', [
+                { x: [100, 100], y: [0, 4], mode: 'lines', name: 'Supply', line: { color: supplyColor, width: 3 } },
+                { x: d2, y: prices, mode: 'lines', name: 'Demand', line: { color: demandColor, width: 2 } },
+                // 85% occupancy zone
+                { x: [85, 85], y: [0, price85], mode: 'lines', name: '85% Occupancy', line: { color: isDark() ? '#fbbf24' : '#f59e0b', width: 2, dash: 'dash' } },
+                { x: [0, 85], y: [price85, price85], mode: 'lines', showlegend: false, line: { color: isDark() ? '#fbbf24' : '#f59e0b', width: 1, dash: 'dash' } },
+                // 85% point on demand
+                { x: [85], y: [price85], mode: 'markers', name: 'Shoup Target', marker: { color: isDark() ? '#fbbf24' : '#f59e0b', size: 12, symbol: 'star' } },
+                // Shade the "available spaces" zone
+                { x: [85, 100, 100, 85], y: [0, 0, price85, price85], fill: 'toself', fillcolor: 'rgba(34,197,94,0.15)', line: { width: 0 }, showlegend: false, name: '15% available' },
+            ], {
+                title: { text: "Shoup's 85% Occupancy Target", font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Parking Spaces Used', range: [0, 140], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price per Hour ($)', range: [0, 3.5], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.55, y: 0.95, font: { color: t.legend_font_color } },
+                annotations: [
+                    { x: 92.5, y: price85 / 2, text: '15 open<br>spaces', showarrow: false, font: { size: 11, color: isDark() ? '#4ade80' : '#16a34a' } },
+                    { x: 0, y: price85, text: '$' + price85.toFixed(2), showarrow: false, xanchor: 'right', xshift: -5, font: { size: 11, color: t.font.color } },
+                ],
+            }, plotCfg);
+        }
+
+        function drawSFparkResults() {
+            const t = plotTheme();
+
+            const categories = ['Cruising Time', 'Traffic Volume', 'Parking Availability'];
+            const before = [100, 100, 100];
+            const after = [57, 92, 115]; // 43% reduction in cruising, 8% reduction in traffic, 15% improvement in availability
+
+            Plotly.react('chart-top', [
+                { x: categories, y: before, type: 'bar', name: 'Before SFpark', marker: { color: isDark() ? '#9ca3af' : '#94a3b8' } },
+                { x: categories, y: after, type: 'bar', name: 'After SFpark', marker: { color: isDark() ? '#60a5fa' : '#2563eb' } },
+            ], {
+                title: { text: 'SFpark Results (Index: Before = 100)', font: { size: 14, color: t.font.color } },
+                xaxis: { gridcolor: t.xaxis_gridcolor },
+                yaxis: { title: 'Index Value', range: [0, 130], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                barmode: 'group',
+                legend: { x: 0.65, y: 0.95, font: { color: t.legend_font_color } },
+            }, plotCfg);
+        }
+
+        function drawPriceSlider() {
+            const t = plotTheme();
+            const supplyColor = isDark() ? '#4ade80' : '#2ca02c';
+            const demandColor = isDark() ? '#60a5fa' : '#1f77b4';
+            const priceColor = isDark() ? '#f87171' : '#d62728';
+
+            const price = parseFloat(DOM.mainSlider.value) / 100;
+            const intercept = 100; // demand just reaches supply at P=0
+            const qd = demandQd(price, intercept);
+            const occupied = Math.min(qd, SUPPLY);
+            const occupancy = occupied;
+            const revenue = price * occupied;
+            const shortage = Math.max(0, qd - SUPPLY);
+
+            // Update info panel
+            DOM.infoPanel.style.display = 'block';
+            DOM.infoPanel.innerHTML = `
+                <div class="info-row"><span>Price per hour:</span><strong>$${price.toFixed(2)}</strong></div>
+                <div class="info-row"><span>Spaces demanded:</span><strong>${Math.round(qd)}</strong></div>
+                <div class="info-row"><span>Spaces occupied:</span><strong>${Math.round(occupied)} / 100</strong></div>
+                <div class="info-row"><span>Occupancy rate:</span><strong>${Math.round(occupancy)}%</strong></div>
+                <div class="info-row"><span>Revenue per hour:</span><strong>$${revenue.toFixed(2)}</strong></div>
+                ${shortage > 0 ? `<div class="info-row"><span style="color:var(--secondary)">Excess demand (shortage):</span><strong style="color:var(--secondary)">${Math.round(shortage)} drivers</strong></div>` : ''}
+            `;
+
+            // Build demand curve
+            const prices = [];
+            for (let p = 0; p <= 4; p += 0.1) prices.push(p);
+            const dCurve = prices.map(p => demandQd(p, intercept));
+
+            const traces = [
+                { x: [100, 100], y: [0, 4], mode: 'lines', name: 'Supply', line: { color: supplyColor, width: 3 } },
+                { x: dCurve, y: prices, mode: 'lines', name: 'Demand', line: { color: demandColor, width: 2 } },
+                // Current price line
+                { x: [0, 110], y: [price, price], mode: 'lines', name: 'Set Price', line: { color: priceColor, width: 2, dash: 'dash' } },
+                // Occupied point
+                { x: [occupied], y: [price], mode: 'markers', name: 'Occupancy', marker: { color: priceColor, size: 10 } },
+            ];
+
+            // Show shortage area if applicable
+            if (shortage > 0) {
+                traces.push({
+                    x: [100, qd, qd, 100], y: [price - 0.05, price - 0.05, price + 0.05, price + 0.05],
+                    fill: 'toself', fillcolor: 'rgba(239,68,68,0.2)', line: { width: 0 },
+                    showlegend: false, name: 'Shortage',
+                });
+            }
+
+            // History points
+            if (priceHistory.length > 0) {
+                const sorted = [...priceHistory].sort((a, b) => a.price - b.price);
+                traces.push({
+                    x: sorted.map(h => h.revenue),
+                    y: sorted.map(h => h.price),
+                    mode: 'markers',
+                    name: 'Your choices',
+                    marker: { color: isDark() ? '#c084fc' : '#7c3aed', size: 6, symbol: 'circle' },
+                });
+            }
+
+            Plotly.react('chart-top', traces, {
+                title: { text: 'Set the Meter Price', font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Parking Spaces', range: [0, 120], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price per Hour ($)', range: [0, 3.2], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.55, y: 0.95, font: { color: t.legend_font_color } },
+                annotations: [
+                    { x: occupied, y: price, text: `${Math.round(occupancy)}%`, showarrow: true, ax: 30, ay: -25, font: { size: 11, color: priceColor } },
+                ],
+            }, plotCfg);
+
+            // Revenue chart on bottom
+            DOM.chartBottom.style.display = 'block';
+            const revPrices = [];
+            const revValues = [];
+            for (let p = 0; p <= 3.5; p += 0.05) {
+                revPrices.push(p);
+                revValues.push(revenueAt(p, intercept));
+            }
+
+            const revTraces = [
+                { x: revPrices, y: revValues, mode: 'lines', name: 'Revenue Curve', line: { color: isDark() ? '#f87171' : '#d62728', width: 2 } },
+                { x: [price], y: [revenue], mode: 'markers', name: 'Current', marker: { color: isDark() ? '#fbbf24' : '#f59e0b', size: 12, symbol: 'star' } },
+            ];
+
+            // History on revenue chart
+            if (priceHistory.length > 0) {
+                const sorted = [...priceHistory].sort((a, b) => a.price - b.price);
+                revTraces.push({
+                    x: sorted.map(h => h.price),
+                    y: sorted.map(h => h.revenue),
+                    mode: 'markers',
+                    name: 'Your choices',
+                    marker: { color: isDark() ? '#c084fc' : '#7c3aed', size: 6 },
+                });
+            }
+
+            Plotly.react('chart-bottom', revTraces, {
+                title: { text: 'Revenue at Each Price', font: { size: 13, color: t.font.color } },
+                xaxis: { title: 'Price ($)', gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Revenue ($/hr)', gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 40, b: 45, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.6, y: 0.95, font: { color: t.legend_font_color } },
+            }, plotCfg);
+        }
+
+        function drawOccupancyRevenue() {
+            const t = plotTheme();
+            const intercept = 100;
+
+            const prices = [];
+            const occupancies = [];
+            const revenues = [];
+            for (let p = 0; p <= 3.5; p += 0.05) {
+                prices.push(p);
+                const occ = occupancyPct(p, intercept);
+                occupancies.push(occ);
+                revenues.push(revenueAt(p, intercept));
+            }
+
+            // Find max revenue
+            let maxRev = 0, maxRevIdx = 0;
+            revenues.forEach((r, i) => { if (r > maxRev) { maxRev = r; maxRevIdx = i; } });
+
+            // 85% occupancy point
+            const price85 = (intercept - 85) / 40;
+            const rev85 = revenueAt(price85, intercept);
+
+            Plotly.react('chart-top', [
+                { x: occupancies, y: prices, mode: 'lines', name: 'Demand', line: { color: isDark() ? '#60a5fa' : '#1f77b4', width: 2 } },
+                // 85% marker
+                { x: [85], y: [price85], mode: 'markers', name: '85% (Social Optimum)',
+                  marker: { color: isDark() ? '#4ade80' : '#16a34a', size: 12, symbol: 'star' } },
+            ], {
+                title: { text: 'Occupancy vs. Price', font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Occupancy (%)', range: [0, 110], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price ($)', range: [0, 3.8], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.5, y: 0.95, font: { color: t.legend_font_color } },
+                annotations: [
+                    { x: 85, y: price85, text: '85%', showarrow: true, ax: 30, ay: -30, font: { size: 12, color: isDark() ? '#4ade80' : '#16a34a' } },
+                ],
+            }, plotCfg);
+
+            // Revenue chart
+            DOM.chartBottom.style.display = 'block';
+            Plotly.react('chart-bottom', [
+                { x: occupancies, y: revenues, mode: 'lines', name: 'Revenue', line: { color: isDark() ? '#f87171' : '#d62728', width: 2 } },
+                // Max revenue point (50% occupancy)
+                { x: [occupancies[maxRevIdx]], y: [maxRev], mode: 'markers', name: 'Max Revenue (50%)',
+                  marker: { color: isDark() ? '#f87171' : '#d62728', size: 10 } },
+                // 85% point
+                { x: [85], y: [rev85], mode: 'markers', name: '85% Occupancy',
+                  marker: { color: isDark() ? '#4ade80' : '#16a34a', size: 10, symbol: 'star' } },
+            ], {
+                title: { text: 'Revenue vs. Occupancy', font: { size: 13, color: t.font.color } },
+                xaxis: { title: 'Occupancy (%)', range: [0, 110], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Revenue ($/hr)', gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 40, b: 45, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.45, y: 0.95, font: { color: t.legend_font_color } },
+                annotations: [
+                    { x: occupancies[maxRevIdx], y: maxRev, text: 'Max Rev', showarrow: true, ax: -40, ay: -20, font: { size: 11, color: isDark() ? '#f87171' : '#d62728' } },
+                    { x: 85, y: rev85, text: '85% target', showarrow: true, ax: 30, ay: 20, font: { size: 11, color: isDark() ? '#4ade80' : '#16a34a' } },
+                ],
+            }, plotCfg);
+        }
+
+        function drawChicagoComparison() {
+            const t = plotTheme();
+
+            const goals = ['Target Occupancy', 'Avg. Price Increase', 'Public Satisfaction'];
+            const chicago = [50, 400, 20];
+            const sfpark = [85, 25, 75];
+
+            Plotly.react('chart-top', [
+                { x: goals, y: chicago, type: 'bar', name: 'Chicago (Private)', marker: { color: isDark() ? '#f87171' : '#dc2626' } },
+                { x: goals, y: sfpark, type: 'bar', name: 'SFpark (Public)', marker: { color: isDark() ? '#60a5fa' : '#2563eb' } },
+            ], {
+                title: { text: 'Chicago Privatization vs. SFpark', font: { size: 14, color: t.font.color } },
+                xaxis: { gridcolor: t.xaxis_gridcolor },
+                yaxis: { title: 'Value (%)', range: [0, 420], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                barmode: 'group',
+                legend: { x: 0.6, y: 0.95, font: { color: t.legend_font_color } },
+            }, plotCfg);
+        }
+
+        function drawDemandShift() {
+            const t = plotTheme();
+            const supplyColor = isDark() ? '#4ade80' : '#2ca02c';
+            const demandColor = isDark() ? '#60a5fa' : '#1f77b4';
+
+            const prices = [];
+            for (let p = 0; p <= 4; p += 0.1) prices.push(p);
+
+            const d1 = prices.map(p => demandQd(p, 120)); // normal
+            const d2 = prices.map(p => demandQd(p, 160)); // christmas
+
+            const eqP1 = equilibriumPrice(120);
+            const eqP2 = equilibriumPrice(160);
+
+            Plotly.react('chart-top', [
+                { x: [100, 100], y: [0, 4], mode: 'lines', name: 'Supply', line: { color: supplyColor, width: 3 } },
+                { x: d1, y: prices, mode: 'lines', name: 'D\u2081 (Normal)', line: { color: demandColor, width: 2 } },
+                { x: d2, y: prices, mode: 'lines', name: 'D\u2082 (Christmas)', line: { color: demandColor, width: 2, dash: 'dash' } },
+                { x: [100, 100], y: [eqP1, eqP2], mode: 'markers', name: 'Equilibrium',
+                  marker: { color: isDark() ? '#f87171' : '#d62728', size: 10 } },
+                { x: [0, 100], y: [eqP1, eqP1], mode: 'lines', showlegend: false,
+                  line: { color: isDark() ? '#9ca3af' : '#6b7280', width: 1, dash: 'dash' } },
+                { x: [0, 100], y: [eqP2, eqP2], mode: 'lines', showlegend: false,
+                  line: { color: isDark() ? '#9ca3af' : '#6b7280', width: 1, dash: 'dash' } },
+                // Arrow showing shift
+                { x: [80, 120], y: [1, 1], mode: 'lines', showlegend: false,
+                  line: { color: isDark() ? '#fbbf24' : '#f59e0b', width: 2 } },
+            ], {
+                title: { text: 'Christmas Demand Shift', font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Parking Spaces', range: [0, 170], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price per Hour ($)', range: [0, 4.2], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.55, y: 0.95, font: { color: t.legend_font_color } },
+                annotations: [
+                    { x: 0, y: eqP1, text: 'P\u2081', showarrow: false, xanchor: 'right', xshift: -5, font: { size: 12, color: t.font.color } },
+                    { x: 0, y: eqP2, text: 'P\u2082', showarrow: false, xanchor: 'right', xshift: -5, font: { size: 12, color: t.font.color } },
+                    { x: 100, y: 1, text: 'Demand\nShift \u2192', showarrow: false, xshift: -50, font: { size: 11, color: isDark() ? '#fbbf24' : '#f59e0b' } },
+                ],
+            }, plotCfg);
+        }
+
+        function drawFreeChristmasParking() {
+            const t = plotTheme();
+            const supplyColor = isDark() ? '#4ade80' : '#2ca02c';
+            const demandColor = isDark() ? '#60a5fa' : '#1f77b4';
+
+            const prices = [];
+            for (let p = 0; p <= 4; p += 0.1) prices.push(p);
+            const d2 = prices.map(p => demandQd(p, 160)); // christmas demand
+
+            const qAtZero = demandQd(0, 160); // 160 spaces demanded, only 100 available
+            const shortage = qAtZero - 100;
+
+            Plotly.react('chart-top', [
+                { x: [100, 100], y: [0, 4], mode: 'lines', name: 'Supply', line: { color: supplyColor, width: 3 } },
+                { x: d2, y: prices, mode: 'lines', name: 'D (Christmas)', line: { color: demandColor, width: 2 } },
+                // Free parking line
+                { x: [0, 170], y: [0, 0], mode: 'lines', name: 'Free Parking (P=0)', line: { color: isDark() ? '#f87171' : '#dc2626', width: 2, dash: 'dash' } },
+                // Shortage bracket
+                { x: [100, 160, 160, 100], y: [-0.08, -0.08, 0.08, 0.08],
+                  fill: 'toself', fillcolor: 'rgba(239,68,68,0.25)', line: { width: 0 },
+                  showlegend: false },
+            ], {
+                title: { text: 'Free Parking + High Demand = Shortage', font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Parking Spaces', range: [0, 180], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price per Hour ($)', range: [-0.3, 4.2], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.5, y: 0.95, font: { color: t.legend_font_color } },
+                annotations: [
+                    { x: 130, y: -0.15, text: 'Shortage: ' + Math.round(shortage) + ' drivers', showarrow: false,
+                      font: { size: 12, color: isDark() ? '#f87171' : '#dc2626', weight: 'bold' } },
+                    { x: 100, y: 0, text: '100', showarrow: false, yshift: 15, font: { size: 10, color: t.font.color } },
+                    { x: 160, y: 0, text: '160', showarrow: false, yshift: 15, font: { size: 10, color: t.font.color } },
+                ],
+            }, plotCfg);
+        }
+
+        function drawExternalities() {
+            const t = plotTheme();
+
+            const categories = ['Direct Cost\n(Construction)', 'Aesthetics\n(Ugly)', 'Environment\n(Runoff)', 'Induced Driving\n(Pollution)', 'Induced Driving\n(Congestion)'];
+            const values = [30, 15, 20, 25, 20];
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444', '#f59e0b'];
+
+            Plotly.react('chart-top', [{
+                x: categories,
+                y: values,
+                type: 'bar',
+                marker: { color: colors },
+                text: values.map(v => '$' + v),
+                textposition: 'outside',
+            }], {
+                title: { text: 'Estimated Costs of One Parking Space<br>(Illustrative, per month)', font: { size: 14, color: t.font.color } },
+                xaxis: { gridcolor: t.xaxis_gridcolor, tickangle: 0, tickfont: { size: 10 } },
+                yaxis: { title: 'Cost ($)', range: [0, 40], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 60, b: 80, l: 50, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                annotations: [
+                    { x: 2, y: 36, text: 'Direct costs are only part of the story!', showarrow: false, font: { size: 12, color: isDark() ? '#fbbf24' : '#b45309' } },
+                ],
+            }, plotCfg);
+        }
+
+        function drawManhattanRevenue() {
+            const t = plotTheme();
+
+            // Potential uses of $114 million per year for 111,000 households
+            const uses = ['Schools', 'Parks &\nSidewalks', 'Transit\nSubsidies', 'Street\nLighting', 'Affordable\nHousing'];
+            const amounts = [30, 20, 25, 15, 24];
+
+            Plotly.react('chart-top', [{
+                labels: uses,
+                values: amounts,
+                type: 'pie',
+                marker: { colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'] },
+                textinfo: 'label+percent',
+                textfont: { color: t.font.color, size: 12 },
+                hole: 0.4,
+            }], {
+                title: { text: 'How Could Manhattan Spend $114M/year<br>in Parking Revenue?', font: { size: 14, color: t.font.color } },
+                margin: { t: 60, b: 30, l: 30, r: 30 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { font: { color: t.legend_font_color } },
+                annotations: [
+                    { text: '$114M', showarrow: false, font: { size: 16, color: t.font.color } },
+                ],
+            }, plotCfg);
+        }
+
+        function drawSummaryChart() {
+            const t = plotTheme();
+            const supplyColor = isDark() ? '#4ade80' : '#2ca02c';
+            const demandColor = isDark() ? '#60a5fa' : '#1f77b4';
+
+            const prices = [];
+            for (let p = 0; p <= 4; p += 0.1) prices.push(p);
+            const d = prices.map(p => demandQd(p, 100));
+            const eqP = equilibriumPrice(100);
+            const price85 = (100 - 85) / 40;
+
+            Plotly.react('chart-top', [
+                { x: [100, 100], y: [0, 4], mode: 'lines', name: 'Supply', line: { color: supplyColor, width: 3 } },
+                { x: d, y: prices, mode: 'lines', name: 'Demand', line: { color: demandColor, width: 2 } },
+                // Free parking line
+                { x: [0, 110], y: [0, 0], mode: 'lines', name: 'Free (P=0)', line: { color: isDark() ? '#9ca3af' : '#6b7280', width: 1, dash: 'dot' } },
+                // Max revenue at 50%
+                { x: [50], y: [(100-50)/40], mode: 'markers', name: '50% (Max Rev)',
+                  marker: { color: isDark() ? '#f87171' : '#dc2626', size: 10 } },
+                // 85% target
+                { x: [85], y: [price85], mode: 'markers', name: '85% (Shoup)',
+                  marker: { color: isDark() ? '#4ade80' : '#16a34a', size: 12, symbol: 'star' } },
+                // Equilibrium
+                { x: [100], y: [eqP], mode: 'markers', name: '100% (Equilibrium)',
+                  marker: { color: isDark() ? '#fbbf24' : '#f59e0b', size: 10 } },
+            ], {
+                title: { text: 'Key Points on the Demand Curve', font: { size: 14, color: t.font.color } },
+                xaxis: { title: 'Spaces Occupied', range: [0, 120], gridcolor: t.xaxis_gridcolor, zerolinecolor: t.xaxis_zerolinecolor },
+                yaxis: { title: 'Price ($)', range: [0, 3], gridcolor: t.yaxis_gridcolor, zerolinecolor: t.yaxis_zerolinecolor },
+                margin: { t: 50, b: 50, l: 60, r: 20 },
+                paper_bgcolor: t.paper_bgcolor,
+                plot_bgcolor: t.plot_bgcolor,
+                font: t.font,
+                legend: { x: 0.5, y: 0.95, font: { color: t.legend_font_color } },
+            }, plotCfg);
+        }
+
+        // =============== SECTIONS & SLIDES ===============
+        const sections = [
+            { name: 'Introduction' },
+            { name: 'Supply & Demand' },
+            { name: "Shoup's Rules" },
+            { name: 'Set the Price' },
+            { name: 'Policy Cases' },
+            { name: 'Beyond Pricing' },
+        ];
+
+        const slides = [
+            // ===== SECTION 0: Introduction =====
+            {
+                section: 0,
+                title: 'The Hidden Cost of Free Parking',
+                content: `<p>Have you ever driven around for 10 minutes looking for a parking spot? You're not alone.</p>
+                <p>Studies estimate that <strong>8% to 45%</strong> of traffic in downtown areas consists of drivers <strong>cruising</strong> for parking.</p>
+                <div class="highlight-box"><strong>Cruising</strong> = driving around searching for an available parking spot, adding congestion, pollution, and wasted time.</div>
+                <p>This activity explores how economists think about street parking and why getting the price right matters enormously.</p>`,
+                draw: drawIntroChart,
+            },
+            {
+                section: 0,
+                title: 'A Brief History of Parking Meters',
+                content: `<p>The first parking meter was installed in <strong>Oklahoma City in 1935</strong>.</p>
+                <p>The goal wasn't to raise revenue &mdash; it was to <strong>improve parking turnover</strong> for local businesses.</p>
+                <p>Before meters, employees and commuters would park all day, leaving no spaces for customers.</p>
+                <div class="highlight-box"><strong>Key insight:</strong> Charging for parking doesn't reduce visits &mdash; it ensures spots are available for people who actually need them right now.</div>
+                <p>The business model was clever: meter companies installed them at <strong>zero upfront cost</strong> to cities, taking a share of revenue until paid off.</p>`,
+                draw: drawIntroChart,
+            },
+            // ===== SECTION 1: Supply & Demand =====
+            {
+                section: 1,
+                title: 'Street Parking Has a Vertical Supply Curve',
+                content: `<p>Street parking is different from most goods because <strong>supply is fixed</strong>.</p>
+                <p>The number of spaces is determined by road design and regulations &mdash; it doesn't change when the price goes up or down.</p>
+                <div class="highlight-box"><strong>Vertical supply curve:</strong> No matter what price you charge, the number of parking spaces stays the same.</div>
+                <p>This means that price changes only affect <strong>which drivers</strong> use the spaces and <strong>how long</strong> they stay &mdash; not how many spaces exist.</p>`,
+                draw: drawVerticalSupply,
+            },
+            {
+                section: 1,
+                title: 'Demand Varies Throughout the Day',
+                substeps: 4,
+                substepContent: [
+                    `<p>We know supply is fixed at 100 spaces. Now let's see how <strong>demand</strong> varies throughout the day.</p>
+                    <p>Demand for parking shifts based on:</p>
+                    <p>&bull; <strong>Time of day</strong> &mdash; lunch rush vs. 3am<br>
+                    &bull; <strong>Day of week</strong> &mdash; Saturday vs. Tuesday<br>
+                    &bull; <strong>Local events</strong> &mdash; concerts, holidays, game days<br>
+                    &bull; <strong>Alternatives</strong> &mdash; nearby garages, transit options</p>`,
+                    `<p><strong>D&#8321; (Low demand)</strong> &mdash; like 3am on a Tuesday.</p>
+                    <p>Demand is so low that spaces go unfilled <strong>even at price&nbsp;=&nbsp;$0</strong>. The demand curve sits entirely to the left of the supply line.</p>
+                    <div class="highlight-box">When demand is below capacity, there is no shortage and no need to charge for parking.</div>`,
+                    `<p><strong>D&#8322; (Medium demand)</strong> &mdash; a normal weekday afternoon.</p>
+                    <p>Now demand exceeds supply at low prices. The market clears at price <strong>P&#8322;</strong>, where demand exactly equals 100 spaces.</p>
+                    <div class="highlight-box">At price P&#8322;, the number of drivers who want to park exactly equals the available spaces.</div>`,
+                    `<p><strong>D&#8323; (High demand)</strong> &mdash; Saturday evening or a big event.</p>
+                    <p>Demand is even higher, pushing the market-clearing price up to <strong>P&#8323;</strong>.</p>
+                    <div class="highlight-box">As demand increases, the efficient price must <strong>rise</strong> to prevent shortages and cruising.</div>`,
+                ],
+                content: `<p>While supply is fixed, <strong>demand shifts constantly</strong> based on:</p>
+                <p>&bull; <strong>Time of day</strong> &mdash; lunch rush vs. 3am<br>
+                &bull; <strong>Day of week</strong> &mdash; Saturday vs. Tuesday<br>
+                &bull; <strong>Local events</strong> &mdash; concerts, holidays, game days<br>
+                &bull; <strong>Alternatives</strong> &mdash; nearby garages, transit options</p>
+                <div class="highlight-box">With <strong>D\u2081</strong> (low demand), spaces go unfilled even at P=0. With <strong>D\u2082</strong> and <strong>D\u2083</strong>, the market-clearing price rises as demand increases.</div>`,
+                draw: drawThreeDemandCurves,
+            },
+            {
+                section: 1,
+                title: 'What Happens When Price is Too Low?',
+                content: `<p>When the price of parking is set <strong>below the market-clearing level</strong>, we get a <strong>shortage</strong>.</p>
+                <p>A shortage means more drivers want parking than spaces available. The result:</p>
+                <p>&bull; <strong>Cruising</strong> &mdash; driving in circles searching<br>
+                &bull; <strong>Congestion</strong> &mdash; cruising vehicles clog streets<br>
+                &bull; <strong>Pollution</strong> &mdash; idling engines, extra miles driven<br>
+                &bull; <strong>Frustration</strong> &mdash; wasted time for everyone</p>
+                <div class="highlight-box">Up to <strong>30%</strong> of downtown traffic in some cities is just people looking for parking!</div>`,
+                draw: drawThreeDemandCurves,
+                quiz: [
+                    { text: 'A shortage (cruising)', correct: true, feedback: 'Correct! When price is below the market-clearing level with high demand, more people want spaces than are available, causing a shortage.' },
+                    { text: 'A surplus (empty spaces)', correct: false, feedback: 'Not quite. A surplus happens when price is too HIGH. When price is too low, demand exceeds supply.' },
+                    { text: 'No change in behavior', correct: false, feedback: 'Not quite. Below-market prices attract more drivers than there are spaces, which changes behavior a lot!' },
+                    { text: 'Supply increases', correct: false, feedback: 'Remember, parking supply is FIXED (vertical supply curve). Price changes cannot create new spaces.' },
+                ],
+            },
+            // ===== SECTION 2: Shoup's Rules =====
+            {
+                section: 2,
+                title: "Donald Shoup's Three Principles",
+                content: `<p>Economist <strong>Donald Shoup</strong> developed three principles for parking policy:</p>
+                <p><strong>1. Eliminate off-street parking requirements</strong><br>
+                Mandatory minimums force developers to build excess parking, raising housing costs and paving over land.</p>
+                <p><strong>2. Charge the right price for on-street parking</strong><br>
+                Set the price so that about <strong>85% of spaces are occupied</strong> &mdash; roughly 1 open space per block.</p>
+                <p><strong>3. Create parking benefit districts</strong><br>
+                Return meter revenue to the neighborhood that generates it for local improvements.</p>`,
+                draw: drawShoupTarget,
+            },
+            {
+                section: 2,
+                title: 'Why 85%? The Goldilocks Occupancy',
+                content: `<p>Shoup's target of <strong>85% occupancy</strong> is a careful balance:</p>
+                <p>&bull; <strong>Too low</strong> (e.g. 50%) &rarr; spaces are wasted, price is too high<br>
+                &bull; <strong>Too high</strong> (e.g. 100%) &rarr; no available spots, cruising begins<br>
+                &bull; <strong>Just right</strong> (85%) &rarr; most spaces used, but there's always one open spot nearby</p>
+                <div class="highlight-box"><strong>The 85% rule:</strong> At about 85% occupancy, there is roughly <strong>1 available space per block face</strong>. Drivers can find a spot quickly without cruising.</div>
+                <p>The chart shows how the 85% target on the demand curve leaves a buffer zone of available spaces.</p>`,
+                draw: drawShoupTarget,
+                quiz: [
+                    { text: 'About 1 open space per block', correct: true, feedback: 'Correct! At 85% occupancy (15% vacant), there is roughly 1 open space per block face, so drivers can find parking without cruising.' },
+                    { text: 'Maximum revenue for the city', correct: false, feedback: 'Not quite. Maximum revenue occurs at about 50% occupancy. The 85% target sacrifices some revenue in exchange for better availability.' },
+                    { text: 'Zero empty spaces', correct: false, feedback: 'That would be 100% occupancy, which causes cruising. The 85% target deliberately keeps some spaces open.' },
+                    { text: 'Half the spaces empty', correct: false, feedback: 'That would be 50% occupancy, which is far too many empty spaces. The 85% target uses most spaces while keeping a few available.' },
+                ],
+            },
+            {
+                section: 2,
+                title: 'SFpark: Proof It Works',
+                content: `<p>San Francisco's <strong>SFpark</strong> program (launched 2011) was the first large-scale test of Shoup's ideas.</p>
+                <p><strong>How it worked:</strong></p>
+                <p>&bull; Sensors tracked real-time occupancy on every block<br>
+                &bull; Prices adjusted every few weeks based on data<br>
+                &bull; Small changes: <strong>$0.25&ndash;$0.50</strong> at a time<br>
+                &bull; Prices went <strong>both up AND down</strong> depending on demand</p>
+                <div class="highlight-box"><strong>Results:</strong> Cruising time fell <strong>43%</strong>, traffic volume dropped <strong>8%</strong>, and the program achieved its <strong>85% occupancy</strong> target.</div>`,
+                draw: drawSFparkResults,
+            },
+            // ===== SECTION 3: Set the Price (Interactive) =====
+            {
+                section: 3,
+                title: 'Your Turn: Set the Meter Price',
+                content: `<p>You are the parking manager for a downtown district with <strong>100 spaces</strong> and high demand.</p>
+                <p>Use the slider to set the hourly meter price and observe how it affects <strong>occupancy</strong>, <strong>shortage</strong>, and <strong>revenue</strong>.</p>
+                <div class="highlight-box"><strong>Your goal:</strong> Try different prices. Can you find the price that achieves about 85% occupancy? What price maximizes revenue?</div>
+                <p>Each price you try is recorded as a purple dot. Build up a picture of the revenue curve!</p>`,
+                draw: drawPriceSlider,
+                interactive: 'price',
+                showMarket: true,
+            },
+            {
+                section: 3,
+                title: 'What Did You Discover?',
+                content: `<p>From your exploration, you should have noticed:</p>
+                <p>&bull; <strong>Revenue peaks</strong> at around 50% occupancy (not 100%!)<br>
+                &bull; The <strong>85% target</strong> generates less revenue than the maximum<br>
+                &bull; At <strong>P = $0</strong>, revenue is zero and there's a big shortage<br>
+                &bull; At very high prices, revenue falls because spaces sit empty</p>
+                <div class="highlight-box"><strong>Key tension:</strong> A private firm maximizing profit targets ~50% occupancy. A city serving the public targets ~85% occupancy. These are very different goals!</div>`,
+                draw: drawOccupancyRevenue,
+                showMarket: true,
+            },
+            // ===== SECTION 4: Policy Cases =====
+            {
+                section: 4,
+                title: 'Should Cities Offer Free Christmas Parking?',
+                content: `<p>Many cities make street parking <strong>free during the holidays</strong> to "help businesses." Let's analyze this.</p>
+                <p>During Christmas, demand for parking <strong>increases</strong> (the demand curve shifts right). According to Shoup, what should the city do?</p>
+                <div class="highlight-box"><strong>Think about it:</strong> If demand rises, should the price go UP, DOWN, or stay the same to maintain 85% occupancy?</div>`,
+                draw: drawDemandShift,
+                quiz: [
+                    { text: 'Raise the price', correct: true, feedback: 'Correct! If demand shifts right, the price needs to INCREASE to maintain the 85% occupancy target. Free parking does the opposite!' },
+                    { text: 'Lower the price to $0', correct: false, feedback: 'This is what many cities do, but it makes the shortage WORSE. Higher demand + lower price = more cruising, not more shopping.' },
+                    { text: 'Keep the price the same', correct: false, feedback: 'If demand has shifted right but price stays the same, occupancy rises above 85% and shortages begin. The price needs to adjust.' },
+                    { text: 'Add more spaces', correct: false, feedback: 'You can\'t add spaces in the short run &mdash; supply is fixed! Price is the tool that manages demand.' },
+                ],
+            },
+            {
+                section: 4,
+                title: 'Free Christmas Parking: The Full Picture',
+                content: `<p>When demand is high and parking is free:</p>
+                <p>&bull; <strong>60 extra drivers</strong> want spots that don't exist<br>
+                &bull; All 100 spaces are full &mdash; nobody can find parking<br>
+                &bull; Cruising <strong>increases dramatically</strong><br>
+                &bull; Some shoppers <strong>give up and leave</strong></p>
+                <p>Does free parking help businesses?</p>
+                <p>&bull; If demand is <em>below</em> capacity: Yes, but then parking should be free all year<br>
+                &bull; If demand <em>exceeds</em> capacity: <strong>No!</strong> Free parking means full lots, frustrated drivers, and fewer customers</p>
+                <div class="highlight-box">Free parking doesn't create more spaces. It just makes it harder to find one.</div>`,
+                draw: drawFreeChristmasParking,
+            },
+            {
+                section: 4,
+                title: "Chicago's Privatization Disaster",
+                content: `<p>In 2008, Chicago leased its parking meters to a private consortium for <strong>75 years</strong> for $1.15 billion.</p>
+                <p><strong>What the private firm did:</strong></p>
+                <p>&bull; Raised meter rates by up to <strong>400%</strong><br>
+                &bull; Targeted <strong>50% occupancy</strong> (the revenue-maximizing point)<br>
+                &bull; Left many spaces frequently empty</p>
+                <p><strong>The problem:</strong> A private firm maximizes <em>revenue</em>. A city should maximize <em>public welfare</em>. These lead to very different prices!</p>
+                <div class="highlight-box"><strong>50% occupancy</strong> (profit max) means half the spaces are empty &mdash; a waste of public space. <strong>85% occupancy</strong> (social optimum) keeps spaces well-used while maintaining availability.</div>`,
+                draw: drawChicagoComparison,
+            },
+            // ===== SECTION 5: Beyond Pricing =====
+            {
+                section: 5,
+                title: 'How Many Spots Should We Have?',
+                content: `<p>Shoup focuses on <em>pricing</em> existing spots correctly, but there's a bigger question: <strong>should we have this many spots at all?</strong></p>
+                <p><strong>The equity argument:</strong> People who bus, bike, or walk should not subsidize parking for drivers.</p>
+                <p>A parking spot should only exist if its <strong>revenue covers its costs</strong>. In many cities, this would mean <em>removing</em> spots.</p>
+                <div class="highlight-box"><strong>But direct costs aren't the whole story.</strong> Parking spots generate negative externalities that revenue alone can't cover.</div>`,
+                draw: drawExternalities,
+            },
+            {
+                section: 5,
+                title: 'The Externality Problem',
+                content: `<p>Beyond the direct cost of building and maintaining a parking spot, there are <strong>negative externalities</strong>:</p>
+                <p>&bull; <strong>Aesthetics:</strong> Rows of parked cars and meters aren't pretty<br>
+                &bull; <strong>Environment:</strong> Less green space, more stormwater runoff<br>
+                &bull; <strong>Induced driving:</strong> More parking encourages more driving &mdash; with all its externalities (pollution, congestion, crashes)</p>
+                <div class="highlight-box">If we account for externalities, the case for <strong>fewer parking spots</strong> becomes even stronger. Revenue &ge; direct cost is a <em>necessary</em> condition, not a sufficient one.</div>`,
+                draw: drawExternalities,
+                quiz: [
+                    { text: 'Revenue must cover direct + external costs', correct: true, feedback: 'Correct! Even if revenue covers construction costs, the externalities (pollution, induced driving, lost green space) mean we should still have fewer spots.' },
+                    { text: 'Revenue must cover construction costs only', correct: false, feedback: 'Not quite. If we only look at direct costs, we ignore the externalities parking creates. The true cost is higher than just construction and maintenance.' },
+                    { text: 'Parking should always be free', correct: false, feedback: 'Free parking ignores both the direct costs and the external costs that parking creates. Someone is always paying for "free" parking.' },
+                    { text: 'More spots are always better', correct: false, feedback: 'More spots mean more externalities (aesthetics, environment, induced driving). Each additional spot needs to justify its full social cost.' },
+                ],
+            },
+            {
+                section: 5,
+                title: 'Does Reducing Parking Hurt Business?',
+                content: `<p>A common worry: "If we remove parking, businesses will suffer." The answer: <strong>it depends on context.</strong></p>
+                <p><strong>Reducing parking CAN increase business when:</strong></p>
+                <p>&bull; The area becomes more walkable and bikeable<br>
+                &bull; Freed-up space makes the area more attractive<br>
+                &bull; It creates a <em>sense of place</em> that draws people in</p>
+                <p><strong>Reducing parking CAN hurt business when:</strong></p>
+                <p>&bull; The area is surrounded by highways<br>
+                &bull; There's no viable public transit<br>
+                &bull; Driving is the <em>only</em> way for customers to arrive</p>
+                <div class="highlight-box">The key question: <strong>Do alternatives to driving exist?</strong> If yes, fewer parking spots can actually be good for business.</div>`,
+                draw: drawManhattanRevenue,
+            },
+            {
+                section: 5,
+                title: "Shoup's Manhattan Question",
+                content: `<p>On Manhattan's Upper West Side:</p>
+                <p>&bull; <strong>111,000 households</strong> live in the area<br>
+                &bull; Cheapest off-street parking: <strong>$35/day</strong><br>
+                &bull; Street parking is free or far below market rate<br>
+                &bull; Only a <strong>small minority</strong> of residents actually use street parking</p>
+                <div class="highlight-box"><strong>Shoup's question:</strong> "Should 111,000 households forgo <strong>$114 million a year</strong> for public services to provide free but hard-to-find curb parking for a small minority of residents?"</div>
+                <p>That's over <strong>$1,000 per household per year</strong> in forgone revenue &mdash; money that could fund schools, parks, transit, and sidewalks.</p>`,
+                draw: drawManhattanRevenue,
+            },
+            {
+                section: 5,
+                title: 'Key Takeaways',
+                content: `<p><strong>What we learned:</strong></p>
+                <p>&bull; Street parking has a <strong>vertical supply curve</strong> &mdash; price can't create new spaces<br>
+                &bull; Underpriced parking causes <strong>shortages and cruising</strong><br>
+                &bull; Shoup's <strong>85% target</strong> balances availability with efficient use<br>
+                &bull; <strong>Dynamic pricing</strong> (SFpark) works in practice<br>
+                &bull; Private firms target <strong>50% occupancy</strong> (max revenue) vs. the social optimum of <strong>85%</strong><br>
+                &bull; Free holiday parking <strong>hurts</strong> rather than helps when demand is high<br>
+                &bull; <strong>Externalities</strong> mean we probably have too many parking spots<br>
+                &bull; Parking revenue should fund <strong>neighborhood improvements</strong></p>
+                <div class="highlight-box">The economics of parking shows how getting prices right can reduce congestion, improve the environment, and make cities more livable.</div>`,
+                draw: drawSummaryChart,
+            },
+        ];
+
+        // =============== NAVIGATION ===============
+        function goToSlide(index, substep) {
+            if (index < 0 || index >= slides.length) return;
+            currentSlide = index;
+            quizAnswered = false;
+            const slide = slides[currentSlide];
+
+            // Handle substeps: default to 0, or use provided value
+            if (slide.substeps) {
+                currentSubstep = (substep !== undefined) ? substep : 0;
+            } else {
+                currentSubstep = 0;
+            }
+
+            renderStepper();
+            DOM.counter.textContent = `Slide ${currentSlide + 1} of ${slides.length}`;
+            DOM.title.textContent = slide.title;
+            DOM.content.innerHTML = (slide.substepContent) ? slide.substepContent[currentSubstep] : slide.content;
+
+            // Quiz
+            DOM.quizArea.innerHTML = '';
+            DOM.feedback.style.display = 'none';
+            if (slide.quiz) {
+                slide.quiz.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.textContent = opt.text;
+                    btn.onclick = () => handleQuiz(opt);
+                    DOM.quizArea.appendChild(btn);
+                });
+            }
+
+            // Slider
+            if (slide.interactive) {
+                DOM.sliderArea.style.display = 'block';
+                DOM.mainSlider.value = 100;
+                DOM.sliderVal.textContent = '$1.00';
+            } else {
+                DOM.sliderArea.style.display = 'none';
+            }
+
+            // Chart bottom visibility
+            DOM.chartBottom.style.display = slide.showMarket ? 'block' : 'none';
+
+            // Info panel
+            DOM.infoPanel.style.display = 'none';
+
+            // Nav buttons
+            DOM.prevBtn.style.display = currentSlide > 0 ? 'inline-block' : 'none';
+            DOM.nextBtn.textContent = currentSlide === slides.length - 1 ? 'Finish' : 'Next';
+            DOM.nextBtn.style.display = (slide.quiz && !quizAnswered) ? 'none' : 'inline-block';
+
+            setTimeout(() => {
+                if (slide.substeps) {
+                    slide.draw(currentSubstep);
+                } else {
+                    slide.draw();
+                }
+                Plotly.Plots.resize('chart-top');
+                if (slide.showMarket) Plotly.Plots.resize('chart-bottom');
+            }, 80);
+        }
+
+        function handleQuiz(opt) {
+            const btns = DOM.quizArea.querySelectorAll('button');
+            btns.forEach(b => b.disabled = true);
+            DOM.feedback.textContent = opt.feedback;
+            DOM.feedback.className = opt.correct ? 'feedback success' : 'feedback error';
+            DOM.feedback.style.display = 'block';
+            if (opt.correct) {
+                quizAnswered = true;
+                DOM.nextBtn.style.display = 'inline-block';
+            } else {
+                setTimeout(() => { btns.forEach(b => b.disabled = false); }, 1800);
+            }
+        }
+
+        function nextSlide() {
+            if (slides[currentSlide].quiz && !quizAnswered) return;
+            const slide = slides[currentSlide];
+            // Advance substep before advancing slide
+            if (slide.substeps && currentSubstep < slide.substeps - 1) {
+                currentSubstep++;
+                DOM.content.innerHTML = slide.substepContent[currentSubstep];
+                slide.draw(currentSubstep);
+                return;
+            }
+            if (currentSlide < slides.length - 1) goToSlide(currentSlide + 1);
+        }
+        function prevSlide() {
+            const slide = slides[currentSlide];
+            // Go back a substep before going to previous slide
+            if (slide.substeps && currentSubstep > 0) {
+                currentSubstep--;
+                DOM.content.innerHTML = slide.substepContent[currentSubstep];
+                slide.draw(currentSubstep);
+                return;
+            }
+            if (currentSlide > 0) {
+                const prevIdx = currentSlide - 1;
+                const prev = slides[prevIdx];
+                // Jump to last substep of previous slide
+                goToSlide(prevIdx, prev.substeps ? prev.substeps - 1 : undefined);
+            }
+        }
+
+        function renderStepper() {
+            const curSection = slides[currentSlide].section;
+            DOM.stepper.innerHTML = '';
+            sections.forEach((sec, i) => {
+                const item = document.createElement('div');
+                item.className = 'step-item';
+                if (i === curSection) item.classList.add('active');
+                else if (i < curSection) item.classList.add('completed');
+                item.innerHTML = `<div class="step-dot">${i < curSection ? '\u2713' : i + 1}</div><div class="step-label">${sec.name}</div>`;
+                item.onclick = () => {
+                    const first = slides.findIndex(s => s.section === i);
+                    if (first >= 0) goToSlide(first);
+                };
+                DOM.stepper.appendChild(item);
+            });
+        }
+
+        // =============== SLIDER EVENT ===============
+        DOM.mainSlider.addEventListener('input', function () {
+            const val = parseFloat(this.value) / 100;
+            DOM.sliderVal.textContent = '$' + val.toFixed(2);
+
+            // Record to history
+            const intercept = 100;
+            const occupied = occupancyAt(val, intercept);
+            const revenue = revenueAt(val, intercept);
+            priceHistory.push({ price: val, occupancy: occupied, revenue: revenue });
+
+            const slide = slides[currentSlide];
+            if (slide.interactive && slide.draw) slide.draw();
+        });
+
+        DOM.clearBtn.addEventListener('click', function () {
+            priceHistory = [];
+            const slide = slides[currentSlide];
+            if (slide.draw) slide.draw();
+        });
+
+        // =============== KEYBOARD NAV ===============
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+
+        // =============== THEME TOGGLE ===============
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const knob = document.getElementById('toggleKnob');
+            knob.textContent = theme === 'dark' ? '\uD83C\uDF19' : '\u2600\uFE0F';
+            localStorage.setItem('street-parking-theme', theme);
+            const slide = slides[currentSlide];
+            if (slide.draw) {
+                if (slide.substeps) { slide.draw(currentSubstep); } else { slide.draw(); }
+            }
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        const savedTheme = localStorage.getItem('street-parking-theme') || 'light';
+        if (savedTheme === 'dark') applyTheme('dark');
+
+        // =============== INIT ===============
+        goToSlide(0);
+    </script>
+</body>
+
+</html>
