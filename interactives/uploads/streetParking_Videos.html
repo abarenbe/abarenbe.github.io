@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Street Parking – Videos &amp; Activity</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+            --dim: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f9a825;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --modal-bg: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            background-image: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 90%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+        }
+
+        /* Slides */
+        .slide {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        /* Nav */
+        .nav {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.75rem;
+            z-index: 100;
+        }
+
+        .nav button {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #e8e8ed;
+            padding: 0.5rem 1.4rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .nav button:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.35);
+            z-index: 100;
+        }
+
+        /* Video */
+        .video-wrapper {
+            width: 90vw;
+            max-width: 1100px;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .slide h2 {
+            font-weight: 600;
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+
+        .slide h2 span.subtle {
+            color: rgba(255, 255, 255, 0.45);
+            font-weight: 400;
+        }
+
+        /* Pause */
+        .pause-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 3rem 4rem;
+            text-align: center;
+            max-width: 700px;
+            backdrop-filter: blur(16px);
+        }
+
+        .pause-card h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .pause-card p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .pause-card a.earth-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: #fff;
+            padding: 0.85rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .pause-card a.earth-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(66, 133, 244, 0.4);
+        }
+
+        /* Table slide */
+        .table-slide {
+            align-items: stretch;
+            padding: 1.5rem 2.5rem;
+            overflow-y: auto;
+        }
+
+        .table-slide h2 {
+            font-family: 'Outfit', sans-serif;
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 0.3rem;
+            background: linear-gradient(to right, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .table-slide .subtitle {
+            color: var(--dim);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .prompt-box {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .prompt-box .label {
+            font-weight: 600;
+            color: #90caf9;
+            margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .hidden-prompt {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .hidden-prompt.visible {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .reveal-btn {
+            background: linear-gradient(135deg, #f9a825, #ff8f00);
+            color: #1a1a2e;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .reveal-btn:hover {
+            transform: scale(1.03);
+        }
+
+        .reveal-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+            transform: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Dynamic table */
+        .table-container {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th,
+        td {
+            padding: 0.7rem 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        thead th {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .category-cell {
+            font-weight: 600;
+            color: var(--text);
+            width: 220px;
+        }
+
+        .data-cell {
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 130px;
+            text-align: center;
+        }
+
+        .data-cell:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .estimate-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .high-low {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+        }
+
+        .low {
+            color: var(--green);
+        }
+
+        .high {
+            color: var(--red);
+        }
+
+        .avg-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        .empty-cell {
+            color: var(--dim);
+            font-style: italic;
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
+        .total-row {
+            background: rgba(99, 102, 241, 0.05);
+            font-weight: 700;
+        }
+
+        .total-row td {
+            color: var(--accent);
+            border-top: 2px solid var(--accent);
+        }
+
+        .section-header td {
+            font-weight: 700;
+            color: var(--orange) !important;
+            font-size: 0.8rem;
+            letter-spacing: 0.03em;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--modal-bg);
+            border-radius: 1.2rem;
+            padding: 2rem;
+            max-width: 460px;
+            width: 90%;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+            color: var(--text);
+        }
+
+        .modal h2 {
+            margin-bottom: 1rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .estimate-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .estimate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .delete-btn {
+            color: var(--red);
+            background: transparent;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: var(--dim);
+            font-size: 0.8rem;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 0.8rem;
+            right: 1rem;
+            background: transparent;
+            color: var(--dim);
+            font-size: 1.5rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .modal .btn-primary {
+            width: 100%;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SLIDE 1 – Video 1 -->
+    <div class="slide active" id="slide1">
+        <h2>Video 1 <span class="subtle">· 1.25× speed</span></h2>
+        <div class="video-wrapper">
+            <iframe id="player1" src="https://www.youtube.com/embed/DKbRL6Opifg?start=9&enablejsapi=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- SLIDE 2 – Video 2 -->
+    <div class="slide" id="slide2">
+        <h2>Video 2 <span class="subtle">· 1.25× speed · stops at 14:06</span></h2>
+        <div class="video-wrapper">
+            <iframe id="player2" src="https://www.youtube.com/embed/d8RRE2rDw4k?enablejsapi=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- SLIDE 3 – Pause / Google Earth -->
+    <div class="slide" id="slide3">
+        <div class="pause-card">
+            <h2>⏸ Pause for Discussion</h2>
+            <p>Video paused at <strong>14:06</strong>. Let's look at this area in Google Earth before continuing.</p>
+            <a class="earth-link"
+                href="https://earth.google.com/web/search/briggs+oympia/@47.00688202,-122.86928286,60.41785274a,5627.87898669d,35y,0h,0t,0r/data=CigiJgokCSM9HYI9GjlAESE9HYI9GjnAGaShybBl5kpAIXKHEhBVFUvAQgIIAToDCgEwQgIIAEoNCP___________wEQAA"
+                target="_blank" rel="noopener">🌍 Open Google Earth</a>
+        </div>
+    </div>
+
+    <!-- SLIDE 4 – Video 3 (Netherlands bike/transit segments) -->
+    <div class="slide" id="slide4">
+        <h2>We saw how nice car infrastructure was…<br><span class="subtle">How about bike and public transport?</span>
+        </h2>
+        <div class="video-wrapper">
+            <iframe id="player3" src="https://www.youtube.com/embed/EqwasBTzZS8?start=150&enablejsapi=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- SLIDE 5 – Dynamic Transportation Cost Table -->
+    <div class="slide table-slide" id="slide5">
+        <h2>% of Total Income Spent on Transportation</h2>
+        <p class="subtitle">Netherlands 🇳🇱 vs. United States 🇺🇸 — Double-click any cell to add estimates</p>
+
+        <div class="prompt-box">
+            <div class="label">Student Prompt for AI</div>
+            What is the percent of total income spent on transportation in the Netherlands and the US? Create a table
+            with both public and private costs.
+        </div>
+
+        <div class="controls">
+            <button class="reveal-btn" id="revealBtn" onclick="advanceReveal()">🔓 Reveal Next Prompt</button>
+            <button class="btn-outline" onclick="resetData()">Reset All</button>
+        </div>
+
+        <div class="hidden-prompt" id="prompt-parking">
+            <div class="prompt-box">
+                <div class="label">Additional Student Prompt</div>
+                Add a row for <strong>parking costs hidden in other costs</strong> (e.g. "free" parking bundled into
+                housing, retail, and employer costs).
+            </div>
+        </div>
+        <div class="hidden-prompt" id="prompt-extern">
+            <div class="prompt-box">
+                <div class="label">Additional Student Prompt</div>
+                Add a row for <strong>externalities</strong> (pollution, congestion, crashes, noise) and a row for
+                <strong>time cost</strong> (commute &amp; travel time as % of income).
+            </div>
+        </div>
+        <div class="hidden-prompt" id="prompt-health">
+            <div class="prompt-box">
+                <div class="label">Additional Student Prompt</div>
+                Add a row for <strong>internalized health costs</strong> (activity levels, obesity, respiratory) and a
+                row for <strong>externalized health costs</strong> (public health burden, emergency services).
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="costsTable">
+                <thead>
+                    <tr id="tableHeader"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Estimate Modal -->
+    <div id="estimateModal" class="modal-overlay">
+        <div class="modal">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Estimates</h2>
+            <div class="estimate-list" id="modalEstimateList"></div>
+            <div class="input-group">
+                <label>Add New Estimate (%)</label>
+                <input type="number" step="0.1" id="newEstimateValue" placeholder="e.g. 4.5">
+            </div>
+            <button class="btn-primary" onclick="addCurrentEstimate()">Add Estimate</button>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <button onclick="changeSlide(-1)">← Prev</button>
+        <button onclick="changeSlide(1)">Next →</button>
+    </div>
+    <div class="slide-counter" id="slideCounter">1 / 5</div>
+
+    <script>
+        // ── Slide navigation ──
+        let current = 0;
+        const slides = document.querySelectorAll('.slide');
+        const total = slides.length;
+        function showSlide(i) { slides.forEach(s => s.classList.remove('active')); slides[i].classList.add('active'); document.getElementById('slideCounter').textContent = `${i + 1} / ${total}`; }
+        function changeSlide(d) { current = Math.max(0, Math.min(total - 1, current + d)); showSlide(current); }
+        document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+
+        // ── YouTube IFrame API ──
+        let player1, player2, player3;
+        let pauseCheckInterval = null;
+        let v3Interval = null;
+        const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
+
+        // Video 3 segments: [startSec, endSec]
+        const V3_SEGMENTS = [[150, 370], [410, 470], [653, 797]]; // 2:30-6:10, 6:50-7:50, 10:53-13:17
+        let v3SegIdx = 0;
+
+        window.onYouTubeIframeAPIReady = function () {
+            player1 = new YT.Player('player1', { events: { onReady: e => e.target.setPlaybackRate(1.25), onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) e.target.setPlaybackRate(1.25); } } });
+            player2 = new YT.Player('player2', { events: { onReady: e => e.target.setPlaybackRate(1.25), onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) { e.target.setPlaybackRate(1.25); startPauseCheck(); } else { stopPauseCheck(); } } } });
+            player3 = new YT.Player('player3', {
+                events: {
+                    onReady: e => e.target.setPlaybackRate(1.25),
+                    onStateChange: e => {
+                        if (e.data === YT.PlayerState.PLAYING) { e.target.setPlaybackRate(1.25); startV3Check(); }
+                        else { stopV3Check(); }
+                    }
+                }
+            });
+        };
+
+        // Video 2: pause at 14:06 (846s)
+        function startPauseCheck() { stopPauseCheck(); pauseCheckInterval = setInterval(() => { if (!player2 || typeof player2.getCurrentTime !== 'function') return; if (player2.getCurrentTime() >= 846) { player2.pauseVideo(); stopPauseCheck(); current = 2; showSlide(current); } }, 500); }
+        function stopPauseCheck() { if (pauseCheckInterval) { clearInterval(pauseCheckInterval); pauseCheckInterval = null; } }
+
+        // Video 3: segment skipping
+        function startV3Check() {
+            stopV3Check();
+            v3Interval = setInterval(() => {
+                if (!player3 || typeof player3.getCurrentTime !== 'function') return;
+                const t = player3.getCurrentTime();
+                const seg = V3_SEGMENTS[v3SegIdx];
+                if (!seg) { player3.pauseVideo(); stopV3Check(); return; }
+                if (t >= seg[1]) {
+                    v3SegIdx++;
+                    const next = V3_SEGMENTS[v3SegIdx];
+                    if (next) { player3.seekTo(next[0], true); }
+                    else { player3.pauseVideo(); stopV3Check(); }
+                }
+            }, 500);
+        }
+        function stopV3Check() { if (v3Interval) { clearInterval(v3Interval); v3Interval = null; } }
+
+        // ── Dynamic Table State (same pattern as transport_costs_calculator.html) ──
+        const MODES = ['🇳🇱 Netherlands', '🇺🇸 United States'];
+        const BASE_CATEGORIES = [
+            { section: null, cats: ['Private Costs', 'Public Costs'] }
+        ];
+        const HIDDEN_GROUPS = {
+            parking: { section: null, cats: ['Parking Costs (hidden in other costs)'], nextBtn: 'revealExtern' },
+            extern: { section: null, cats: ['Externalities', 'Time Cost'], nextBtn: 'revealHealth' },
+            health: { section: null, cats: ['Internalized Health Costs', 'Externalized Health Costs'], nextBtn: null }
+        };
+
+        let state = { data: {}, revealedGroups: [] };
+        let activeCell = { mode: null, category: null };
+
+        function allCategories() {
+            let cats = [];
+            BASE_CATEGORIES.forEach(s => cats.push({ section: s.section, cats: s.cats, hidden: false }));
+            ['parking', 'extern', 'health'].forEach(g => {
+                if (state.revealedGroups.includes(g)) {
+                    const h = HIDDEN_GROUPS[g];
+                    cats.push({ section: h.section, cats: h.cats, hidden: false });
+                }
+            });
+            return cats;
+        }
+
+        function initData() {
+            const saved = localStorage.getItem('streetParkingTableState');
+            if (saved) { state = JSON.parse(saved); }
+            // Ensure all cells exist
+            const allCats = [].concat(...BASE_CATEGORIES.map(s => s.cats), ...Object.values(HIDDEN_GROUPS).map(g => g.cats));
+            MODES.forEach(m => { if (!state.data[m]) state.data[m] = {}; allCats.forEach(c => { if (!state.data[m][c]) state.data[m][c] = []; }); });
+            renderTable();
+            restoreRevealState();
+        }
+
+        function saveData() { localStorage.setItem('streetParkingTableState', JSON.stringify(state)); }
+
+        function renderTable() {
+            const header = document.getElementById('tableHeader');
+            header.innerHTML = '<th>Cost Category</th>';
+            MODES.forEach(m => { header.innerHTML += `<th>${m}</th>`; });
+
+            const body = document.getElementById('tableBody');
+            body.innerHTML = '';
+            const sections = allCategories();
+
+            sections.forEach(sec => {
+                // Section header row (only if section name exists)
+                if (sec.section) body.innerHTML += `<tr class="section-header"><td colspan="${MODES.length + 1}">${sec.section}</td></tr>`;
+                sec.cats.forEach(cat => {
+                    let row = `<tr><td class="category-cell">${cat}</td>`;
+                    MODES.forEach(m => {
+                        const esc_m = m.replace(/'/g, "\\'");
+                        const esc_c = cat.replace(/'/g, "\\'");
+                        const estimates = (state.data[m] && state.data[m][cat]) || [];
+                        row += `<td class="data-cell" ondblclick="openModal('${esc_m}','${esc_c}')">${renderCell(estimates)}</td>`;
+                    });
+                    row += '</tr>';
+                    body.innerHTML += row;
+                });
+            });
+
+            // Totals row
+            let totalRow = `<tr class="total-row"><td class="category-cell">TOTAL (avg sum)</td>`;
+            MODES.forEach(m => {
+                let totalAvg = 0, totalMin = 0, totalMax = 0, hasData = false;
+                const sections2 = allCategories();
+                sections2.forEach(sec => sec.cats.forEach(cat => {
+                    const est = (state.data[m] && state.data[m][cat]) || [];
+                    if (est.length > 0) {
+                        hasData = true;
+                        totalAvg += est.reduce((a, b) => a + b, 0) / est.length;
+                        totalMin += Math.min(...est);
+                        totalMax += Math.max(...est);
+                    }
+                }));
+                if (hasData) {
+                    totalRow += `<td><div class="high-low"><span class="low">Min: ${totalMin.toFixed(1)}%</span><span class="high">Max: ${totalMax.toFixed(1)}%</span></div><div class="avg-value">${totalAvg.toFixed(1)}%</div></td>`;
+                } else {
+                    totalRow += `<td class="empty-cell">–</td>`;
+                }
+            });
+            totalRow += '</tr>';
+            body.innerHTML += totalRow;
+        }
+
+        function renderCell(estimates) {
+            if (estimates.length === 0) return '<div class="empty-cell">Double-click to add</div>';
+            const lo = Math.min(...estimates), hi = Math.max(...estimates);
+            const avg = estimates.reduce((a, b) => a + b, 0) / estimates.length;
+            return `<div class="estimate-summary"><div class="high-low"><span class="low">Min: ${lo.toFixed(1)}%</span><span class="high">Max: ${hi.toFixed(1)}%</span></div><div class="avg-value">${avg.toFixed(1)}%</div><div style="font-size:0.65rem;color:var(--dim);text-align:center">${estimates.length} estimate${estimates.length > 1 ? 's' : ''}</div></div>`;
+        }
+
+        // ── Modal ──
+        function openModal(mode, cat) {
+            activeCell = { mode, cat };
+            document.getElementById('modalTitle').textContent = `${cat} — ${mode}`;
+            renderModalList();
+            document.getElementById('estimateModal').classList.add('active');
+            document.getElementById('newEstimateValue').value = '';
+            setTimeout(() => document.getElementById('newEstimateValue').focus(), 100);
+        }
+        function closeModal() { document.getElementById('estimateModal').classList.remove('active'); }
+        function renderModalList() {
+            const list = document.getElementById('modalEstimateList');
+            const est = state.data[activeCell.mode][activeCell.cat] || [];
+            list.innerHTML = est.length === 0 ? '<div style="color:var(--dim);font-style:italic;padding:0.5rem">No estimates yet</div>' : '';
+            est.forEach((v, i) => { list.innerHTML += `<div class="estimate-item"><span>${v.toFixed(1)}%</span><button class="delete-btn" onclick="deleteEstimate(${i})">Delete</button></div>`; });
+        }
+        function addCurrentEstimate() {
+            const input = document.getElementById('newEstimateValue');
+            const val = parseFloat(input.value);
+            if (isNaN(val)) return;
+            if (!state.data[activeCell.mode][activeCell.cat]) state.data[activeCell.mode][activeCell.cat] = [];
+            state.data[activeCell.mode][activeCell.cat].push(val);
+            input.value = '';
+            renderModalList(); renderTable(); saveData();
+            input.focus();
+        }
+        function deleteEstimate(i) { state.data[activeCell.mode][activeCell.cat].splice(i, 1); renderModalList(); renderTable(); saveData(); }
+        document.getElementById('newEstimateValue').addEventListener('keypress', e => { if (e.key === 'Enter') addCurrentEstimate(); });
+
+        // ── Reveal system: two-step per group ──
+        // Steps: show prompt → add rows + show next prompt (hiding previous)
+        const REVEAL_ORDER = ['parking', 'extern', 'health'];
+
+        // revealStep tracks progress: 0=nothing shown, 1=parking prompt shown, 2=parking rows added + extern prompt shown, etc.
+        // Even steps (0,2,4,6) = ready to show a prompt; Odd steps (1,3,5) = prompt is showing, next click adds rows
+        function getRevealStep() { return state.revealStep || 0; }
+        function setRevealStep(s) { state.revealStep = s; saveData(); }
+
+        function advanceReveal() {
+            const step = getRevealStep();
+            const groupIdx = Math.floor(step / 2);
+            const isPromptShowing = step % 2 === 1;
+
+            if (isPromptShowing) {
+                // Step 2: add rows to table, hide current prompt, show next prompt if any
+                const group = REVEAL_ORDER[groupIdx];
+                if (!state.revealedGroups.includes(group)) state.revealedGroups.push(group);
+                HIDDEN_GROUPS[group].cats.forEach(c => { MODES.forEach(m => { if (!state.data[m][c]) state.data[m][c] = []; }); });
+                renderTable();
+
+                // Hide current prompt
+                document.getElementById(`prompt-${group}`).classList.remove('visible');
+
+                setRevealStep(step + 1);
+
+                // Show next prompt if there is one
+                const nextIdx = groupIdx + 1;
+                if (nextIdx < REVEAL_ORDER.length) {
+                    document.getElementById(`prompt-${REVEAL_ORDER[nextIdx]}`).classList.add('visible');
+                    setRevealStep(step + 2); // skip to "prompt showing" state for next group
+                } else {
+                    // All done
+                    document.getElementById('revealBtn').style.display = 'none';
+                }
+            } else {
+                // Step 1: show prompt only
+                if (groupIdx >= REVEAL_ORDER.length) { document.getElementById('revealBtn').style.display = 'none'; return; }
+                const group = REVEAL_ORDER[groupIdx];
+
+                // Hide all prompts, show only this one
+                REVEAL_ORDER.forEach(g => document.getElementById(`prompt-${g}`).classList.remove('visible'));
+                document.getElementById(`prompt-${group}`).classList.add('visible');
+
+                setRevealStep(step + 1);
+            }
+            saveData();
+        }
+
+        function restoreRevealState() {
+            const step = getRevealStep();
+            REVEAL_ORDER.forEach(g => document.getElementById(`prompt-${g}`).classList.remove('visible'));
+
+            if (step === 0) return;
+
+            // Odd step = prompt for group at floor(step/2) is showing
+            // Even step > 0 = we jumped by 2 in advanceReveal, prompt for group at step/2 is showing
+            const isOdd = step % 2 === 1;
+            const promptIdx = isOdd ? Math.floor(step / 2) : (step / 2);
+
+            if (promptIdx < REVEAL_ORDER.length) {
+                document.getElementById(`prompt-${REVEAL_ORDER[promptIdx]}`).classList.add('visible');
+            }
+
+            if (step >= REVEAL_ORDER.length * 2) {
+                document.getElementById('revealBtn').style.display = 'none';
+            }
+        }
+
+        function resetData() { if (confirm('Clear all data?')) { localStorage.removeItem('streetParkingTableState'); location.reload(); } }
+
+        initData();
+    </script>
+</body>
+
+</html>
