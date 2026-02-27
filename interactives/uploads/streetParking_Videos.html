@@ -513,6 +513,19 @@
             width: 100%;
             justify-content: center;
         }
+
+        .yt-link {
+            display: inline-block;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .yt-link:hover {
+            color: #ff4444;
+        }
     </style>
 </head>
 
@@ -520,9 +533,11 @@
 
     <!-- SLIDE 1 – Video 1 -->
     <div class="slide active" id="slide1">
-        <h2>Video 1 <span class="subtle">· 1.25× speed</span></h2>
+        <h2>How Amsterdam Became a Bicycle Paradise</h2>
+        <a class="yt-link" href="https://www.youtube.com/watch?v=DKbRL6Opifg" target="_blank">▶ Open on YouTube
+            (ad-free)</a>
         <div class="video-wrapper">
-            <iframe id="player1" src="https://www.youtube.com/embed/DKbRL6Opifg?start=9&enablejsapi=1"
+            <iframe id="player1" src="https://www.youtube.com/embed/DKbRL6Opifg?enablejsapi=1"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen></iframe>
         </div>
@@ -530,7 +545,9 @@
 
     <!-- SLIDE 2 – Video 2 -->
     <div class="slide" id="slide2">
-        <h2>Video 2 <span class="subtle">· 1.25× speed · stops at 14:06</span></h2>
+        <h2>The Best Country in the World for Drivers</h2>
+        <a class="yt-link" href="https://www.youtube.com/watch?v=d8RRE2rDw4k" target="_blank">▶ Open on YouTube
+            (ad-free)</a>
         <div class="video-wrapper">
             <iframe id="player2" src="https://www.youtube.com/embed/d8RRE2rDw4k?enablejsapi=1"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -551,8 +568,11 @@
 
     <!-- SLIDE 4 – Video 3 (Netherlands bike/transit segments) -->
     <div class="slide" id="slide4">
-        <h2>We saw how nice car infrastructure was…<br><span class="subtle">How about bike and public transport?</span>
+        <h2>We saw how nice car infrastructure was…<br><span class="subtle">How about bike and public transport? —
+                Amsterdam Just Got Awesomer</span>
         </h2>
+        <a class="yt-link" href="https://www.youtube.com/watch?v=EqwasBTzZS8&t=150" target="_blank">▶ Open on YouTube
+            (ad-free)</a>
         <div class="video-wrapper">
             <iframe id="player3" src="https://www.youtube.com/embed/EqwasBTzZS8?start=150&enablejsapi=1"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -649,7 +669,7 @@
         let v3SegIdx = 0;
 
         window.onYouTubeIframeAPIReady = function () {
-            player1 = new YT.Player('player1', { events: { onReady: e => e.target.setPlaybackRate(1.25), onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) e.target.setPlaybackRate(1.25); } } });
+            player1 = new YT.Player('player1', { events: { onReady: e => { }, onStateChange: e => { } } });
             player2 = new YT.Player('player2', { events: { onReady: e => e.target.setPlaybackRate(1.25), onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) { e.target.setPlaybackRate(1.25); startPauseCheck(); } else { stopPauseCheck(); } } } });
             player3 = new YT.Player('player3', {
                 events: {
