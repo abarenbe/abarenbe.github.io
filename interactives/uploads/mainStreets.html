@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Streets Gallery</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme-link">
+    <style>
+        :root,
+        :root[data-theme="light"] {
+            --bg-primary: #ffffff;
+            --text-primary: #1e293b;
+            --accent-blue: #2563eb;
+            --heading-color: #0f172a;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        :root[data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --text-primary: #e2e8f0;
+            --accent-blue: #60a5fa;
+            --heading-color: #f1f5f9;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        .reveal-viewport {
+            background: var(--bg-primary) !important;
+        }
+
+        .reveal {
+            color: var(--text-primary);
+        }
+
+        .reveal h1,
+        .reveal h2,
+        .reveal h3 {
+            color: var(--heading-color) !important;
+            font-weight: 700;
+            text-transform: none;
+        }
+
+        .reveal h2 {
+            font-size: 1.25em;
+            margin-bottom: 0.3em;
+            border-bottom: 3px solid var(--accent-blue);
+            display: inline-block;
+            padding-bottom: 0.1em;
+        }
+
+        .slide-image {
+            max-width: 95%;
+            max-height: 600px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px var(--shadow);
+            margin: 0.5em auto;
+            display: block;
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 200;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        #theme-toggle svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+
+        .icon-sun {
+            display: none;
+        }
+
+        .icon-moon {
+            display: block;
+        }
+
+        [data-theme="dark"] .icon-sun {
+            display: block;
+        }
+
+        [data-theme="dark"] .icon-moon {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button id="theme-toggle" aria-label="Toggle theme">
+        <svg class="icon-moon" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" />
+            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" />
+        </svg>
+    </button>
+
+    <div class="reveal">
+        <div class="slides">
+
+            <section>
+                <h1>Main Streets Gallery</h1>
+                <p>Economics of the City</p>
+            </section>
+
+            <section>
+                <h2>Bellingham: Before Parking Requirements</h2>
+                <img src="bellingham_before.jpg" alt="Bellingham Before" class="slide-image">
+            </section>
+
+            <section>
+                <h2>Bellingham: After Parking Requirements</h2>
+                <img src="bellingham_after.jpg" alt="Bellingham After" class="slide-image">
+            </section>
+
+            <section>
+                <h2>Houston: Downtown</h2>
+                <img src="houston_downtown.webp" alt="Houston Downtown" class="slide-image">
+            </section>
+
+            <section>
+                <h2>Cazenovia, NY</h2>
+                <img src="cazenovia.jpg" alt="Cazenovia New York" class="slide-image">
+            </section>
+
+            <section>
+                <h2>Olympia Capital Mall</h2>
+                <img src="olympia_mall.png" alt="Olympia Capital Mall" class="slide-image">
+            </section>
+
+            <section>
+                <h2>No longer generally legal to build</h2>
+                <img src="downtown.jpg" alt="Downtown" class="slide-image">
+            </section>
+
+            <section>
+                <h2>INstead this is mandated. </h2>
+                <img src="400_1st_ave.webp" alt="400 1st Avenue" class="slide-image">
+            </section>
+
+            <section>
+                <h2>Or this</h2>
+                <img src="301_n_main.webp" alt="301 N Main" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_1.jpg" alt="Main Street 1" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_2.png" alt="Main Street 2" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_3.jpg" alt="Main Street 3" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_4.webp" alt="Main Street 4" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_5.jpg" alt="Main Street 5" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_6.jpg" alt="Main Street 6" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_7.jpg" alt="Main Street 7" class="slide-image">
+            </section>
+
+            <section>
+                <img src="main_street_8.jpg" alt="Main Street 8" class="slide-image">
+            </section>
+
+            <section>
+                <h2>We haven't discussed a key determinant of US Car dependency.</h2>
+            </section>
+
+            <section>
+                <h3>The Great Migration and Urban Transformation</h3>
+                <div style="text-align: left; font-size: 0.8em;">
+                    <p><strong>Ellora Derenoncourt</strong> used a shift-share instrument study of African American
+                        Immigration during the Great Migration to study how Northern cities transformed.</p>
+                    <ul>
+                        <li>Cities with a larger in-migration shock <strong>increased investment in Highways</strong>.
+                        </li>
+                        <li>They <strong>decreased investment in public transport</strong>.</li>
+                        <li>Commute times increased as a result.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Watch: Building the Highway System</h2>
+                <iframe width="960" height="540" src="https://www.youtube.com/embed/FLTKE2zMiZI" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            </section>
+
+            <section>
+                <h2>Watch: The High Cost of Free Parking</h2>
+                <iframe width="960" height="540" src="https://www.youtube.com/embed/T6SiYlMD0U8" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            center: true,
+            transition: 'slide'
+        });
+
+        const btn = document.getElementById('theme-toggle');
+        btn.addEventListener('click', () => {
+            const root = document.documentElement;
+            const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+            root.dataset.theme = next;
+            document.getElementById('theme-link').href = next === 'dark'
+                ? 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css'
+                : 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css';
+        });
+    </script>
+</body>
+
+</html>
