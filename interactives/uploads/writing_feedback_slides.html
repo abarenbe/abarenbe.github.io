@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Improving Your Writing — Common Issues &amp; Fixes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-light: #334155;
+    --accent: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.15);
+    --bad: #f87171;
+    --bad-bg: rgba(248, 113, 113, 0.08);
+    --good: #4ade80;
+    --good-bg: rgba(74, 222, 128, 0.08);
+    --fix: #facc15;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-bright: #f8fafc;
+    --radius: 12px;
+  }
+
+  :root.light {
+    --bg: #f8fafc;
+    --surface: #e2e8f0;
+    --surface-light: #cbd5e1;
+    --accent: #0284c7;
+    --accent-glow: rgba(2, 132, 199, 0.12);
+    --bad: #dc2626;
+    --bad-bg: rgba(220, 38, 38, 0.07);
+    --good: #16a34a;
+    --good-bg: rgba(22, 163, 74, 0.07);
+    --fix: #a16207;
+    --text: #334155;
+    --text-dim: #64748b;
+    --text-bright: #0f172a;
+  }
+
+  .light .example-card.bad {
+    border-color: rgba(220, 38, 38, 0.25);
+  }
+  .light .example-card.good {
+    border-color: rgba(22, 163, 74, 0.25);
+  }
+  .light .card-text .highlight-bad {
+    background: rgba(220, 38, 38, 0.12);
+  }
+  .light .card-text .highlight-good {
+    background: rgba(22, 163, 74, 0.12);
+  }
+  .light .fix-banner {
+    background: rgba(161, 98, 7, 0.07);
+    border-color: rgba(161, 98, 7, 0.25);
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── Slide container ── */
+  .deck {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 48px 64px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .slide.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  /* ── Title slide ── */
+  .slide.title-slide {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .slide.title-slide h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .slide.title-slide h1 span {
+    color: var(--accent);
+  }
+  .slide.title-slide p {
+    font-size: 1.3rem;
+    color: var(--text-dim);
+    max-width: 640px;
+  }
+
+  /* ── Content slides ── */
+  .slide-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .slide-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .slide-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .problem-statement {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+    padding-left: 60px;
+    line-height: 1.6;
+  }
+
+  .examples {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    flex: 1;
+    padding-left: 0px;
+    min-height: 0;
+  }
+
+  .example-card {
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
+  .example-card.bad {
+    background: var(--bad-bg);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+  }
+  .example-card.good {
+    background: var(--good-bg);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+  }
+
+  .card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .bad .card-label { color: var(--bad); }
+  .good .card-label { color: var(--good); }
+
+  .card-text {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text);
+    flex: 1;
+  }
+  .card-text .highlight-bad {
+    background: rgba(248, 113, 113, 0.18);
+    border-radius: 3px;
+    padding: 1px 4px;
+  }
+  .card-text .highlight-good {
+    background: rgba(74, 222, 128, 0.18);
+    border-radius: 3px;
+    padding: 1px 4px;
+  }
+
+  .fix-banner {
+    margin-top: auto;
+    margin-bottom: 12px;
+    padding: 14px 24px;
+    background: rgba(250, 204, 21, 0.08);
+    border: 1px solid rgba(250, 204, 21, 0.2);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .fix-banner .fix-icon {
+    color: var(--fix);
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .fix-banner p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--surface-light);
+    z-index: 100;
+  }
+  .nav button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  .nav button:hover {
+    background: var(--surface-light);
+    color: var(--text-bright);
+  }
+  .nav button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .nav button:disabled:hover {
+    background: none;
+    color: var(--text-dim);
+  }
+  .nav .page-info {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    min-width: 60px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Progress dots ── */
+  .progress {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+  }
+  .progress .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--surface-light);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .progress .dot.active {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* ── Summary slide ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+  }
+  .summary-item {
+    background: var(--surface);
+    border: 1px solid var(--surface-light);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .summary-item .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .summary-item h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  .summary-item p {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .summary-header {
+    margin-bottom: 28px;
+  }
+  .summary-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+  .summary-header p {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+  }
+
+  .bottom-note {
+    margin-top: auto;
+    padding-top: 20px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .bottom-note strong {
+    color: var(--accent);
+  }
+
+  /* ── Theme toggle ── */
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 28px;
+    z-index: 200;
+    background: var(--surface);
+    border: 1px solid var(--surface-light);
+    color: var(--text-dim);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .theme-toggle:hover {
+    background: var(--surface-light);
+    color: var(--text-bright);
+  }
+  .theme-toggle .icon { font-size: 1rem; }
+
+  /* smaller screens */
+  @media (max-width: 900px) {
+    .slide { padding: 32px 28px; }
+    .examples { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .slide.title-slide h1 { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+  <span class="icon" id="themeIcon">&#9788;</span> Light Mode
+</button>
+
+<div class="progress" id="progress"></div>
+
+<div class="deck" id="deck">
+
+  <!-- ===== SLIDE 0: TITLE ===== -->
+  <div class="slide title-slide active">
+    <h1>Strengthening Your <span>Writing</span></h1>
+    <p>Five common issues from your papers — and concrete strategies to fix each one.</p>
+  </div>
+
+  <!-- ===== SLIDE 1: DROPPED QUOTES ===== -->
+  <div class="slide">
+    <div class="slide-header">
+      <span class="slide-number">1</span>
+      <h2>Dropped Quotes</h2>
+    </div>
+    <p class="problem-statement">
+      A quote appears in your paragraph without any introduction before it or analysis after it. The reader doesn't know <em>why</em> the quote is there or what it means for your argument.
+    </p>
+    <div class="examples">
+      <div class="example-card bad">
+        <div class="card-label">Before</div>
+        <div class="card-text">
+          "Public transit ridership has increased by 34% in cities with dedicated infrastructure (Chen, 2021). <span class="highlight-bad">Bikes are also a popular option in these areas.</span>"
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">The quote is dropped in with no setup, and the next sentence doesn't connect to it.</em>
+        </div>
+      </div>
+      <div class="example-card good">
+        <div class="card-label">After</div>
+        <div class="card-text">
+          "<span class="highlight-good">A study from the University of Michigan found that investment in transit infrastructure directly drives ridership,</span> reporting a 34% increase in cities that prioritized dedicated lanes (Chen, 2021). <span class="highlight-good">This suggests that supply of reliable transit, not just demand, is the key driver of behavioral change.</span>"
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">The quote is introduced, and the writer interprets what it means.</em>
+        </div>
+      </div>
+    </div>
+    <div class="fix-banner">
+      <span class="fix-icon">TIP</span>
+      <p><strong>Introduce</strong> what the evidence is about, then <strong>follow up</strong> with your own interpretation of what it means for your argument.</p>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 2: VAGUE LANGUAGE ===== -->
+  <div class="slide">
+    <div class="slide-header">
+      <span class="slide-number">2</span>
+      <h2>Vague Language</h2>
+    </div>
+    <p class="problem-statement">
+      Imprecise words like "good things," "situations," or "areas" don't communicate specific meaning. Your reader can't picture what you're describing.
+    </p>
+    <div class="examples">
+      <div class="example-card bad">
+        <div class="card-label">Before</div>
+        <div class="card-text">
+          "People who live in <span class="highlight-bad">areas</span> with <span class="highlight-bad">good things</span> nearby tend to be happier and more productive in their <span class="highlight-bad">daily situations</span>."
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">What areas? What good things? What daily situations? The sentence says almost nothing.</em>
+        </div>
+      </div>
+      <div class="example-card good">
+        <div class="card-label">After</div>
+        <div class="card-text">
+          "<span class="highlight-good">Residents with walkable access to grocery stores, parks, and transit stops</span> report <span class="highlight-good">higher life satisfaction and lower stress levels</span>."
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">Concrete nouns and measurable outcomes — the reader can see exactly what you mean.</em>
+        </div>
+      </div>
+    </div>
+    <div class="fix-banner">
+      <span class="fix-icon">TIP</span>
+      <p>Replace vague words with <strong>concrete, specific terms</strong> your reader can picture. If you can't name it precisely, you probably need to think more carefully about what you actually mean.</p>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 3: CITATIONS WITHOUT CONTEXT ===== -->
+  <div class="slide">
+    <div class="slide-header">
+      <span class="slide-number">3</span>
+      <h2>Citations Without Context</h2>
+    </div>
+    <p class="problem-statement">
+      A source is cited for a claim it may not directly support, or an unexpected source is used without any explanation of why it's relevant.
+    </p>
+    <div class="examples">
+      <div class="example-card bad">
+        <div class="card-label">Before</div>
+        <div class="card-text">
+          "Noise pollution has been shown to negatively affect student performance (Henderson et al., 2019)."
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;"><span class="highlight-bad">Henderson et al. is actually a study on hospital workflows</span> — the reader has no idea why it's being cited here.</em>
+        </div>
+      </div>
+      <div class="example-card good">
+        <div class="card-label">After</div>
+        <div class="card-text">
+          "<span class="highlight-good">Though primarily focused on workplace environments, Henderson et al.'s findings on noise disruption and cognitive performance have been widely applied to educational settings as well.</span>"
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">The writer explains the connection — now the reader trusts the citation.</em>
+        </div>
+      </div>
+    </div>
+    <div class="fix-banner">
+      <span class="fix-icon">TIP</span>
+      <p>Briefly <strong>explain the source's relevance</strong> so the reader understands why you chose it — especially when applying findings from a different context.</p>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 4: UNDERDEVELOPED PARAGRAPHS ===== -->
+  <div class="slide">
+    <div class="slide-header">
+      <span class="slide-number">4</span>
+      <h2>Underdeveloped Paragraphs</h2>
+    </div>
+    <p class="problem-statement">
+      Some paragraphs make claims without specific evidence or analysis. They feel thin compared to the rest of the paper.
+    </p>
+    <div class="examples">
+      <div class="example-card bad">
+        <div class="card-label">Before</div>
+        <div class="card-text">
+          "Another solution is green infrastructure. Cities that plant more trees and install green roofs <span class="highlight-bad">see environmental benefits</span>. This is <span class="highlight-bad">important for fighting climate change going forward</span>."
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">No source, no data, no analysis — just a vague claim.</em>
+        </div>
+      </div>
+      <div class="example-card good">
+        <div class="card-label">After</div>
+        <div class="card-text">
+          "Green infrastructure offers measurable climate benefits at the city level. <span class="highlight-good">A 2022 EPA report found that urban tree canopy coverage reduces surface temperatures by up to 9&deg;F in dense neighborhoods</span> (EPA, 2022). <span class="highlight-good">This cooling effect directly reduces energy demand, lowering both costs and emissions for city residents.</span>"
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">Claim + source + specific evidence + analysis.</em>
+        </div>
+      </div>
+    </div>
+    <div class="fix-banner">
+      <span class="fix-icon">TIP</span>
+      <p>Every paragraph needs the same structure: a <strong>claim</strong>, a <strong>source</strong>, <strong>specific evidence</strong>, and <strong>your own analysis</strong> of what it means.</p>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 5: CONCLUSIONS THAT LOSE FOCUS ===== -->
+  <div class="slide">
+    <div class="slide-header">
+      <span class="slide-number">5</span>
+      <h2>Conclusions That Lose Focus</h2>
+    </div>
+    <p class="problem-statement">
+      The conclusion shifts tone, introduces new ideas, or drifts into motivational language instead of wrapping up the argument already made.
+    </p>
+    <div class="examples">
+      <div class="example-card bad">
+        <div class="card-label">Before</div>
+        <div class="card-text">
+          "While congestion pricing may not be the perfect answer, it is a step in the right direction. <span class="highlight-bad">Everyone should take time to learn about these issues and talk to their local representatives. Small actions add up and together we can build a better tomorrow.</span>"
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">This reads like a public service announcement, not a paper conclusion.</em>
+        </div>
+      </div>
+      <div class="example-card good">
+        <div class="card-label">After</div>
+        <div class="card-text">
+          "<span class="highlight-good">The evidence presented here suggests that congestion pricing, when paired with reliable public transit alternatives, reduces both traffic volume and emissions without disproportionately burdening lower-income commuters.</span> Cities considering this policy should prioritize transit investment alongside pricing to ensure equitable outcomes."
+          <br><br>
+          <em style="color:var(--text-dim); font-size:0.88rem;">Synthesizes the paper's evidence into a clear, specific takeaway.</em>
+        </div>
+      </div>
+    </div>
+    <div class="fix-banner">
+      <span class="fix-icon">TIP</span>
+      <p><strong>Synthesize your strongest evidence</strong> and state a clear, specific takeaway. No new arguments, no calls to action, no motivational language.</p>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 6: SUMMARY ===== -->
+  <div class="slide">
+    <div class="summary-header">
+      <h2>Quick Reference</h2>
+      <p>Keep these five fixes in mind as you revise.</p>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <span class="num">1</span>
+        <div>
+          <h3>Dropped Quotes</h3>
+          <p>Always introduce evidence and follow it with your interpretation.</p>
+        </div>
+      </div>
+      <div class="summary-item">
+        <span class="num">2</span>
+        <div>
+          <h3>Vague Language</h3>
+          <p>Replace fuzzy words with concrete, specific terms.</p>
+        </div>
+      </div>
+      <div class="summary-item">
+        <span class="num">3</span>
+        <div>
+          <h3>Citations Without Context</h3>
+          <p>Explain why a source is relevant, especially across fields.</p>
+        </div>
+      </div>
+      <div class="summary-item">
+        <span class="num">4</span>
+        <div>
+          <h3>Underdeveloped Paragraphs</h3>
+          <p>Every paragraph: claim + source + evidence + analysis.</p>
+        </div>
+      </div>
+      <div class="summary-item" style="grid-column: 1 / -1;">
+        <span class="num">5</span>
+        <div>
+          <h3>Conclusions That Lose Focus</h3>
+          <p>Synthesize your evidence into a clear takeaway — no new arguments or motivational language.</p>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-note">
+      These are the most common patterns across your papers.<br>
+      Addressing even <strong>one or two</strong> of these will noticeably strengthen your writing.
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button id="prev" onclick="go(-1)" disabled>&larr; Prev</button>
+  <span class="page-info" id="pageInfo">1 / 7</span>
+  <button id="next" onclick="go(1)">Next &rarr;</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let cur = 0;
+
+  // Build progress dots
+  const prog = document.getElementById('progress');
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('span');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    prog.appendChild(d);
+  }
+
+  function goTo(n) {
+    slides[cur].classList.remove('active');
+    prog.children[cur].classList.remove('active');
+    cur = n;
+    slides[cur].classList.add('active');
+    prog.children[cur].classList.add('active');
+    document.getElementById('prev').disabled = cur === 0;
+    document.getElementById('next').disabled = cur === total - 1;
+    document.getElementById('pageInfo').textContent = `${cur + 1} / ${total}`;
+  }
+
+  function go(dir) { if (cur + dir >= 0 && cur + dir < total) goTo(cur + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); go(-1); }
+  });
+
+  // Theme toggle
+  function toggleTheme() {
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    root.classList.toggle('light');
+    if (root.classList.contains('light')) {
+      icon.innerHTML = '&#9790;';
+      btn.innerHTML = '<span class="icon" id="themeIcon">&#9790;</span> Dark Mode';
+    } else {
+      icon.innerHTML = '&#9788;';
+      btn.innerHTML = '<span class="icon" id="themeIcon">&#9788;</span> Light Mode';
+    }
+  }
+</script>
+
+</body>
+</html>
