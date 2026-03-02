@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economics of the City: Midterm Review</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --supply-green: #2ca02c;
+            --demand-blue: #1f77b4;
+            --social-red: #d62728;
+            --dwl-fill: rgba(255,165,0,0.25);
+            --correct-bg: #dcfce7;
+            --correct-border: #22c55e;
+            --correct-text: #166534;
+            --wrong-bg: #fee2e2;
+            --wrong-border: #ef4444;
+            --wrong-text: #991b1b;
+        }
+        [data-theme="dark"] {
+            --bg: #111827;
+            --card-bg: #1f2937;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --primary: #60a5fa;
+            --primary-light: #1e3a5f;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            --correct-bg: #14532d;
+            --correct-border: #22c55e;
+            --correct-text: #bbf7d0;
+            --wrong-bg: #450a0a;
+            --wrong-border: #ef4444;
+            --wrong-text: #fecaca;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        header {
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--card-shadow);
+            z-index: 10;
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        h1 { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+        .stepper { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+        .step {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 600;
+            background: var(--border); color: var(--text-muted);
+            cursor: pointer; transition: all 0.2s; border: 2px solid transparent;
+        }
+        .step.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .step.completed { background: #22c55e; color: white; }
+        .step:hover { opacity: 0.8; }
+        .header-right { display: flex; align-items: center; gap: 0.75rem; }
+        .slide-counter { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+        .theme-toggle {
+            width: 48px; height: 26px; background: var(--border);
+            border-radius: 13px; cursor: pointer; padding: 3px; transition: background 0.3s;
+        }
+        .toggle-knob {
+            width: 20px; height: 20px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; transition: transform 0.3s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] .toggle-knob { transform: translateX(22px); background: #374151; }
+        [data-theme="dark"] .theme-toggle { background: var(--primary); }
+        main { flex: 1; display: flex; overflow: hidden; }
+        .chart-panel {
+            flex: 1.2; padding: 1.5rem; display: flex; flex-direction: column;
+            background: var(--bg); border-right: 1px solid var(--border);
+        }
+        .chart-panel.hidden { display: none; }
+        .content-panel {
+            flex: 1; padding: 2rem 2.5rem; overflow-y: auto;
+            background: var(--card-bg); display: flex; flex-direction: column;
+        }
+        .content-panel.full-width { flex: 1; }
+        .chart-container {
+            flex: 1; background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 0.75rem; box-shadow: var(--card-shadow); min-height: 0;
+        }
+        .slide-content h2 { font-size: 1.5rem; margin-top: 0; margin-bottom: 0.75rem; color: var(--primary); }
+        .slide-content h3 {
+            font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .slide-content p { line-height: 1.55; margin-bottom: 0.75rem; }
+        .slide-content ul, .slide-content ol { margin-bottom: 0.75rem; padding-left: 1.5rem; }
+        .slide-content li { line-height: 1.5; margin-bottom: 0.35rem; }
+        .highlight-box {
+            padding: 1rem 1.25rem; background: var(--primary-light);
+            border-left: 4px solid var(--primary); border-radius: 4px; margin: 1rem 0;
+        }
+        .highlight-box p { margin: 0.25rem 0; font-weight: 500; }
+        .quiz-container { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+        .quiz-btn {
+            padding: 0.85rem 1.25rem; text-align: left; background: var(--card-bg);
+            border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+            transition: all 0.2s; font-size: 0.95rem; color: var(--text);
+            font-family: inherit;
+        }
+        .quiz-btn:hover:not(.correct):not(.wrong):not(.disabled) {
+            border-color: var(--primary); background: var(--primary-light);
+        }
+        .quiz-btn.correct { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); }
+        .quiz-btn.wrong { background: var(--wrong-bg); border-color: var(--wrong-border); color: var(--wrong-text); }
+        .quiz-btn.selected { background: var(--primary-light); border-color: var(--primary); }
+        .quiz-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .multi-hint { font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.5rem; }
+        .submit-quiz-btn {
+            padding: 0.75rem 2rem; background: var(--primary); color: #fff; border: none;
+            border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-family: inherit;
+            font-weight: 600; margin-top: 0.5rem; transition: all 0.2s;
+        }
+        .submit-quiz-btn:hover { filter: brightness(1.1); }
+        .submit-quiz-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .feedback { margin-top: 0.75rem; font-weight: 600; min-height: 1.5em; line-height: 1.4; }
+        .controls {
+            margin-top: auto; padding-top: 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-btn {
+            padding: 0.65rem 1.25rem; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--card-bg); color: var(--text); cursor: pointer;
+            font-weight: 600; transition: all 0.2s; display: flex; align-items: center;
+            gap: 0.5rem; font-family: inherit; font-size: 0.9rem;
+        }
+        .nav-btn:not(.primary):hover:not(:disabled) { background: var(--border); }
+        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .nav-btn.primary { background: var(--primary); color: white; border: none; }
+        .nav-btn.primary:hover:not(:disabled) { background: var(--primary); filter: brightness(1.1); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1>Midterm Review</h1>
+            <div id="stepper" class="stepper"></div>
+        </div>
+        <div class="header-right">
+            <span id="slide-counter" class="slide-counter"></span>
+            <div class="theme-toggle" onclick="toggleTheme()">
+                <div class="toggle-knob" id="toggle-knob"></div>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div id="chart-panel" class="chart-panel">
+            <div id="plot" class="chart-container"></div>
+        </div>
+        <div id="content-panel" class="content-panel">
+            <div id="slide-content" class="slide-content"></div>
+            <div id="quiz-container" class="quiz-container"></div>
+            <div id="feedback" class="feedback"></div>
+            <div class="controls">
+                <button id="prev-btn" class="nav-btn" onclick="prevSlide()">&#8592; Prev</button>
+                <button id="next-btn" class="nav-btn primary" onclick="nextSlide()">Next &#8594;</button>
+            </div>
+        </div>
+    </main>
+
+<script>
+// ========== STATE ==========
+let cur = 0;
+const sections = [
+    "Intro",
+    "Q1: Parking",
+    "Q2: Congestion",
+    "Q3: Glaeser",
+    "Q4: Florida",
+    "Q5: Shoup",
+    "Q6: Agglom.",
+    "Q7: Causality"
+];
+
+// ========== THEME ==========
+function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+function toggleTheme() {
+    const next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('midterm-review-theme', next);
+    document.getElementById('toggle-knob').textContent = next === 'light' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+    renderSlide();
+}
+function pt() {
+    const d = isDark();
+    return {
+        paper_bgcolor: d ? '#1f2937' : '#ffffff',
+        plot_bgcolor: d ? '#1f2937' : '#ffffff',
+        font: { color: d ? '#e5e7eb' : '#1f2937', size: 13 },
+        xaxis: { gridcolor: d ? '#374151' : '#e5e7eb', linecolor: d ? '#6b7280' : '#374151', zerolinecolor: d ? '#6b7280' : '#d1d5db' },
+        yaxis: { gridcolor: d ? '#374151' : '#e5e7eb', linecolor: d ? '#6b7280' : '#374151', zerolinecolor: d ? '#6b7280' : '#d1d5db' }
+    };
+}
+const PC = { responsive: true, displayModeBar: false };
+
+// ========== CHART FUNCTIONS ==========
+
+// --- Q1: Parking ---
+function drawParkingEmpty() {
+    Plotly.react('plot', [], {
+        ...pt(),
+        xaxis: { ...pt().xaxis, title: 'Quantity of Parking Spaces', range: [0, 110], dtick: 20 },
+        yaxis: { ...pt().yaxis, title: 'Price / Cost ($)', range: [0, 120], dtick: 20 },
+        annotations: [{ x: 55, y: 60, text: 'Draw your curves here!', showarrow: false, font: { size: 16, color: isDark() ? '#9ca3af' : '#9ca3af' } }],
+        margin: { t: 40, b: 50, l: 60, r: 20 }
+    }, PC);
+}
+
+function drawParking(step) {
+    const q = Array.from({length: 101}, (_, i) => i);
+    const mpb = q.map(v => 100 - v);
+    const mpc = q.map(v => 20 + 0.6 * v);
+    const msc = q.map(v => 40 + 0.6 * v);
+    // Equilibrium: 100 - q = 20 + 0.6q => 80 = 1.6q => q = 50, p = 50
+    // Free parking: MPB = 0 => q = 100
+    // Social optimum: 100 - q = 40 + 0.6q => 60 = 1.6q => q = 37.5, p = 62.5
+
+    const traces = [];
+    const ann = [];
+    const shapes = [];
+
+    if (step >= 1) traces.push({ x: q, y: mpb, name: 'MPB (Demand)', line: { color: '#1f77b4', width: 3 }, mode: 'lines' });
+    if (step >= 2) traces.push({ x: q, y: mpc, name: 'MPC (Supply)', line: { color: '#2ca02c', width: 3 }, mode: 'lines' });
+
+    if (step >= 3) {
+        ann.push({ x: 50, y: 50, text: '<b>Market Eq.</b><br>Q<sub>m</sub>=50', showarrow: true, arrowhead: 2, ax: 50, ay: -40, font: { size: 12 } });
+        traces.push({ x: [50], y: [50], mode: 'markers', marker: { size: 10, color: '#ff7f0e' }, name: 'Market Equilibrium', showlegend: false });
+    }
+    if (step >= 4) {
+        ann.push({ x: 100, y: 0, text: '<b>Free Parking</b><br>Q<sub>free</sub>=100', showarrow: true, arrowhead: 2, ax: -60, ay: -40, font: { size: 12 } });
+        traces.push({ x: [100], y: [0], mode: 'markers', marker: { size: 10, color: '#e377c2' }, name: 'Free Parking Qty', showlegend: false });
+    }
+    // step 5: DWL from free parking (no externalities)
+    if (step === 5) {
+        shapes.push({
+            type: 'path',
+            path: 'M 50,50 L 100,0 L 100,80 Z',
+            fillcolor: 'rgba(255,165,0,0.25)',
+            line: { width: 1, color: 'rgba(255,165,0,0.5)' }
+        });
+        ann.push({ x: 82, y: 35, text: '<b>DWL</b>', showarrow: false, font: { size: 14, color: '#e67300' } });
+    }
+    if (step >= 6) traces.push({ x: q, y: msc, name: 'MSC (Social Cost)', line: { color: '#d62728', width: 3, dash: 'dash' }, mode: 'lines' });
+    if (step >= 7) {
+        ann.push({ x: 37.5, y: 62.5, text: '<b>Social Optimum</b><br>Q<sub>s</sub>=37.5', showarrow: true, arrowhead: 2, ax: -70, ay: -30, font: { size: 12 } });
+        traces.push({ x: [37.5], y: [62.5], mode: 'markers', marker: { size: 10, color: '#d62728' }, name: 'Social Optimum', showlegend: false });
+    }
+    // step 8: total DWL with externalities
+    if (step >= 8) {
+        shapes.push({
+            type: 'path',
+            path: 'M 37.5,62.5 L 100,0 L 100,100 Z',
+            fillcolor: 'rgba(255,0,0,0.15)',
+            line: { width: 1, color: 'rgba(255,0,0,0.3)' }
+        });
+        ann.push({ x: 78, y: 45, text: '<b>Total DWL</b>', showarrow: false, font: { size: 14, color: '#d62728' } });
+    }
+
+    Plotly.react('plot', traces, {
+        ...pt(),
+        title: { text: 'Parking Market Analysis', font: { size: 15 } },
+        xaxis: { ...pt().xaxis, title: 'Quantity of Parking Spaces', range: [0, 110], dtick: 20 },
+        yaxis: { ...pt().yaxis, title: 'Price / Cost ($)', range: [0, 120], dtick: 20 },
+        annotations: ann, shapes: shapes,
+        showlegend: true, legend: { x: 0.55, y: 0.98, bgcolor: 'rgba(0,0,0,0)' },
+        margin: { t: 40, b: 50, l: 60, r: 20 }
+    }, PC);
+}
+
+// --- Q2: Congestion ---
+function drawCongestion(step) {
+    const t = Array.from({length: 101}, (_, i) => i);
+    const ac = t.map(v => v <= 60 ? 10 : 10 + 0.02 * Math.pow(v - 60, 2));
+    const mc = t.map(v => v <= 60 ? 10 : 10 + 0.04 * Math.pow(v - 60, 2));
+    // Demand: 60 - 0.5t (crosses AC at about t=80: 60-40=20, ac(80)=10+0.02*400=18... let me adjust)
+    // Better demand: D = 50 - 0.4t
+    // Eq (D=AC): 50-0.4t = 10+0.02(t-60)^2 for t>60
+    // 40-0.4t = 0.02(t-60)^2 => 40-0.4t = 0.02t^2-2.4t+72 => 0.02t^2-2t+32=0 => t=(2+-sqrt(4-2.56))/0.04
+    // t=(2+-1.2)/0.04 => t=80 or t=20. t=80: AC=10+0.02*400=18, D=50-32=18. Good.
+    // Opt (D=MC): 50-0.4t = 10+0.04(t-60)^2 for t>60
+    // 40-0.4t = 0.04t^2-4.8t+144 => 0.04t^2-4.4t+104=0 => t=(4.4+-sqrt(19.36-16.64))/0.08
+    // t=(4.4+-sqrt(2.72))/0.08 = (4.4+-1.649)/0.08 => t=75.6 or t=34.4. t=75.6 is right.
+    // At t=75.6: MC=10+0.04*(15.6)^2=10+9.73=19.73, D=50-30.24=19.76. Close enough, use 76.
+
+    const demand = t.map(v => 50 - 0.4 * v);
+
+    const traces = [
+        { x: t.filter(v => v <= 60), y: ac.filter((_, i) => t[i] <= 60), name: 'AC (Private Cost)', line: { color: '#1f77b4', width: 3 }, mode: 'lines', showlegend: false },
+        { x: t.filter(v => v >= 60), y: ac.filter((_, i) => t[i] >= 60), name: 'AC (Private Cost)', line: { color: '#1f77b4', width: 3 }, mode: 'lines' },
+        { x: t.filter(v => v >= 60), y: mc.filter((_, i) => t[i] >= 60), name: 'MC (Social Cost)', line: { color: '#d62728', width: 3 }, mode: 'lines' }
+    ];
+
+    const ann = [
+        { x: 60, y: 2, text: 'T*', showarrow: false, font: { size: 13, color: isDark() ? '#9ca3af' : '#6b7280' } }
+    ];
+    const shapes = [
+        { type: 'line', x0: 60, y0: 0, x1: 60, y1: 10, line: { color: isDark() ? '#6b7280' : '#aaa', dash: 'dot', width: 1 } }
+    ];
+
+    if (step >= 1) {
+        traces.push({ x: t, y: demand, name: 'Demand (PMB)', line: { color: '#9467bd', width: 3, dash: 'dot' }, mode: 'lines' });
+    }
+    if (step >= 2) {
+        ann.push({ x: 80, y: 18, text: '<b>Equilibrium</b><br>T<sub>eq</sub>=80', showarrow: true, arrowhead: 2, ax: 40, ay: -40, font: { size: 12 } });
+        traces.push({ x: [80], y: [18], mode: 'markers', marker: { size: 10, color: '#ff7f0e' }, name: 'Equilibrium', showlegend: false });
+    }
+    if (step >= 3) {
+        ann.push({ x: 76, y: 19.7, text: '<b>Social Optimum</b><br>T<sub>opt</sub>=76', showarrow: true, arrowhead: 2, ax: -70, ay: -30, font: { size: 12 } });
+        traces.push({ x: [76], y: [19.7], mode: 'markers', marker: { size: 10, color: '#d62728' }, name: 'Social Optimum', showlegend: false });
+    }
+    if (step >= 4) {
+        // Show externality gap
+        const acAt80 = 10 + 0.02 * Math.pow(20, 2);  // 18
+        const mcAt80 = 10 + 0.04 * Math.pow(20, 2);   // 26
+        shapes.push({ type: 'line', x0: 80, y0: acAt80, x1: 80, y1: mcAt80, line: { color: '#d62728', width: 3 } });
+        ann.push({ x: 82, y: 22, text: '<b>Externality</b>', showarrow: false, font: { size: 11, color: '#d62728' } });
+    }
+    // Step 5: toll illustration
+    if (step >= 5) {
+        const tollAmt = 19.7 - (10 + 0.02 * Math.pow(16, 2)); // MC-AC at opt
+        const acAtOpt = 10 + 0.02 * Math.pow(16, 2); // ~15.12
+        shapes.push({
+            type: 'rect', x0: 0, y0: acAtOpt, x1: 76, y1: 19.7,
+            fillcolor: 'rgba(46,139,87,0.15)', line: { width: 1, color: 'rgba(46,139,87,0.4)' }
+        });
+        ann.push({ x: 38, y: 17.4, text: '<b>Toll Revenue</b><br>(Transfer)', showarrow: false, font: { size: 11, color: '#2e8b57' } });
+    }
+    // Step 6: lane expansion
+    if (step >= 6) {
+        const acNew = t.map(v => v <= 75 ? 10 : 10 + 0.02 * Math.pow(v - 75, 2));
+        const mcNew = t.map(v => v <= 75 ? 10 : 10 + 0.04 * Math.pow(v - 75, 2));
+        traces.push(
+            { x: t.filter(v => v >= 75), y: acNew.filter((_, i) => t[i] >= 75), name: 'AC (New Lane)', line: { color: '#1f77b4', width: 2, dash: 'dash' }, mode: 'lines' },
+            { x: t.filter(v => v >= 75), y: mcNew.filter((_, i) => t[i] >= 75), name: 'MC (New Lane)', line: { color: '#d62728', width: 2, dash: 'dash' }, mode: 'lines' }
+        );
+        // New eq: D=AC_new: 50-0.4t = 10+0.02(t-75)^2 at around t=90
+        ann.push({ x: 90, y: 14.5, text: '<b>New Eq.</b><br>(Latent Demand)', showarrow: true, arrowhead: 2, ax: 0, ay: -40, font: { size: 11 } });
+    }
+    // Step 7: induced demand shift
+    if (step >= 7) {
+        const demandNew = t.map(v => 60 - 0.4 * v);
+        traces.push({ x: t, y: demandNew, name: 'D (Induced)', line: { color: '#9467bd', width: 2, dash: 'dash' }, mode: 'lines' });
+        ann.push({ x: 95, y: 20, text: '<b>Induced<br>Demand</b>', showarrow: true, arrowhead: 2, ax: 0, ay: -35, font: { size: 11, color: '#9467bd' } });
+    }
+
+    Plotly.react('plot', traces, {
+        ...pt(),
+        title: { text: 'Highway Congestion', font: { size: 15 } },
+        xaxis: { ...pt().xaxis, title: 'Traffic Volume', range: [0, 105], dtick: 20 },
+        yaxis: { ...pt().yaxis, title: 'Time Cost (minutes)', range: [0, 55], dtick: 10 },
+        annotations: ann, shapes: shapes,
+        showlegend: true, legend: { x: 0.01, y: 0.98, bgcolor: 'rgba(0,0,0,0)' },
+        margin: { t: 40, b: 50, l: 60, r: 20 }
+    }, PC);
+}
+
+// --- Q6: Agglomeration ---
+function drawAgglom(step) {
+    const x = Array.from({length: 201}, (_, i) => i * 0.1);
+    // Quadratic productivity: peaks at x=16, y=6 (matches lecture)
+    const prod = x.map(v => -0.02 * Math.pow(v - 16, 2) + 6);
+    const cost = x.map(v => 0.3 * v);
+    // Equilibrium: -0.02*(x-16)^2 + 6 = 0.3x => x ≈ 19.3
+    // Max avg surplus: slope of prod = slope of cost => -0.04*(x-16) = 0.3 => x = 8.5
+
+    const traces = [
+        { x: x, y: prod, name: 'Productivity (Wages)', line: { color: '#1f77b4', width: 3 }, mode: 'lines' },
+        { x: x, y: cost, name: 'Housing + Congestion Costs', line: { color: '#d62728', width: 3 }, mode: 'lines' }
+    ];
+    const ann = [];
+    const shapes = [];
+
+    if (step >= 1) {
+        // Equilibrium at intersection: x ≈ 19.3, y ≈ 5.79
+        ann.push({ x: 19.3, y: 5.79, text: '<b>Equilibrium</b><br>(Prod = Costs)', showarrow: true, arrowhead: 2, ax: -70, ay: -35, font: { size: 12 } });
+        shapes.push({ type: 'line', x0: 19.3, y0: 0, x1: 19.3, y1: 5.79, line: { dash: 'dot', color: isDark() ? '#6b7280' : '#aaa' } });
+    }
+    if (step >= 2) {
+        // Max avg surplus at x=8.5, prod = -0.02*(8.5-16)^2+6 = 4.875, cost = 2.55
+        ann.push({ x: 8.5, y: 4.875, text: '<b>Max Avg Surplus</b><br>(Ideal for Residents)', showarrow: true, arrowhead: 2, ax: -80, ay: -35, font: { size: 12 } });
+        shapes.push({ type: 'line', x0: 8.5, y0: 0, x1: 8.5, y1: 4.875, line: { dash: 'dot', color: isDark() ? '#6b7280' : '#aaa' } });
+    }
+    if (step >= 3) {
+        // Higher housing costs (NIMBY)
+        const costHigh = x.map(v => 0.45 * v);
+        traces.push({ x: x, y: costHigh, name: 'Higher Costs (NIMBY)', line: { color: '#ff7f0e', width: 2, dash: 'dash' }, mode: 'lines' });
+        ann.push({ x: 12, y: 5.4, text: '<b>NIMBY restricts<br>supply</b>', showarrow: true, arrowhead: 2, ax: 40, ay: -30, font: { size: 11, color: '#ff7f0e' } });
+    }
+
+    Plotly.react('plot', traces, {
+        ...pt(),
+        title: { text: 'City Size: Productivity vs. Costs', font: { size: 15 } },
+        xaxis: { ...pt().xaxis, title: 'City Size (millions)', range: [0, 20], dtick: 4 },
+        yaxis: { ...pt().yaxis, title: 'Value ($)', range: [0, 7], dtick: 1 },
+        annotations: ann, shapes: shapes,
+        showlegend: true, legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0)' },
+        margin: { t: 40, b: 50, l: 60, r: 20 }
+    }, PC);
+}
+
+// ========== SLIDES ==========
+const slides = [
+// === SECTION 0: INTRO ===
+{
+    section: 0,
+    title: "Midterm Review Session",
+    content: `
+        <p>Welcome! This activity walks through <strong>every question</strong> on your midterm, step by step.</p>
+        <div class="highlight-box">
+            <p><strong>Section One (25 pts):</strong> Pick 1 of 2 graphing questions</p>
+            <p><strong>Section Two (75 pts):</strong> Pick 3 of 5 short-answer questions</p>
+        </div>
+        <p>You may bring <strong>one half-page of notes</strong> (single-sided, 8.5x11 cut in half).</p>
+        <p>Let's begin with Question 1.</p>
+    `,
+    hideChart: true
+},
+
+// === SECTION 1: Q1 PARKING ===
+{
+    section: 1,
+    title: "Q1: Externalities and Urban Parking",
+    subtitle: "Section One \u2014 Graphing (Choice 1)",
+    content: `
+        <p>Metropolis requires businesses to provide <strong>free parking</strong> to users.</p>
+        <p>A city study found:</p>
+        <ul>
+            <li><strong>MPB</strong> (Marginal Private Benefit) decreases as more spaces are provided</li>
+            <li><strong>MPC</strong> (Marginal Private Cost) increases as more spaces are provided</li>
+        </ul>
+        <p>We'll build this graph exactly as you would on the exam.</p>
+    `,
+    draw: () => drawParkingEmpty()
+},
+{
+    section: 1,
+    title: "Step 1: Draw the MPB Curve",
+    subtitle: "Question 1a",
+    content: `
+        <p>First, draw your axes: <strong>Quantity</strong> (parking spaces) on the x-axis, <strong>Price/Cost</strong> on the y-axis.</p>
+        <p>Now think about the <strong>Marginal Private Benefit</strong> curve. This is the demand curve &mdash; the value a user gets from one more parking space.</p>
+    `,
+    draw: () => drawParkingEmpty(),
+    quiz: [
+        { text: "MPB slopes upward (more spaces = more benefit)", correct: false, feedback: "Not quite. Think about diminishing returns: the 1st space is very valuable, but the 100th adds little benefit." },
+        { text: "MPB is a horizontal line (constant benefit)", correct: false, feedback: "No \u2014 the problem states MPB decreases as more spaces are provided. That means it slopes downward." },
+        { text: "MPB slopes downward (each additional space is worth less)", correct: true, feedback: "Correct! The benefit of one more space decreases as you already have many. This is diminishing marginal benefit." },
+        { text: "MPB is a vertical line", correct: false, feedback: "A vertical line would mean a fixed quantity regardless of price. The benefit changes with quantity." }
+    ]
+},
+{
+    section: 1,
+    title: "The MPB Curve",
+    subtitle: "Question 1a",
+    content: `
+        <p>The <strong>MPB (Demand)</strong> slopes downward because each additional parking space provides less value.</p>
+        <p>The first space near a store is extremely valuable. The 50th space in an empty lot? Much less so.</p>
+        <p>This is the principle of <strong>diminishing marginal benefit</strong>.</p>
+    `,
+    draw: () => drawParking(1)
+},
+{
+    section: 1,
+    title: "Step 2: Draw the MPC Curve",
+    subtitle: "Question 1a",
+    content: `
+        <p>Next, sketch the <strong>Marginal Private Cost (MPC)</strong> curve &mdash; the cost to firms of providing each additional space.</p>
+        <p>Think about what it costs to build parking: land, concrete, maintenance...</p>
+    `,
+    draw: () => drawParking(1),
+    quiz: [
+        { text: "MPC slopes downward (economies of scale make it cheaper)", correct: false, feedback: "While there may be some economies of scale, in urban areas land is scarce. Each additional space requires more expensive land or structured parking." },
+        { text: "MPC slopes upward (each additional space costs more to provide)", correct: true, feedback: "Correct! Land gets scarcer in urban areas, and building structured parking or converting more land gets progressively more expensive." },
+        { text: "MPC is horizontal (constant cost per space)", correct: false, feedback: "The problem states MPC increases as more spaces are provided, so it must slope upward." },
+        { text: "MPC starts high and then drops to zero", correct: false, feedback: "That would mean parking becomes free to provide \u2014 but land and construction costs are real and increasing." }
+    ]
+},
+{
+    section: 1,
+    title: "The MPC Curve",
+    subtitle: "Question 1a",
+    content: `
+        <p>The <strong>MPC (Supply)</strong> slopes upward because urban land is scarce.</p>
+        <p>Building the first spaces on cheap land is inexpensive. But as you need more, you must use more expensive land or build costly parking structures.</p>
+    `,
+    draw: () => drawParking(2)
+},
+{
+    section: 1,
+    title: "Step 3: Find Market Equilibrium",
+    subtitle: "Question 1a",
+    content: `
+        <p>If parking were priced efficiently in a market (users pay for parking), where would the <strong>equilibrium quantity</strong> be?</p>
+    `,
+    draw: () => drawParking(2),
+    quiz: [
+        { text: "Where MPB is at its maximum", correct: false, feedback: "The maximum of MPB is at Q=0. Equilibrium requires balancing benefit against cost." },
+        { text: "Where MPC = 0", correct: false, feedback: "MPC = 0 would mean parking is free to provide. The equilibrium accounts for real costs." },
+        { text: "Where MPB = 0", correct: false, feedback: "That\u2019s where users value parking at zero \u2014 that\u2019s actually the free-parking quantity, not the efficient one!" },
+        { text: "Where MPB = MPC (the intersection of the two curves)", correct: true, feedback: "Correct! In an efficient market, the price signal brings quantity to where the cost of one more space equals its benefit." }
+    ]
+},
+{
+    section: 1,
+    title: "Market Equilibrium",
+    subtitle: "Question 1a",
+    content: `
+        <p>The <strong>market equilibrium</strong> is at Q<sub>m</sub> = 50, where MPB = MPC.</p>
+        <p>At this quantity, the benefit of one more space exactly equals the cost of providing it. This is the efficient outcome <em>if there are no externalities</em>.</p>
+    `,
+    draw: () => drawParking(3)
+},
+{
+    section: 1,
+    title: "Step 4: What Happens with Free Parking?",
+    subtitle: "Question 1a",
+    content: `
+        <p>Now the city <strong>mandates that parking be free</strong> to users. The price to users is $0.</p>
+        <p>If parking costs nothing to use, how much will people demand?</p>
+    `,
+    draw: () => drawParking(3),
+    quiz: [
+        { text: "Where MPB = 0 (users keep parking until it provides zero extra benefit)", correct: true, feedback: "Exactly! When something is free, people use it until the last unit provides no benefit at all. That pushes quantity far past the efficient level." },
+        { text: "At the market equilibrium (same as before)", correct: false, feedback: "No \u2014 the market equilibrium requires users to pay a price. When it\u2019s free, they ignore costs entirely." },
+        { text: "Less than the equilibrium (free means less is provided)", correct: false, feedback: "Free parking means users demand MORE, not less. It\u2019s the demand side that explodes when price = 0." },
+        { text: "An infinite amount", correct: false, feedback: "Not infinite \u2014 eventually even free parking has zero benefit. Users stop when MPB hits zero." }
+    ]
+},
+{
+    section: 1,
+    title: "Free Parking Quantity",
+    subtitle: "Question 1a",
+    content: `
+        <p>When parking is free, quantity goes all the way to Q<sub>free</sub> = 100, where MPB = 0.</p>
+        <p>That is <strong>double</strong> the efficient quantity! But is there a deadweight loss?</p>
+        <p>Look at the graph. Between Q<sub>m</sub> = 50 and Q<sub>free</sub> = 100, compare the MPC and MPB curves.</p>
+    `,
+    draw: () => drawParking(4)
+},
+{
+    section: 1,
+    title: "Where Is the Deadweight Loss?",
+    subtitle: "Question 1a \u2014 Identify the DWL",
+    content: `
+        <p>For every space between Q<sub>m</sub> and Q<sub>free</sub>, is the cost of providing it (MPC) greater than or less than its benefit to users (MPB)?</p>
+        <p>Where exactly is the <strong>Deadweight Loss</strong>?</p>
+    `,
+    draw: () => drawParking(4),
+    quiz: [
+        { text: "There is no deadweight loss \u2014 free parking benefits everyone", correct: false, feedback: "Look at the graph: past Q\u2098, the green MPC line is above the blue MPB line. Those spaces cost more to provide than they\u2019re worth!" },
+        { text: "The entire area under the MPC curve", correct: false, feedback: "DWL is not total cost. It\u2019s the area where cost EXCEEDS benefit \u2014 the triangle between MPC and MPB from Q\u2098 to Q_free." },
+        { text: "The area above the MPB curve only", correct: false, feedback: "DWL requires comparing cost to benefit. It\u2019s the region between the two curves where MPC > MPB." },
+        { text: "The triangle between MPC and MPB from Q\u2098 to Q_free \u2014 cost exceeds benefit for every extra space", correct: true, feedback: "Correct! For every space past Q\u2098, the MPC is above the MPB. Society pays more to provide it than anyone benefits. That triangle is pure waste." }
+    ]
+},
+{
+    section: 1,
+    title: "The Deadweight Loss Revealed",
+    subtitle: "Question 1a",
+    content: `
+        <p>The orange shaded triangle is the <strong>Deadweight Loss</strong>.</p>
+        <p>For every space between Q<sub>m</sub> and Q<sub>free</sub>, the cost of providing it (MPC) exceeds the benefit to users (MPB).</p>
+        <p>Society is wasting resources on parking that costs more than it\u2019s worth!</p>
+    `,
+    draw: () => drawParking(5)
+},
+{
+    section: 1,
+    title: "Q1b: Now Add External Costs",
+    subtitle: "Question 1b \u2014 Marginal Social Cost",
+    content: `
+        <p>Part (b) adds <strong>externalities</strong>: congestion, pollution from induced driving, and stormwater runoff.</p>
+        <p>These are costs imposed on <strong>third parties</strong> who aren\u2019t involved in the parking decision.</p>
+        <p>Where does the <strong>Marginal Social Cost (MSC)</strong> curve go relative to MPC?</p>
+    `,
+    draw: () => drawParking(5),
+    quiz: [
+        { text: "MSC is below MPC (externalities reduce costs)", correct: false, feedback: "No \u2014 negative externalities add costs to society. Pollution, congestion, and runoff are additional costs, not benefits." },
+        { text: "MSC is above MPC (social cost = private cost + external cost)", correct: true, feedback: "Correct! MSC = MPC + External Cost. The externalities add costs on top of the private costs, shifting the cost curve up." },
+        { text: "MSC equals MPC (externalities don\u2019t affect costs)", correct: false, feedback: "If there were no externalities, MSC = MPC. But the problem explicitly mentions congestion, pollution, and runoff as external costs." },
+        { text: "MSC is horizontal", correct: false, feedback: "MSC has the same shape as MPC but shifted up by the external cost amount." }
+    ]
+},
+{
+    section: 1,
+    title: "The MSC Curve and Social Optimum",
+    subtitle: "Question 1b",
+    content: `
+        <p>The <strong>MSC</strong> (dashed red) sits above MPC. The gap between them is the <strong>external cost</strong> per unit.</p>
+        <p>The <strong>socially optimal quantity</strong> is where MPB = MSC, at Q<sub>s</sub> = 37.5.</p>
+        <p>Notice: Q<sub>s</sub> < Q<sub>m</sub> < Q<sub>free</sub>. Society wants <em>even less</em> parking than the market would provide!</p>
+    `,
+    draw: () => drawParking(7)
+},
+{
+    section: 1,
+    title: "Where Is the Total Deadweight Loss?",
+    subtitle: "Question 1b \u2014 Identify the DWL",
+    content: `
+        <p>Now think about the DWL from free parking <strong>with externalities</strong>.</p>
+        <p>The socially optimal quantity is Q<sub>s</sub> = 37.5. Free parking pushes quantity to Q<sub>free</sub> = 100.</p>
+        <p>For every space between Q<sub>s</sub> and Q<sub>free</sub>, compare the MSC to the MPB. Where is the total DWL?</p>
+    `,
+    draw: () => drawParking(7),
+    quiz: [
+        { text: "The triangle between MSC and MPB from Q\u209b to Q_free \u2014 social cost exceeds benefit for every extra space", correct: true, feedback: "Correct! From Q\u209b to Q_free, the MSC is above MPB. Every unit in that range costs society more than it benefits anyone. This triangle is the total deadweight loss." },
+        { text: "The same triangle as before (between MPC and MPB)", correct: false, feedback: "With externalities, we use MSC, not MPC! The social cost includes external costs, so the DWL is larger \u2014 the triangle is between MSC and MPB." },
+        { text: "There is no DWL because the parking is free", correct: false, feedback: "Free is exactly the problem! When price = 0, quantity overshoots far past Q\u209b, creating massive waste." },
+        { text: "Only the area between MPC and MSC", correct: false, feedback: "That gap is just the external cost per unit. The DWL is the total triangle where MSC exceeds MPB, from Q\u209b to Q_free." }
+    ]
+},
+{
+    section: 1,
+    title: "The Full Deadweight Loss Revealed",
+    subtitle: "Question 1b",
+    content: `
+        <p>The red-shaded triangle shows the <strong>total DWL</strong> from free parking when externalities exist.</p>
+        <p>From Q<sub>s</sub> to Q<sub>free</sub>, every additional space costs society (MSC) more than it benefits users (MPB). This is an enormous waste.</p>
+        <div class="highlight-box">
+            <p><strong>Key insight:</strong> Free parking mandates cause overproduction far beyond both the market equilibrium AND the social optimum.</p>
+        </div>
+    `,
+    draw: () => drawParking(8)
+},
+{
+    section: 1,
+    title: "Q1c: Effects on Land Use & Transportation",
+    subtitle: "Question 1c",
+    content: `
+        <p>What are the <strong>overall effects</strong> of mandating free parking?</p>
+        <p>Think about both <strong>direct</strong> effects on land use and <strong>indirect</strong> effects on transportation choices.</p>
+    `,
+    draw: () => drawParking(8),
+    quiz: [
+        { text: "Improves urban density by providing convenient access", correct: false, feedback: "The opposite! Parking takes up enormous amounts of land. In Silicon Valley, 13% of all land is parking. This reduces density." },
+        { text: "Has no effect on transportation choices", correct: false, feedback: "Research (McCahill et al.) shows increasing parking from 0.1 to 0.5 spaces per person raises auto mode share by 30 percentage points!" },
+        { text: "Reduces urban density, induces more driving, wastes land on parking", correct: true, feedback: "Exactly! Parking mandates use up scarce urban land, reduce density (weakening agglomeration), and subsidize driving over transit." },
+        { text: "Only affects the parking market, not land use", correct: false, feedback: "Parking requirements shape the entire built environment. A study of Silicon Valley found they cost 13,000 potential jobs and $1+ billion in payroll." }
+    ]
+},
+{
+    section: 1,
+    title: "Q1c: The Full Picture",
+    subtitle: "Question 1c \u2014 Summary",
+    content: `
+        <p><strong>Direct effects on land use:</strong></p>
+        <ul>
+            <li>Massive land consumed by parking (13% of land in Silicon Valley)</li>
+            <li>Reduced urban density &rarr; weakened agglomeration benefits</li>
+            <li>Lost opportunity: could have been housing, offices, or green space</li>
+            <li>Silicon Valley study: removing mandates since 2000 could have added 13,000 jobs</li>
+        </ul>
+        <p><strong>Indirect effects on transportation:</strong></p>
+        <ul>
+            <li>Induces driving (McCahill study: 30 ppt increase in auto mode share)</li>
+            <li>Subsidizes car use over transit, biking, walking</li>
+            <li>More driving &rarr; more congestion, pollution, emissions</li>
+            <li>Sprawling development patterns that lock in car dependency</li>
+        </ul>
+        <div class="highlight-box"><p>Free parking is a massive hidden subsidy for driving that reshapes the entire city.</p></div>
+    `,
+    draw: () => drawParking(8)
+},
+
+// === SECTION 2: Q2 CONGESTION ===
+{
+    section: 2,
+    title: "Q2: Congestion Graphing",
+    subtitle: "Section One \u2014 Graphing (Choice 2)",
+    content: `
+        <p>Metropolis has severe <strong>highway congestion</strong> during rush hour.</p>
+        <p>The graph shows <strong>Average Cost (AC)</strong> and <strong>Marginal Cost (MC)</strong> curves for a highway.</p>
+        <p>Key concept: Every driver experiences the average cost (their travel time), but each driver also slows down everyone else.</p>
+    `,
+    draw: () => drawCongestion(0)
+},
+{
+    section: 2,
+    title: "Understanding AC and MC",
+    subtitle: "Question 2a",
+    content: `
+        <p>Let's understand these curves:</p>
+        <ul>
+            <li><strong>AC (blue)</strong>: The time cost each driver actually experiences. Flat until capacity T*, then rises.</li>
+            <li><strong>MC (red)</strong>: The total cost to society of one more driver = their cost + the delay they impose on everyone else.</li>
+        </ul>
+        <p>Below T*, the road is uncongested and AC = MC. Above T*, congestion begins.</p>
+    `,
+    draw: () => drawCongestion(0)
+},
+{
+    section: 2,
+    title: "AC vs. MC When Congested",
+    subtitle: "Question 2a",
+    content: `
+        <p>When the road is congested (above T*), what is the relationship between MC and AC?</p>
+    `,
+    draw: () => drawCongestion(0),
+    quiz: [
+        { text: "MC = AC at all traffic levels", correct: false, feedback: "Only true below T*. Once congestion starts, each new driver imposes costs on others that they don\u2019t personally bear." },
+        { text: "MC > AC when the road is congested because each driver slows everyone down", correct: true, feedback: "Correct! The gap between MC and AC is the externality \u2014 the delay one driver imposes on ALL other drivers." },
+        { text: "MC < AC because drivers share the road", correct: false, feedback: "No \u2014 the social cost exceeds the private cost. Drivers share the road but they also slow each other down." },
+        { text: "AC > MC because average includes all drivers", correct: false, feedback: "MC is higher than AC when congested. MC includes the external cost imposed on every other driver." }
+    ]
+},
+{
+    section: 2,
+    title: "Step 1: The Demand Curve",
+    subtitle: "Question 2a",
+    content: `
+        <p>The exam asks you to add a <strong>Demand curve (PMB)</strong> to this graph.</p>
+        <p>Think about the private marginal benefit of each trip. The first trip (commuting to work) is very valuable. Later trips (optional errands) are worth less.</p>
+        <p>What direction does the Demand (PMB) curve slope?</p>
+    `,
+    draw: () => drawCongestion(0),
+    quiz: [
+        { text: "Upward \u2014 more traffic means each trip is worth more", correct: false, feedback: "More traffic actually makes each trip worse (slower). The benefit of each additional trip is less, not more." },
+        { text: "Flat \u2014 every trip has the same value", correct: false, feedback: "Not all trips are equally valuable. A commute to work is worth far more than a trip to browse a store." },
+        { text: "U-shaped \u2014 benefits fall then rise", correct: false, feedback: "Demand curves for trips slope consistently downward. There\u2019s no reason benefits would start increasing again." },
+        { text: "Downward \u2014 the first trips are most valuable, later trips less so", correct: true, feedback: "Correct! The demand curve slopes down because of diminishing marginal benefit. Your commute to work is essential; your third optional errand is not." }
+    ]
+},
+{
+    section: 2,
+    title: "The Demand Curve Revealed",
+    subtitle: "Question 2a",
+    content: `
+        <p>The <strong>Demand (PMB)</strong> curve slopes downward (purple dotted line).</p>
+        <p>Now we can find two critical traffic levels by looking at where this demand curve intersects the cost curves.</p>
+    `,
+    draw: () => drawCongestion(1)
+},
+{
+    section: 2,
+    title: "Step 2: Find the Equilibrium",
+    subtitle: "Question 2a",
+    content: `
+        <p>On a <strong>freeway</strong> (no toll), how is the traffic level determined?</p>
+    `,
+    draw: () => drawCongestion(1),
+    quiz: [
+        { text: "Where Demand = MC (drivers consider the full social cost)", correct: false, feedback: "That would be the social optimum, not the equilibrium. Drivers don\u2019t consider the cost they impose on others." },
+        { text: "At T* (the capacity point)", correct: false, feedback: "T* is just where congestion begins. The actual traffic level overshoots far past T*." },
+        { text: "Where Demand = AC (drivers enter until their benefit equals their private cost)", correct: true, feedback: "Correct! Drivers only consider their own travel time (AC), not the delay they impose on others. They keep entering until PMB = AC." },
+        { text: "Where AC is minimized", correct: false, feedback: "AC is minimized below T* (flat section). The equilibrium is where drivers\u2019 benefit equals their cost of driving." }
+    ]
+},
+{
+    section: 2,
+    title: "The Equilibrium",
+    subtitle: "Question 2a",
+    content: `
+        <p><strong>Equilibrium</strong> (T<sub>eq</sub> = 80): Where Demand = AC.</p>
+        <p>Drivers keep entering the highway until their benefit (Demand) equals their private cost (AC). They ignore the delay they impose on others.</p>
+        <p>But is this the <strong>socially optimal</strong> traffic level? Where should society want traffic to be?</p>
+    `,
+    draw: () => drawCongestion(2),
+    quiz: [
+        { text: "Where Demand = MC \u2014 the social optimum accounts for the cost each driver imposes on others", correct: true, feedback: "Correct! The socially optimal traffic level is where the benefit of one more trip (Demand) equals the FULL social cost (MC), including the externality." },
+        { text: "Where Demand = AC \u2014 the equilibrium is already optimal", correct: false, feedback: "No \u2014 the equilibrium ignores external costs. Drivers don\u2019t pay for the delay they impose on others, so there\u2019s too much traffic." },
+        { text: "At T* \u2014 no congestion is the ideal", correct: false, feedback: "Some congestion is efficient! The optimal level is where the benefit of one more trip equals its full social cost, which is above T*." },
+        { text: "Where MC = 0 \u2014 minimize social cost", correct: false, feedback: "MC = 0 only below T*. The optimum balances benefit against cost, not cost alone." }
+    ]
+},
+{
+    section: 2,
+    title: "Equilibrium vs. Social Optimum",
+    subtitle: "Question 2a",
+    content: `
+        <p><strong>Equilibrium</strong> (T<sub>eq</sub> = 80): Where Demand = AC. Too many drivers!</p>
+        <p><strong>Social Optimum</strong> (T<sub>opt</sub> = 76): Where Demand = MC. The efficient level.</p>
+        <p>The gap exists because drivers ignore the <strong>externality</strong> they impose on others. T<sub>eq</sub> > T<sub>opt</sub> every time.</p>
+    `,
+    draw: () => drawCongestion(3)
+},
+{
+    section: 2,
+    title: "The Externality Gap",
+    subtitle: "Question 2a",
+    content: `
+        <p>The vertical red line at T<sub>eq</sub> shows the <strong>externality</strong>: the gap between MC and AC.</p>
+        <p>This is the additional delay each driver imposes on ALL other drivers. They don\u2019t pay for this cost, so the road is overused.</p>
+        <div class="highlight-box">
+            <p><strong>Key point:</strong> Each driver IS traffic to everyone else. They experience AC but impose MC.</p>
+        </div>
+    `,
+    draw: () => drawCongestion(4)
+},
+{
+    section: 2,
+    title: "Q2b: Policy Option 1 \u2014 Congestion Toll",
+    subtitle: "Question 2b",
+    content: `
+        <p>One policy option is a <strong>congestion toll</strong>. How does a congestion toll work, and what does it achieve?</p>
+    `,
+    draw: () => drawCongestion(4),
+    quiz: [
+        { text: "The toll eliminates all congestion", correct: false, feedback: "Not exactly. Some congestion remains at the optimal level. The goal isn\u2019t zero congestion, but the EFFICIENT level of congestion." },
+        { text: "The toll makes everyone worse off", correct: false, feedback: "Drivers who still use the road face higher costs, but the toll revenue is collected and can be returned. Society is better off overall." },
+        { text: "The toll reduces traffic to the social optimum by making drivers pay for externalities", correct: true, feedback: "Correct! The toll internalizes the externality. Drivers now face the true social cost and only drive if their benefit exceeds it." },
+        { text: "The toll only helps wealthy drivers", correct: false, feedback: "While distributional concerns are real, the economic point is that the toll corrects a market failure and improves efficiency." }
+    ]
+},
+{
+    section: 2,
+    title: "How the Toll Works",
+    subtitle: "Question 2b",
+    content: `
+        <p>The <strong>congestion toll</strong> charges drivers the externality amount at the optimal traffic level.</p>
+        <p>This makes drivers face the full social cost (AC + toll = MC), reducing traffic to T<sub>opt</sub>.</p>
+        <p>The green shaded area shows the <strong>toll revenue</strong> collected.</p>
+    `,
+    draw: () => drawCongestion(5)
+},
+{
+    section: 2,
+    title: "Q2b: Policy Option 2 \u2014 Adding a Lane",
+    subtitle: "Question 2b",
+    content: `
+        <p>The second policy option is to <strong>add a lane</strong> to the highway.</p>
+        <p>Think about what adding a lane does to the AC and MC curves on the graph. More lanes means more capacity before congestion begins.</p>
+        <p>What happens to the AC and MC curves when you add a lane?</p>
+    `,
+    draw: () => drawCongestion(4),
+    quiz: [
+        { text: "AC and MC shift to the right \u2014 higher capacity threshold before congestion begins", correct: true, feedback: "Correct! The new lane increases the road\u2019s capacity. T* moves to the right, so congestion starts at a higher traffic volume." },
+        { text: "AC and MC shift upward \u2014 costs increase for all drivers", correct: false, feedback: "Adding a lane increases capacity, it doesn\u2019t raise costs. The curves shift right (more room before congestion), not up." },
+        { text: "AC and MC disappear \u2014 congestion is eliminated", correct: false, feedback: "Adding a lane doesn\u2019t eliminate congestion. It just increases the threshold before congestion begins." }
+    ]
+},
+{
+    section: 2,
+    title: "What Happens Next?",
+    subtitle: "Question 2b \u2014 Latent Demand",
+    content: `
+        <p>The lane is added. AC and MC shift right (dashed lines). Initially, congestion drops.</p>
+        <p>But will the road stay uncongested? Think about all the people who <em>avoided</em> this highway because it was too congested: people who took alternate routes, traveled at off-peak times, or skipped trips entirely.</p>
+        <p>What happens when they see the highway is now faster?</p>
+    `,
+    draw: () => drawCongestion(6),
+    quiz: [
+        { text: "Nothing \u2014 traffic stays at the old level", correct: false, feedback: "If the road is now faster, people who previously avoided it will start using it. The lower cost attracts more drivers." },
+        { text: "Traffic decreases even further over time", correct: false, feedback: "The opposite! Lower congestion attracts more drivers. Latent demand fills the new capacity quickly." },
+        { text: "Only new residents would use the new lane", correct: false, feedback: "Latent demand comes from EXISTING residents who were previously avoiding the congested highway. They switch back immediately." },
+        { text: "Latent demand fills the new capacity \u2014 suppressed trips now occur (movement along the demand curve)", correct: true, feedback: "Correct! People who avoided peak hours, took alternate routes, or skipped trips now use the new lane. The demand curve doesn\u2019t shift \u2014 we move along it to a new, higher-traffic equilibrium." }
+    ]
+},
+{
+    section: 2,
+    title: "Induced Demand",
+    subtitle: "Question 2b \u2014 Long Run",
+    content: `
+        <p>In the <strong>long run</strong>, adding a lane causes <strong>induced demand</strong>: the demand curve itself shifts outward.</p>
+        <p>Why? The new capacity changes the <strong>built environment</strong>:</p>
+        <ul>
+            <li>Developers build houses and stores further from the city</li>
+            <li>People choose to live farther away (longer commutes become viable)</li>
+            <li>Land use patterns shift toward car dependency</li>
+        </ul>
+        <p>Result: congestion returns to similar or worse levels with even higher traffic volume.</p>
+        <div class="highlight-box">
+            <p><strong>"Fundamental Law of Road Congestion":</strong> Adding lanes often fails to reduce congestion because of latent + induced demand.</p>
+        </div>
+    `,
+    draw: () => drawCongestion(7)
+},
+{
+    section: 2,
+    title: "Q2c: The Toll Is a Transfer",
+    subtitle: "Question 2c",
+    content: `
+        <p>The exam asks: <em>"Explain why the toll is not a cost to society, but a transfer."</em></p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "The toll creates new wealth by speeding up traffic", correct: false, feedback: "The toll itself doesn\u2019t create wealth. The reduced congestion creates value, but the toll payment is a transfer." },
+        { text: "The toll moves money from drivers to the government \u2014 no resources are destroyed", correct: true, feedback: "Correct! Unlike congestion (which wastes everyone\u2019s time), the toll is just money changing hands. The revenue can be used to benefit society." },
+        { text: "A transfer means it only affects the government budget", correct: false, feedback: "A transfer means money moves from one party (drivers) to another (government/society). Both sides are affected, but no net resources are lost." }
+    ]
+},
+{
+    section: 2,
+    title: "Why the Toll Is Efficient",
+    subtitle: "Question 2c \u2014 Summary",
+    content: `
+        <p><strong>The toll is a transfer, not a cost.</strong></p>
+        <ul>
+            <li><strong>Congestion</strong> wastes real resources (everyone\u2019s time). It is a deadweight loss.</li>
+            <li><strong>The toll</strong> moves money from drivers to the government. No resources are destroyed.</li>
+            <li>The toll makes drivers <strong>choose</strong> whether their trip is worth the cost they impose on others.</li>
+            <li>Revenue can fund transit, roads, or be returned to neighborhoods.</li>
+        </ul>
+        <div class="highlight-box">
+            <p><strong>Implication:</strong> Congestion pricing improves efficiency because it replaces wasted time (a real cost) with a payment (a transfer). Society gains the time savings without losing anything.</p>
+        </div>
+    `,
+    hideChart: true
+},
+
+// === SECTION 3: Q3 GLAESER ===
+{
+    section: 3,
+    title: "Q3: Agglomeration Anecdotes",
+    subtitle: "Section Two \u2014 Short Answer",
+    content: `
+        <p>The exam asks: <em>"What is an anecdote from Glaeser\u2019s Triumph of the City that highlights agglomeration effects? Explain how it shows agglomeration effects."</em></p>
+        <p>First, let\u2019s review the three mechanisms of agglomeration (the <strong>SML Framework</strong>):</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Supply, Marketing, Location", correct: false, feedback: "Not quite. The three mechanisms are Sharing, Matching, and Learning (Duranton & Puga)." },
+        { text: "Size, Money, Labor", correct: false, feedback: "The framework is Sharing, Matching, Learning \u2014 the three reasons agglomeration occurs." },
+        { text: "Sorting, Migration, Lobbying", correct: false, feedback: "Those aren\u2019t the agglomeration mechanisms. It\u2019s Sharing, Matching, Learning." },
+        { text: "Sharing, Matching, Learning", correct: true, feedback: "Correct! Duranton & Puga\u2019s SML framework: Sharing (specialized suppliers, infrastructure), Matching (thick labor markets), Learning (tacit knowledge transfer)." }
+    ]
+},
+{
+    section: 3,
+    title: "Anecdote: Cities as Crossroads",
+    subtitle: "Question 3 \u2014 Examples from Glaeser",
+    content: `
+        <p>Glaeser describes cities as <strong>"ports of intellectual entry"</strong> where different cultures collide and create breakthroughs:</p>
+        <ul>
+            <li><strong>Athens:</strong> Greek and Eastern knowledge met, creating Western philosophy and medicine</li>
+            <li><strong>Baghdad:</strong> The House of Wisdom combined Greek, Indian, and Persian knowledge \u2192 Algebra</li>
+            <li><strong>Nagasaki:</strong> Japanese-Dutch trade enabled knowledge transfer and innovation</li>
+        </ul>
+        <p>Which agglomeration mechanism do these examples primarily illustrate?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Sharing \u2014 they shared physical infrastructure like ports", correct: false, feedback: "While ports are involved, the key insight is about knowledge transfer. The ports enabled face-to-face interaction that transferred ideas." },
+        { text: "Matching \u2014 they matched workers to jobs", correct: false, feedback: "These examples are about ideas colliding, not labor market matching. Learning is the primary mechanism." },
+        { text: "Learning \u2014 face-to-face transfer of tacit knowledge between cultures", correct: true, feedback: "Correct! These crossroads cities enabled Learning: the transfer of tacit knowledge through direct interaction between people from different traditions." },
+        { text: "None of the above", correct: false, feedback: "These examples perfectly illustrate the Learning mechanism of agglomeration." }
+    ]
+},
+{
+    section: 3,
+    title: "More Anecdotes to Choose From",
+    subtitle: "Question 3 \u2014 Exam Preparation",
+    content: `
+        <p>Other strong examples from the book and lectures:</p>
+        <ul>
+            <li><strong>Silicon Valley:</strong> Dense network of tech firms enables rapid <strong>Matching</strong> (specialized skills to jobs) and <strong>Learning</strong> (knowledge spillovers between firms)</li>
+            <li><strong>Prato, Italy:</strong> Textile cluster where firms <strong>Share</strong> specialized suppliers and infrastructure to dominate world markets</li>
+            <li><strong>Detroit (cautionary):</strong> Over-reliance on one industry (auto) &mdash; when it declined, the city lacked diversity for agglomeration to sustain it</li>
+        </ul>
+        <div class="highlight-box">
+            <p><strong>Exam tip:</strong> Pick ONE specific anecdote. Name the city, describe what happened, and explicitly connect it to Sharing, Matching, or Learning.</p>
+        </div>
+    `,
+    hideChart: true
+},
+{
+    section: 3,
+    title: "The Urban Wage Premium",
+    subtitle: "Question 3 \u2014 Evidence",
+    content: `
+        <p>Glaeser provides key evidence that agglomeration is real, not just sorting.</p>
+        <p>What does the evidence on urban wages show about agglomeration?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Workers in cities earn less but have better amenities", correct: false, feedback: "No \u2014 workers in cities earn about 30% MORE. The question is whether this is sorting or agglomeration." },
+        { text: "Workers in cities earn ~30% more, AND wage growth is faster in cities (even controlling for IQ/education)", correct: true, feedback: "Correct! The 30% urban wage premium is partly sorting (ambitious people move to cities), but the faster wage GROWTH proves that cities actually make people more productive through agglomeration." },
+        { text: "Wages are the same everywhere after adjusting for cost of living", correct: false, feedback: "Spatial equilibrium means utility is equalized, but nominal wages are higher in cities. The productivity gains are real." },
+        { text: "Only tech workers benefit from being in cities", correct: false, feedback: "The urban wage premium exists across many industries. It\u2019s a general feature of city economies." }
+    ]
+},
+
+// === SECTION 4: Q4 FLORIDA ===
+{
+    section: 4,
+    title: "Q4: The New Urban Crisis",
+    subtitle: "Section Two \u2014 Short Answer",
+    content: `
+        <p>The exam asks: <em>"According to Richard Florida, what is the 'New Urban Crisis'?"</em></p>
+        <p>What is Florida\u2019s fundamental insight about cities and clustering?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "The clustering force is both the engine of growth AND the driver of inequality", correct: true, feedback: "Exactly! Florida\u2019s core thesis: agglomeration creates wealth AND concentrates it. Both urban optimists and pessimists are correct \u2014 urbanism is paradoxical." },
+        { text: "Cities are dying because people are moving to suburbs", correct: false, feedback: "That was the OLD Urban Crisis (1960s-70s). The NEW crisis is the opposite: cities are succeeding, but that success creates new problems." },
+        { text: "Technology has eliminated the need for cities", correct: false, feedback: "Actually, Jevons\u2019s Paradox: better digital communication INCREASES demand for face-to-face contact. Cities are more important than ever." },
+        { text: "The crisis is only about housing prices", correct: false, feedback: "Housing is one dimension, but the New Urban Crisis has five dimensions. It\u2019s about the broader paradox of urban success creating inequality." }
+    ]
+},
+{
+    section: 4,
+    title: "Old vs. New Urban Crisis",
+    subtitle: "Question 4 \u2014 Context",
+    content: `
+        <p>Understanding the shift:</p>
+        <ul>
+            <li><strong>Old Crisis (1960s-70s):</strong> Urban abandonment, "hole-in-the-donut," flight to suburbs, declining city centers, poor concentrated IN cities</li>
+            <li><strong>New Crisis (today):</strong> Urban success creates problems, "disappearing middle," affluent return to cities, unaffordable superstar cities, poor pushed TO suburbs</li>
+        </ul>
+        <p>What\u2019s the first dimension of the New Urban Crisis?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Winner-Take-All Urbanism \u2014 a few superstar cities capture disproportionate talent and investment", correct: true, feedback: "Correct! Just like superstar athletes earn multiples of average players, superstar cities (NYC, SF, London) capture outsized economic rewards. 80% of US homes over $1M are in just NYC, LA, or SF." },
+        { text: "All cities are declining equally", correct: false, feedback: "The opposite! The problem is extreme inequality BETWEEN cities. A few superstars dominate while others struggle." },
+        { text: "Technology companies have left cities", correct: false, feedback: "Actually, tech has moved INTO urban cores. 54% of US venture capital is now in urban ZIP codes." },
+        { text: "Immigration is destroying city economies", correct: false, feedback: "Florida\u2019s framework is about clustering and inequality, not immigration. Superstar cities attract talent, creating winner-take-all dynamics." }
+    ]
+},
+{
+    section: 4,
+    title: "The Five Dimensions",
+    subtitle: "Question 4 \u2014 The Full Framework",
+    content: `
+        <p>Florida identifies <strong>five dimensions</strong> of the New Urban Crisis:</p>
+        <ol>
+            <li><strong>Winner-Take-All Urbanism:</strong> A few superstar cities capture disproportionate talent, investment, and high-value industries</li>
+            <li><strong>Crisis of Success:</strong> Superstar cities face unaffordable housing and "plutocratization" (super-rich buying trophy apartments)</li>
+            <li><strong>Sorting & Segregation:</strong> Middle-class neighborhoods disappearing (65% &rarr; 40% of families, 1970-2012)</li>
+            <li><strong>Suburban Crisis:</strong> More poor people now live in suburbs (17M) than cities (13.5M)</li>
+            <li><strong>Urbanization Without Growth:</strong> Developing world sees people moving to cities without rising living standards</li>
+        </ol>
+    `,
+    hideChart: true
+},
+{
+    section: 4,
+    title: "Who Benefits from Superstar Cities?",
+    subtitle: "Question 4 \u2014 Key Evidence",
+    content: `
+        <p>According to Richard Florida, superstar cities have high wages <em>and</em> high housing costs. But the impact is not the same for everyone.</p>
+        <p>Florida looks at <strong>wages left over after housing costs</strong> for different classes of workers in superstar cities like San Jose and NYC.</p>
+        <p>According to Florida, who actually benefits from superstar cities?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Everyone benefits equally from urban success", correct: false, feedback: "Florida\u2019s data shows a stark divide. In San Jose, the creative class earns 5.6x what the service class keeps after housing. The gains are not shared." },
+        { text: "Nobody benefits \u2014 housing costs eat all the gains", correct: false, feedback: "The creative class does benefit \u2014 their high wages more than offset housing costs. But Florida shows the service class does not." },
+        { text: "Only homeowners benefit from rising prices", correct: false, feedback: "Florida\u2019s argument is about the class divide in wages-after-housing, not just homeownership. The creative class benefits whether they own or rent; the service class loses either way." },
+        { text: "Only the creative class benefits; service-class workers are WORSE off after housing costs", correct: true, feedback: "Correct! Florida finds that in San Jose, the creative class keeps ~$80K after housing while the service class keeps only ~$14K \u2014 a 5.6x gap. Housing costs are positively correlated with money left over for the creative class, but negatively correlated for the service class." }
+    ]
+},
+{
+    section: 4,
+    title: "NIMBYism and the Causal Chain",
+    subtitle: "Question 4 \u2014 Final Piece",
+    content: `
+        <p>Florida identifies a key causal chain that worsens the crisis:</p>
+        <div class="highlight-box">
+            <p><strong>NIMBYism &rarr; Restricted Supply &rarr; High Prices &rarr; Exclusivity &rarr; Inequality</strong></p>
+        </div>
+        <ul>
+            <li><strong>"New Urban Luddites"</strong>: Florida\u2019s term for wealthy homeowners who block development to protect property values</li>
+            <li>They capture <strong>economic rent</strong> (unearned gains from owning property in appreciating locations)</li>
+            <li>Land use restrictions cost the US economy <strong>$1.4-2 trillion</strong> over 45 years</li>
+        </ul>
+        <div class="highlight-box">
+            <p><strong>Exam tip:</strong> The fundamental contradiction + the 5 dimensions + who benefits = a complete answer.</p>
+        </div>
+    `,
+    hideChart: true
+},
+
+// === SECTION 5: Q5 SHOUP ===
+{
+    section: 5,
+    title: "Q5a: Shoup\u2019s Three Principles",
+    subtitle: "Section Two \u2014 Short Answer",
+    content: `
+        <p>The exam asks: <em>"What are Donald Shoup\u2019s three principles of getting parking right?"</em></p>
+        <p>What is Shoup\u2019s <strong>first</strong> principle?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Build more parking garages", correct: false, feedback: "Shoup argues the opposite \u2014 we already have too much parking. The solution is pricing, not building more." },
+        { text: "Charge market-rate prices for curb parking", correct: true, feedback: "Correct! Principle 1: Set the price of curb parking so that about 15% of spaces are always available. This eliminates cruising for parking and treats parking like any other scarce resource." },
+        { text: "Make all parking free", correct: false, feedback: "That\u2019s exactly the problem Shoup is trying to fix! Free parking leads to overuse and waste." },
+        { text: "Ban all cars from city centers", correct: false, feedback: "Shoup\u2019s approach is market-based pricing, not outright bans." }
+    ]
+},
+{
+    section: 5,
+    title: "Principle 2 and 3",
+    subtitle: "Question 5a",
+    content: `
+        <p>What is Shoup\u2019s <strong>second</strong> principle?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Send all parking revenue to the state government", correct: false, feedback: "Shoup specifically argues for LOCAL return of revenue to the neighborhoods, not centralized collection." },
+        { text: "Use parking revenue to build more parking", correct: false, feedback: "That would perpetuate the problem. Revenue goes to neighborhood improvements instead." },
+        { text: "Return parking revenue to the neighborhoods where it is collected", correct: true, feedback: "Correct! Principle 2: The revenue from parking meters goes back to the local neighborhood for improvements (trees, sidewalks, lighting). This builds local support for pricing." },
+        { text: "Eliminate parking meters entirely", correct: false, feedback: "The opposite \u2014 Shoup wants market-rate meters with revenue returned locally." }
+    ]
+},
+{
+    section: 5,
+    title: "Principle 3",
+    subtitle: "Question 5a",
+    content: `
+        <p>What is Shoup\u2019s <strong>third</strong> principle?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Require more off-street parking", correct: false, feedback: "The opposite! Shoup argues that minimum parking requirements are the root cause of many urban problems." },
+        { text: "Convert all street parking to bike lanes", correct: false, feedback: "While Shoup supports better land use, his third principle is specifically about removing off-street parking mandates for developers." },
+        { text: "Remove off-street minimum parking requirements", correct: true, feedback: "Correct! Principle 3: Stop requiring developers to build minimum numbers of parking spaces. Let the market decide how much parking to provide." },
+        { text: "Limit parking to government-owned lots only", correct: false, feedback: "Shoup\u2019s approach is deregulation of off-street parking, not government monopoly." }
+    ]
+},
+{
+    section: 5,
+    title: "All Three Principles",
+    subtitle: "Question 5a \u2014 Summary",
+    content: `
+        <div class="highlight-box">
+            <p><strong>Shoup\u2019s Three Principles:</strong></p>
+            <p>1. Charge market-rate prices for curb parking</p>
+            <p>2. Return revenue to the neighborhoods</p>
+            <p>3. Remove off-street minimum parking requirements</p>
+        </div>
+        <p>These work together: pricing curb parking correctly (#1) with local revenue return (#2) builds political support for removing costly mandates (#3).</p>
+    `,
+    hideChart: true
+},
+{
+    section: 5,
+    title: "Q5b: Outcomes of Free Parking Mandates",
+    subtitle: "Question 5b",
+    content: `
+        <p>The exam asks: <em>"What would be the likely outcome of mandating that firms provide parking for free?"</em></p>
+        <p>We covered the graph in Q1. What are the broader economic consequences of free parking mandates?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Overconsumption of parking, induced driving, reduced density, massive opportunity costs", correct: true, feedback: "Correct! Free parking leads to: quantity at MPB=0 (overconsumption), more driving (McCahill: 30 ppt increase in auto share), less density (13% of Silicon Valley is parking), and huge opportunity costs ($1B+ in lost payroll)." },
+        { text: "More convenient shopping and happy customers", correct: false, feedback: "While it seems convenient, the hidden costs are enormous: wasted land, induced driving, reduced density, pollution." },
+        { text: "Lower housing costs because parking is included", correct: false, feedback: "The opposite! Parking mandates INCREASE housing costs because developers must build expensive parking (a new space costs more than a new car)." },
+        { text: "No significant economic effects", correct: false, feedback: "The effects are massive: Shoup estimated unpriced parking costs $191-563 billion in the US alone." }
+    ]
+},
+{
+    section: 5,
+    title: "The Evidence for Parking Reform",
+    subtitle: "Question 5b \u2014 Key Studies",
+    content: `
+        <p><strong>Evidence from research presented in class:</strong></p>
+        <ul>
+            <li><strong>McCahill et al. (2016):</strong> Going from 0.1 to 0.5 parking spaces per person &rarr; <strong>30 percentage point increase</strong> in auto mode share</li>
+            <li><strong>Gabbe, Osman & Manville (2021) on Silicon Valley:</strong> 13% of land is parking; removing mandates since 2000 could have added 13,000 jobs and $1+ billion in annual payroll</li>
+            <li><strong>Shoup (2005):</strong> Unpriced parking costs $191-563 billion in the US (more than twice the value of all US cars)</li>
+            <li><strong>Hudson Yards example:</strong> With Louisville\u2019s parking requirements, it would need 160,000 spaces, eliminating most development potential</li>
+        </ul>
+        <div class="highlight-box">
+            <p><strong>Exam tip:</strong> List the principles, then explain the economic logic. Use specific evidence to support your answer.</p>
+        </div>
+    `,
+    hideChart: true
+},
+
+// === SECTION 6: Q6 AGGLOMERATION ===
+{
+    section: 6,
+    title: "Q6-1: What Are Agglomeration Effects?",
+    subtitle: "Section Two \u2014 Short Answer",
+    content: `
+        <p>The exam asks four sub-questions. Let\u2019s start with: <em>"What are agglomeration effects?"</em></p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "The tendency of cities to spread outward over time", correct: false, feedback: "That\u2019s suburbanization or sprawl. Agglomeration is about the BENEFITS of clustering together." },
+        { text: "Government subsidies for urban development", correct: false, feedback: "Agglomeration is a natural economic phenomenon, not a government program." },
+        { text: "The costs of living in a crowded city", correct: false, feedback: "Those are congestion costs, the OPPOSITE of agglomeration benefits." },
+        { text: "Productivity benefits from firms and people clustering together in space", correct: true, feedback: "Correct! Agglomeration effects are the economic benefits (higher productivity, higher wages) that arise when firms and workers locate near each other in cities." }
+    ]
+},
+{
+    section: 6,
+    title: "Q6-2: Why Do Agglomeration Effects Happen?",
+    subtitle: "Question 6, Part 2",
+    content: `
+        <p>The SML Framework (Duranton & Puga) explains three mechanisms:</p>
+        <ul>
+            <li><strong>Sharing:</strong> Firms share costly infrastructure (ports, airports, fiber optics), access specialized local suppliers (VC firms, law offices), and pool labor risk</li>
+            <li><strong>Matching:</strong> Large ("thick") labor markets allow better fit between specialized skills and specific jobs. Easier to find co-founders or switch jobs.</li>
+            <li><strong>Learning:</strong> Close proximity enables transfer of <strong>tacit knowledge</strong> through face-to-face interaction</li>
+        </ul>
+    `,
+    hideChart: true
+},
+{
+    section: 6,
+    title: "Tacit Knowledge",
+    subtitle: "Question 6, Part 2",
+    content: `
+        <p>The Learning mechanism depends on <strong>tacit knowledge</strong>. What is tacit knowledge?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Tacit knowledge is information available in textbooks", correct: false, feedback: "That\u2019s codified knowledge. Tacit knowledge is the opposite: skills and insights that can only be transferred through direct interaction." },
+        { text: "Tacit knowledge is knowledge that can\u2019t be easily written down \u2014 it requires face-to-face interaction", correct: true, feedback: "Correct! Tacit knowledge (how to negotiate, read social cues, develop intuition) spreads through proximity. This is why Jevons\u2019s Paradox holds: better digital communication INCREASES demand for face-to-face contact." },
+        { text: "Tacit knowledge only applies to manual labor", correct: false, feedback: "Tacit knowledge applies to ALL fields: business strategy, artistic technique, scientific intuition, entrepreneurship." },
+        { text: "Tacit knowledge has been replaced by the internet", correct: false, feedback: "Jevons\u2019s Paradox: better digital communication actually INCREASES demand for face-to-face interaction, not decreases it." }
+    ]
+},
+{
+    section: 6,
+    title: "Q6-3: City Size, Productivity, and Costs",
+    subtitle: "Question 6, Part 3",
+    content: `
+        <p>Now the graph. Productivity grows with city size but at a <strong>diminishing rate</strong> (concave curve). Housing and congestion costs rise <strong>linearly</strong>.</p>
+        <p>Where is the <strong>equilibrium</strong> city size?</p>
+    `,
+    draw: () => drawAgglom(0),
+    quiz: [
+        { text: "Where Productivity = Housing Costs (the intersection)", correct: true, feedback: "Correct! People move in as long as productivity exceeds costs. The city grows until the two curves meet \u2014 that\u2019s where the last person moving in just breaks even. Note: this may actually be LARGER than the surplus-maximizing size because of congestion externalities." },
+        { text: "Where Productivity is maximized", correct: false, feedback: "Productivity peaks before the intersection. People keep moving in past the peak as long as productivity still exceeds costs." },
+        { text: "Where costs are zero", correct: false, feedback: "Costs are never zero in a real city. Equilibrium balances productivity against costs." },
+        { text: "There is no equilibrium \u2014 cities grow forever", correct: false, feedback: "Rising costs eventually catch up to productivity. With the concave productivity curve, the intersection is the natural stopping point." }
+    ]
+},
+{
+    section: 6,
+    title: "Equilibrium vs. Optimal City Size",
+    subtitle: "Question 6, Part 3",
+    content: `
+        <p>There are TWO important points on this graph:</p>
+        <ul>
+            <li><strong>Equilibrium</strong>: Where Productivity = Costs (the intersection). People keep moving in as long as productivity exceeds their costs, so the city naturally grows to this size.</li>
+            <li><strong>Max Average Surplus</strong> (ideal for current residents): Where the SLOPE of productivity = the slope of costs. The surplus <em>per person</em> is maximized here.</li>
+        </ul>
+        <div class="highlight-box">
+            <p><strong>Key insight:</strong> The equilibrium can <em>overshoot</em> the social optimum. Each new person imposes congestion costs on everyone else but doesn't account for that externality. So the city may grow <strong>larger</strong> than what maximizes total surplus.</p>
+        </div>
+    `,
+    draw: () => drawAgglom(2)
+},
+{
+    section: 6,
+    title: "Q6-4: NIMBYism",
+    subtitle: "Question 6, Part 4",
+    content: `
+        <p>The exam asks: <em>"Explain the NIMBY phenomenon using agglomeration benefits and congestion costs."</em></p>
+    `,
+    draw: () => drawAgglom(2),
+    multiCorrect: true,
+    quiz: [
+        { text: "Residents get agglomeration benefits city-wide but congestion costs are LOCAL (in their neighborhood)", correct: true, feedback: "A new building benefits the whole city (agglomeration) but increases traffic, noise, and crowding in one neighborhood." },
+        { text: "Congestion is outweighing agglomeration effects city-wide", correct: true, feedback: "Beyond max average surplus, each new resident adds more congestion cost than productivity gain per person." },
+        { text: "Decreasing average net surplus can reduce resident welfare even as it increases total surplus", correct: true, feedback: "The city can grow (more total surplus) while each existing resident is worse off (lower average surplus)." },
+        { text: "NIMBYism only affects wealthy neighborhoods", correct: false, feedback: "NIMBY dynamics occur in all neighborhoods. The key economic logic is the spatial mismatch of benefits and costs." }
+    ]
+},
+{
+    section: 6,
+    title: "NIMBY and Housing Supply",
+    subtitle: "Question 6, Part 4 \u2014 Summary",
+    content: `
+        <p>When NIMBYs block development, housing supply is restricted, pushing the cost curve <strong>steeper</strong> (orange dashed line).</p>
+        <p>This means:</p>
+        <ul>
+            <li>The city reaches equilibrium at a <strong>smaller</strong> size</li>
+            <li>Total surplus is <strong>reduced</strong> (less area between productivity and costs)</li>
+            <li>Housing prices are <strong>higher</strong> for everyone</li>
+            <li>But average surplus for existing residents may be <strong>higher</strong> (they benefit from exclusivity)</li>
+        </ul>
+        <div class="highlight-box">
+            <p><strong>The tension:</strong> What\u2019s good for current residents (restricting entry) is bad for the city and society as a whole.</p>
+        </div>
+    `,
+    draw: () => drawAgglom(3)
+},
+
+// === SECTION 7: Q7 CAUSALITY ===
+{
+    section: 7,
+    title: "Q7-1: Correlation vs. Causation",
+    subtitle: "Section Two \u2014 Short Answer",
+    content: `
+        <p>The exam statement: <em>"Cities with more immigrants have lower crime rates, therefore immigration reduces crime."</em></p>
+        <p>Part 1 asks: Why does correlation not imply causation here?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "There could be confounding variables that cause both more immigration AND less crime", correct: true, feedback: "Correct! Just because two things happen together doesn\u2019t mean one causes the other. A third variable (economic conditions, policing, demographics) could drive both." },
+        { text: "Correlation always implies causation if the sample is large enough", correct: false, feedback: "No! Even with millions of observations, correlation never proves causation. There could always be omitted variables or reverse causation." },
+        { text: "The data is probably wrong", correct: false, feedback: "The correlation can be perfectly real and accurate. The problem is in the INTERPRETATION, not the data." },
+        { text: "Immigration and crime are unrelated", correct: false, feedback: "They may well be related \u2014 the correlation is real. The question is whether the relationship is CAUSAL or driven by other factors." }
+    ]
+},
+{
+    section: 7,
+    title: "Confounding Variables",
+    subtitle: "Question 7, Part 1",
+    content: `
+        <p>A <strong>confounding variable</strong> affects BOTH the explanatory variable (immigration) and the outcome (crime).</p>
+        <p>Examples:</p>
+        <ul>
+            <li><strong>Economic conditions:</strong> Immigrants may settle in economically strong cities that already have low crime</li>
+            <li><strong>Housing costs:</strong> Both affected by affordability and demand</li>
+            <li><strong>Policing levels:</strong> May differ across cities</li>
+            <li><strong>Age demographics:</strong> Different age distributions affect both immigration patterns and crime rates</li>
+        </ul>
+    `,
+    hideChart: true
+},
+{
+    section: 7,
+    title: "Beyond Confounders",
+    subtitle: "Question 7, Part 1",
+    content: `
+        <p>Besides confounding variables, there is another reason correlation might not equal causation here. What is it?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "The weather affects both immigration and crime", correct: false, feedback: "While weather can affect both, the better examples from class are economic conditions and reverse causation." },
+        { text: "There are no possible confounders", correct: false, feedback: "There are many possible confounders! That\u2019s exactly why correlation doesn\u2019t prove causation." },
+        { text: "Reverse causation: maybe low crime attracts immigrants, not the other way around", correct: true, feedback: "Correct! This is a key confounder. If safe cities attract more immigrants, we\u2019d observe the same correlation even if immigration has NO effect on crime." },
+        { text: "Only randomized experiments can identify confounders", correct: false, feedback: "Confounders can be identified through careful reasoning. Natural experiments can then help address them." }
+    ]
+},
+{
+    section: 7,
+    title: "Q7-2: Establishing Causality",
+    subtitle: "Question 7, Part 2",
+    content: `
+        <p>Part 2 asks: <em>"How might economists establish causality?"</em></p>
+        <p>What approach can economists use to move beyond correlation?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Survey immigrants and ask if they caused crime changes", correct: false, feedback: "Self-reported surveys can\u2019t establish causality. People may not know or accurately report their effects on crime." },
+        { text: "Just collect more data points", correct: false, feedback: "More data doesn\u2019t solve the confounding problem. You need a research design that isolates the causal effect." },
+        { text: "Compare rich cities to poor cities", correct: false, feedback: "Simple comparisons have all the same confounding problems. Natural experiments provide the needed variation." },
+        { text: "Use an unexpected shock (like the Mariel Boatlift) as a natural experiment", correct: true, feedback: "Correct! The Mariel Boatlift (1980) sent 125,000 Cuban immigrants to Miami unexpectedly. Economists compared Miami\u2019s outcomes to similar cities that didn\u2019t receive the shock." }
+    ]
+},
+{
+    section: 7,
+    title: "Natural Experiments Explained",
+    subtitle: "Question 7, Part 2",
+    content: `
+        <p>A <strong>natural experiment</strong> exploits an unexpected event that creates variation independent of confounders.</p>
+        <p><strong>The Mariel Boatlift (1980):</strong></p>
+        <ul>
+            <li>Castro unexpectedly opened the port of Mariel, sending 125,000 Cubans to Miami</li>
+            <li>This was NOT caused by Miami\u2019s economic conditions \u2014 it was a political decision by Cuba</li>
+            <li>Economists compared Miami (treatment) to similar cities (control) before and after</li>
+            <li>This isolates the CAUSAL effect of immigration from confounders</li>
+        </ul>
+        <p>Other approaches: <strong>instrumental variables</strong> (using historical settlement patterns as an instrument) and <strong>comparing before/after</strong> unexpected policy changes.</p>
+    `,
+    hideChart: true
+},
+{
+    section: 7,
+    title: "Q7-3: Economic Impacts of Immigration",
+    subtitle: "Question 7, Part 3 \u2014 Short Run",
+    content: `
+        <p>Part 3 asks about immigration\u2019s economic impact. First, the <strong>short run</strong>:</p>
+        <p>What happens to wages for natives at the <strong>same education level</strong> as immigrants?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "Wages increase immediately for all workers", correct: false, feedback: "In the short run, there IS competitive pressure on similar workers. The benefits come in the long run." },
+        { text: "About a 3% decline in wages for natives in the same education group", correct: true, feedback: "Correct! Natural experiment studies find approximately a 3% wage decline for natives with similar education levels in the short run. This is a real but modest effect." },
+        { text: "Wages drop by 30% or more", correct: false, feedback: "The actual effect is much smaller \u2014 about 3%. Simple supply-demand theory overpredicts the decline." },
+        { text: "No effect on wages at all", correct: false, feedback: "There IS a small short-run effect (~3% decline) for workers at the same education level." }
+    ]
+},
+{
+    section: 7,
+    title: "Long-Run Effects of Immigration",
+    subtitle: "Question 7, Part 3 \u2014 Long Run",
+    content: `
+        <p>In the <strong>long run</strong>, the effects are very different. What is the overall long-run impact of immigration on the economy?</p>
+    `,
+    hideChart: true,
+    quiz: [
+        { text: "The negative effects get worse over time", correct: false, feedback: "The opposite! Short-run competitive pressure fades as the economy adjusts, and long-run benefits emerge." },
+        { text: "Immigration has no long-run effects", correct: false, feedback: "The long-run effects are substantial and positive: more innovation, more investment, higher growth." },
+        { text: "Net positive: innovation, capital formation, specialization, and overall wage growth", correct: true, feedback: "Correct! Long-run benefits include: increased patents/innovation, businesses invest more (capital formation), natives move up the job ladder (specialization), and the net effect on wages becomes positive." },
+        { text: "Only immigrants benefit in the long run", correct: false, feedback: "Natives benefit too: they specialize, move up the job ladder, and enjoy the fruits of higher innovation and growth." }
+    ]
+},
+{
+    section: 7,
+    title: "Immigration: The Full Picture",
+    subtitle: "Question 7, Part 3 \u2014 Summary",
+    content: `
+        <p><strong>Short-run impacts</strong> on same-education natives:</p>
+        <ul>
+            <li>~3% decline in wages (competitive pressure)</li>
+            <li>Concentrated among workers with similar skills</li>
+        </ul>
+        <p><strong>Long-run and broader impacts:</strong></p>
+        <ul>
+            <li>Increased innovation and patent activity</li>
+            <li>Enhanced capital formation (businesses invest more)</li>
+            <li>Higher economic growth rates</li>
+            <li>Natives specialize and move up the "job ladder"</li>
+            <li>Agglomeration effects in urban areas amplified</li>
+            <li>Net positive effect on native wages over time</li>
+        </ul>
+        <div class="highlight-box">
+            <p><strong>Key insight:</strong> Simple theory predicts larger wage declines than actually observed. Dynamic responses (innovation, capital formation, specialization) offset the initial competitive pressure.</p>
+        </div>
+    `,
+    hideChart: true
+},
+{
+    section: 7,
+    title: "Congratulations!",
+    subtitle: "Review Complete",
+    content: `
+        <p>You\u2019ve reviewed all 7 midterm questions step by step!</p>
+        <div class="highlight-box">
+            <p><strong>Final Reminders:</strong></p>
+            <p>1. Bring your <strong>half-page of notes</strong></p>
+            <p>2. For graph questions: <strong>label all curves, axes, equilibrium points, and shade DWL</strong></p>
+            <p>3. For short-answer: use <strong>specific terms, evidence, and examples from readings</strong></p>
+            <p>4. Section 1: Pick 1 of 2 graphing questions (25 pts)</p>
+            <p>5. Section 2: Pick 3 of 5 short-answer questions (75 pts)</p>
+        </div>
+        <p>Good luck on your midterm!</p>
+    `,
+    hideChart: true
+}
+];
+
+// ========== NAVIGATION ==========
+function renderStepper() {
+    const el = document.getElementById('stepper');
+    el.innerHTML = '';
+    const curSec = slides[cur].section;
+    sections.forEach((name, i) => {
+        const d = document.createElement('div');
+        d.className = `step ${i < curSec ? 'completed' : (i === curSec ? 'active' : '')}`;
+        d.textContent = i < curSec ? '\u2713' : (i + 1);
+        d.title = name;
+        d.onclick = () => { const idx = slides.findIndex(s => s.section === i); if (idx !== -1) { cur = idx; renderSlide(); } };
+        el.appendChild(d);
+    });
+}
+
+function renderSlide() {
+    const s = slides[cur];
+    document.getElementById('slide-content').innerHTML =
+        (s.subtitle ? `<h3>${s.subtitle}</h3>` : '') + `<h2>${s.title}</h2>` + s.content;
+
+    const cp = document.getElementById('chart-panel');
+    const cont = document.getElementById('content-panel');
+    if (s.hideChart) { cp.classList.add('hidden'); cont.classList.add('full-width'); }
+    else { cp.classList.remove('hidden'); cont.classList.remove('full-width'); setTimeout(() => Plotly.Plots.resize('plot'), 50); }
+
+    const qc = document.getElementById('quiz-container');
+    const fb = document.getElementById('feedback');
+    qc.innerHTML = ''; fb.innerHTML = '';
+
+    if (s.quiz) {
+        document.getElementById('next-btn').disabled = true;
+        if (s.multiCorrect) {
+            const hint = document.createElement('div');
+            hint.className = 'multi-hint';
+            hint.textContent = 'Select all that apply:';
+            qc.appendChild(hint);
+            s.quiz.forEach((q, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn';
+                btn.textContent = q.text;
+                btn.dataset.idx = i;
+                btn.onclick = () => { btn.classList.toggle('selected'); };
+                qc.appendChild(btn);
+            });
+            const sub = document.createElement('button');
+            sub.className = 'submit-quiz-btn';
+            sub.textContent = 'Submit';
+            sub.onclick = () => handleMultiQuiz(s.quiz);
+            qc.appendChild(sub);
+        } else {
+            s.quiz.forEach((q, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn';
+                btn.textContent = q.text;
+                btn.onclick = () => handleQuiz(q, btn, s.quiz);
+                qc.appendChild(btn);
+            });
+        }
+    } else {
+        document.getElementById('next-btn').disabled = false;
+    }
+
+    if (!s.hideChart && s.draw) s.draw();
+    renderStepper();
+    document.getElementById('prev-btn').disabled = cur === 0;
+    document.getElementById('next-btn').textContent = cur === slides.length - 1 ? 'Finish' : 'Next \u2192';
+    document.getElementById('slide-counter').textContent = `${cur + 1} / ${slides.length}`;
+    cont.scrollTop = 0;
+}
+
+function handleQuiz(q, btn, allQuiz) {
+    const fb = document.getElementById('feedback');
+    fb.textContent = q.feedback;
+    if (q.correct) {
+        btn.classList.add('correct');
+        document.getElementById('next-btn').disabled = false;
+        document.querySelectorAll('.quiz-btn').forEach(b => { if (b !== btn) b.classList.add('disabled'); b.onclick = null; });
+    } else {
+        btn.classList.add('wrong');
+        setTimeout(() => btn.classList.remove('wrong'), 1800);
+    }
+}
+
+function handleMultiQuiz(quiz) {
+    const btns = document.querySelectorAll('.quiz-btn');
+    const fb = document.getElementById('feedback');
+    const selected = new Set();
+    btns.forEach((b, i) => { if (b.classList.contains('selected')) selected.add(i); });
+    const correctSet = new Set();
+    quiz.forEach((q, i) => { if (q.correct) correctSet.add(i); });
+
+    const isCorrect = selected.size === correctSet.size && [...selected].every(i => correctSet.has(i));
+    if (isCorrect) {
+        const correctFeedback = quiz.filter(q => q.correct).map(q => q.feedback).join(' ');
+        fb.textContent = correctFeedback;
+        btns.forEach((b, i) => {
+            if (correctSet.has(i)) b.classList.add('correct');
+            else b.classList.add('disabled');
+            b.onclick = null;
+        });
+        document.querySelector('.submit-quiz-btn').disabled = true;
+        document.getElementById('next-btn').disabled = false;
+    } else {
+        const correctAnswers = quiz.filter(q => q.correct).map(q => q.text);
+        fb.textContent = 'Not quite. The correct answers are: ' + correctAnswers.join('; ') + '.';
+        btns.forEach(b => { b.classList.remove('selected'); });
+        const sub = document.querySelector('.submit-quiz-btn');
+        sub.disabled = true;
+        setTimeout(() => { sub.disabled = false; }, 1800);
+    }
+}
+
+function nextSlide() { if (cur < slides.length - 1) { cur++; renderSlide(); } }
+function prevSlide() { if (cur > 0) { cur--; renderSlide(); } }
+
+// ========== INIT ==========
+const saved = localStorage.getItem('midterm-review-theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+document.getElementById('toggle-knob').textContent = saved === 'light' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+renderSlide();
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { if (!document.getElementById('next-btn').disabled) nextSlide(); }
+    if (e.key === 'ArrowLeft') prevSlide();
+});
+</script>
+</body>
+</html>
