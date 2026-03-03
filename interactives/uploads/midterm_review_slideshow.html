@@ -3,1220 +3,1751 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Econ 201 — Midterm Review</title>
+    <title>Macroeconomics 202 Midterm Review</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         :root {
-            --bg: #f9fafb; --card-bg: #ffffff; --text: #1f2937; --text-muted: #6b7280;
-            --border: #e5e7eb; --primary: #2563eb; --primary-light: #eff6ff;
-            --card-shadow: 0 1px 3px rgba(0,0,0,0.1); --correct: #16a34a; --incorrect: #dc2626;
-            --highlight-bg: #fef3c7; --highlight-border: #f59e0b;
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --supply-green: #2ca02c;
+            --demand-blue: #1f77b4;
+            --equilibrium-red: #d62728;
+            --shift-purple: #9467bd;
         }
         [data-theme="dark"] {
-            --bg: #111827; --card-bg: #1f2937; --text: #f3f4f6; --text-muted: #9ca3af;
-            --border: #374151; --primary: #60a5fa; --primary-light: #1e3a5f;
+            --bg: #111827;
+            --card-bg: #1f2937;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --primary: #60a5fa;
+            --primary-light: #1e3a5f;
             --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
-            --highlight-bg: #422006; --highlight-border: #d97706;
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-        header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--card-shadow); position: sticky; top: 0; z-index: 100; }
-        .header-title { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
-        .stepper { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; flex: 1; margin: 0 16px; }
-        .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 2px solid var(--border); background: var(--card-bg); color: var(--text-muted); transition: all 0.2s; }
-        .step-dot.active { border-color: var(--primary); background: var(--primary); color: white; }
-        .step-dot.completed { border-color: var(--correct); background: var(--correct); color: white; }
-        .step-dot:hover { transform: scale(1.15); }
-        .theme-toggle { background: var(--border); border: none; border-radius: 20px; width: 52px; height: 28px; cursor: pointer; position: relative; flex-shrink: 0; }
-        .theme-toggle .knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: white; transition: transform 0.3s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-        [data-theme="dark"] .theme-toggle .knob { transform: translateX(24px); }
-        .main { display: flex; flex: 1; overflow: hidden; }
-        .chart-panel { width: 55%; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-        .chart-container { width: 100%; min-height: 400px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--card-shadow); }
-        .content-panel { width: 45%; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; border-left: 1px solid var(--border); transition: width 0.3s; }
-        .main.full-width .chart-panel { display: none; }
-        .main.full-width .content-panel { width: 100%; border-left: none; max-width: 800px; margin: 0 auto; padding: 32px 40px; }
-        .slide-title { font-size: 2rem; font-weight: 700; color: var(--primary); line-height: 1.3; }
-        .slide-section-label { font-size: 1rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
-        .slide-content { line-height: 1.8; font-size: 1.35rem; }
-        .slide-content p { margin-bottom: 14px; }
-        .slide-content ul, .slide-content ol { margin: 12px 0 12px 28px; }
-        .slide-content li { margin-bottom: 10px; }
-        .highlight-box { background: var(--highlight-bg); border-left: 4px solid var(--highlight-border); padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 1.1rem; }
-        .answer-box { background: var(--primary-light); border-left: 4px solid var(--primary); padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 1.1rem; }
-        .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-        .quiz-btn { padding: 14px 20px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); cursor: pointer; font-size: 1.1rem; text-align: left; transition: all 0.2s; line-height: 1.5; }
-        .quiz-btn:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-light); }
-        .quiz-btn.correct { border-color: var(--correct); background: #dcfce7; color: #166534; }
-        .quiz-btn.incorrect { border-color: var(--incorrect); background: #fef2f2; color: #991b1b; }
-        [data-theme="dark"] .quiz-btn.correct { background: #14532d; color: #bbf7d0; }
-        [data-theme="dark"] .quiz-btn.incorrect { background: #7f1d1d; color: #fecaca; }
-        .quiz-feedback { margin-top: 12px; padding: 14px; border-radius: 8px; font-size: 1.05rem; line-height: 1.6; }
-        .nav-buttons { display: flex; gap: 12px; margin-top: auto; padding-top: 20px; }
-        .nav-btn { padding: 12px 28px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 1.1rem; transition: all 0.2s; }
-        .nav-btn.prev { background: var(--border); color: var(--text); }
-        .nav-btn.next { background: var(--primary); color: white; }
-        .nav-btn:hover { opacity: 0.85; transform: translateY(-1px); }
-        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .reveal-btn { padding: 10px 24px; border-radius: 8px; border: 2px solid var(--primary); background: var(--primary-light); color: var(--primary); cursor: pointer; font-weight: 600; font-size: 1.05rem; margin: 10px 0; transition: all 0.2s; }
-        .reveal-btn:hover { background: var(--primary); color: white; }
-        .hidden-answer { display: none; }
-        .hidden-answer.show { display: block; }
-        .payoff-table { border-collapse: collapse; margin: 16px 0; width: 100%; font-size: 1rem; }
-        .payoff-table th, .payoff-table td { border: 1px solid var(--border); padding: 12px 14px; text-align: center; }
-        .payoff-table th { background: var(--primary-light); font-weight: 600; }
-        .payoff-table .highlight-cell { background: var(--highlight-bg); font-weight: 700; }
-        .step-label { font-size: 0.65rem; display: block; margin-top: 2px; color: var(--text-muted); max-width: 60px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        @media (max-width: 900px) {
-            .main { flex-direction: column; }
-            .chart-panel, .content-panel { width: 100%; border-left: none; }
-            .chart-panel { min-height: 350px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
         }
+
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header h1 { font-size: 1.5rem; font-weight: 600; }
+
+        .theme-toggle {
+            background: var(--primary-light);
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .theme-toggle:hover { transform: scale(1.05); }
+
+        .stepper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .step {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+        }
+        .step.completed { background: #10b981; color: white; border-color: #10b981; }
+        .step.current { background: var(--primary); color: white; border-color: var(--primary); }
+        .step:hover { transform: scale(1.1); }
+
+        .main {
+            display: flex;
+            height: calc(100vh - 140px);
+        }
+
+        .chart-panel {
+            width: 55%;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .content-panel {
+            width: 45%;
+            padding: 32px 40px;
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main.full-width .chart-panel { width: 0; padding: 0; overflow: hidden; min-width: 0; }
+        .main.full-width .content-panel {
+            width: 100%;
+            border-left: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 40px;
+        }
+
+        .slide-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--text);
+        }
+
+        .slide-content {
+            font-size: 1.35rem;
+            line-height: 1.8;
+            flex-grow: 1;
+        }
+
+        .slide-content p { margin-bottom: 16px; }
+        .slide-content strong { color: var(--primary); }
+        .slide-content ul { margin-left: 24px; margin-bottom: 16px; }
+        .slide-content li { margin-bottom: 8px; }
+
+        .highlight-box {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 16px 20px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            border-radius: 4px;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .quiz-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+            color: var(--text);
+        }
+        .quiz-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+        .quiz-btn.correct { background: #d1fae5; border-color: #10b981; color: #065f46; }
+        .quiz-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+        .quiz-btn.selected { background: var(--primary-light); border-color: var(--primary); }
+        .quiz-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .feedback {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+        .feedback.correct { background: #d1fae5; color: #065f46; }
+        .feedback.wrong { background: #fee2e2; color: #991b1b; }
+
+        .multi-correct-hint {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.3s;
+        }
+        .submit-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .nav-btn:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+
+        .slide-counter {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .slider-container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        .slider-label {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .clear-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 12px;
+        }
+        .clear-btn:hover { background: #dc2626; }
+
+        #chart1, #chart2 { height: 100%; min-height: 400px; }
+
+        .reveal-step { display: none; }
+        .reveal-step.visible { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .reveal-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 16px;
+        }
+        .reveal-btn:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
-<header>
-    <div class="header-title">Econ 201 Midterm Review</div>
-    <div class="stepper" id="stepper"></div>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-        <div class="knob" id="themeKnob">☀️</div>
-    </button>
-</header>
-<div class="main">
-    <div class="chart-panel"><div class="chart-container" id="chart1"></div></div>
-    <div class="content-panel">
-        <div class="slide-section-label" id="sectionLabel"></div>
-        <div class="slide-title" id="slideTitle"></div>
-        <div class="slide-content" id="slideContent"></div>
-        <div class="quiz-options" id="quizArea"></div>
-        <div class="quiz-feedback" id="quizFeedback"></div>
-        <div class="nav-buttons">
-            <button class="nav-btn prev" id="prevBtn" onclick="navigate(-1)">← Back</button>
-            <button class="nav-btn next" id="nextBtn" onclick="navigate(1)">Next →</button>
+    <div class="header">
+        <h1>Macroeconomics 202 Midterm Review</h1>
+        <div class="stepper" id="stepper"></div>
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <span id="theme-icon">☀️</span>
         </div>
     </div>
-</div>
-
-<script>
-// ─── THEME ───
-function isDark(){return document.documentElement.getAttribute('data-theme')==='dark'}
-function plotTheme(){const d=isDark();return{paper_bgcolor:d?'#1f2937':'#fff',plot_bgcolor:d?'#1f2937':'#fff',font:{color:d?'#e5e7eb':'#1f2937',size:13},xaxis:{gridcolor:d?'#4b5563':'#e5e7eb',zerolinecolor:d?'#6b7280':'#d1d5db'},yaxis:{gridcolor:d?'#4b5563':'#e5e7eb',zerolinecolor:d?'#6b7280':'#d1d5db'}}}
-function toggleTheme(){const t=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',t);document.getElementById('themeKnob').textContent=t==='dark'?'🌙':'☀️';localStorage.setItem('midterm-review-theme',t);const s=slides[currentSlide];if(s.draw)s.draw();}
-(function(){const t=localStorage.getItem('midterm-review-theme')||'light';document.documentElement.setAttribute('data-theme',t);document.getElementById('themeKnob').textContent=t==='dark'?'🌙':'☀️';})();
-
-// ─── SECTIONS ───
-const sections = [
-    {name:'Intro'},
-    {name:'C1: Capitalism'},
-    {name:'C2: Prod. Fn.'},
-    {name:'C3: Malthus'},
-    {name:'C4: Isocost'},
-    {name:'C5: Utility Max'},
-    {name:'C6: Inc/Sub'},
-    {name:'C7: Prisoner\'s'},
-    {name:'C8: Social Dilemma'},
-    {name:'C9: Stag Hunt'},
-];
-
-let currentSlide = 0;
-let quizAnswered = {};
-
-// ─── DRAW FUNCTIONS ───
-
-function drawWelcome(){
-    const t=plotTheme();
-    const topics=['Capitalism','Prod. Function','Malthus','Isocost','Utility Max','Inc/Sub Effects','Prisoner\'s Dilemma','Social Dilemma','Stag Hunt'];
-    const points=[10,12,12,8,9,16,16,8,8];
-    Plotly.react('chart1',[{x:topics,y:points,type:'bar',marker:{color:['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#ef4444','#f97316','#6366f1']}}],
-    Object.assign({},t,{title:{text:'Points by Question',font:{size:16}},xaxis:Object.assign({},t.xaxis,{title:'',tickangle:-30}),yaxis:Object.assign({},t.yaxis,{title:'Points'}),margin:{t:50,b:100,l:50,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawProdFunction(){
-    const t=plotTheme();
-    const pts={x:[3,6,8,10,12],y:[6,9,10.8,12,13.2]};
-    const x=[];const y=[];
-    for(let i=0;i<=13;i+=0.1){
-        x.push(i);
-        if(i<=3)y.push(6*i/3);
-        else if(i<=6)y.push(6+(9-6)*(i-3)/3);
-        else if(i<=8)y.push(9+(10.8-9)*(i-6)/2);
-        else if(i<=10)y.push(10.8+(12-10.8)*(i-8)/2);
-        else y.push(12+(13.2-12)*(i-10)/2);
-    }
-    Plotly.react('chart1',[
-        {x,y,mode:'lines',line:{color:'#2563eb',width:3},name:'Production Fn'},
-        {x:pts.x,y:pts.y,mode:'markers+text',marker:{color:'#2563eb',size:10},text:['6','9','10.8','12','13.2'],textposition:'top right',name:'Given points'}
-    ],Object.assign({},t,{title:{text:'Production Function',font:{size:16}},xaxis:Object.assign({},t.xaxis,{title:'Workers',range:[0,13.5]}),yaxis:Object.assign({},t.yaxis,{title:'Output (tons)',range:[0,15]}),showlegend:false,margin:{t:50,b:50,l:50,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawAPLine(){
-    const t=plotTheme();
-    const pts={x:[3,6,8,10,12],y:[6,9,10.8,12,13.2]};
-    const x=[];const y=[];
-    for(let i=0;i<=13;i+=0.1){
-        x.push(i);
-        if(i<=3)y.push(6*i/3);
-        else if(i<=6)y.push(6+(9-6)*(i-3)/3);
-        else if(i<=8)y.push(9+(10.8-9)*(i-6)/2);
-        else if(i<=10)y.push(10.8+(12-10.8)*(i-8)/2);
-        else y.push(12+(13.2-12)*(i-10)/2);
-    }
-    // Ray from origin to (6,9)
-    const rayX=[0,6,12];const rayY=[0,9,18];
-    Plotly.react('chart1',[
-        {x,y,mode:'lines',line:{color:'#2563eb',width:3},name:'Production Fn'},
-        {x:pts.x,y:pts.y,mode:'markers+text',marker:{color:'#2563eb',size:10},text:['6','9','10.8','12','13.2'],textposition:'top right',showlegend:false},
-        {x:rayX,y:rayY,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'Ray from origin (slope=AP)'},
-        {x:[6],y:[9],mode:'markers',marker:{color:'#ef4444',size:14,symbol:'circle-open',line:{width:3}},name:'AP = 9/6 = 1.5'}
-    ],Object.assign({},t,{title:{text:'Average Product = Slope of Ray from Origin',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Workers',range:[0,13.5]}),yaxis:Object.assign({},t.yaxis,{title:'Output (tons)',range:[0,15]}),showlegend:true,legend:{x:0.02,y:0.98},margin:{t:50,b:50,l:50,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawMPLine(){
-    const t=plotTheme();
-    const pts={x:[3,6,8,10,12],y:[6,9,10.8,12,13.2]};
-    const x=[];const y=[];
-    for(let i=0;i<=13;i+=0.1){
-        x.push(i);
-        if(i<=3)y.push(6*i/3);
-        else if(i<=6)y.push(6+(9-6)*(i-3)/3);
-        else if(i<=8)y.push(9+(10.8-9)*(i-6)/2);
-        else if(i<=10)y.push(10.8+(12-10.8)*(i-8)/2);
-        else y.push(12+(13.2-12)*(i-10)/2);
-    }
-    // Secant from (7, 9.9) to (8,10.8): MP = (10.8-9.9)/(8-7) = 0.9/1 = 0.9
-    // Point at x=7: y = 9 + (10.8-9)*(7-6)/2 = 9 + 0.9 = 9.9
-    Plotly.react('chart1',[
-        {x,y,mode:'lines',line:{color:'#2563eb',width:3},name:'Production Fn'},
-        {x:pts.x,y:pts.y,mode:'markers+text',marker:{color:'#2563eb',size:10},text:['6','9','10.8','12','13.2'],textposition:'top right',showlegend:false},
-        {x:[7],y:[9.9],mode:'markers+text',marker:{color:'#2563eb',size:10},text:['9.9'],textposition:'top left',showlegend:false},
-        {x:[6,9],y:[9.9-0.9,10.8+0.9],mode:'lines',line:{color:'#16a34a',width:2,dash:'dash'},name:'Slope = MP = 0.9'},
-        {x:[7,8],y:[9.9,10.8],mode:'markers',marker:{color:'#16a34a',size:14,symbol:'circle-open',line:{width:3}},name:'7→8 workers'},
-        {x:[7,8,8],y:[9.9,9.9,10.8],mode:'lines',line:{color:'#f59e0b',width:1.5,dash:'dot'},name:'ΔL=1, ΔY=0.9',showlegend:true}
-    ],Object.assign({},t,{title:{text:'Marginal Product of 8th Worker',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Workers',range:[0,13.5]}),yaxis:Object.assign({},t.yaxis,{title:'Output (tons)',range:[0,15]}),showlegend:true,legend:{x:0.02,y:0.98},margin:{t:50,b:50,l:50,r:20},annotations:[{x:7.5,y:9.75,text:'ΔL=1',showarrow:false,font:{color:'#f59e0b',size:12}},{x:8.15,y:10.35,text:'ΔY=0.9',showarrow:false,font:{color:'#f59e0b',size:12}}]}),{responsive:true,displayModeBar:false});
-}
-
-function drawDiminishing(){
-    const t=plotTheme();
-    // MP at each interval: 3→6: (9-6)/3=1.0; 6→8: (10.8-9)/2=0.9; 8→10: (12-10.8)/2=0.6; 10→12: (13.2-12)/2=0.6
-    const mps=[{from:3,to:6,mp:1.0},{from:6,to:8,mp:0.9},{from:8,to:10,mp:0.6},{from:10,to:12,mp:0.6}];
-    const midX=mps.map(m=>(m.from+m.to)/2);
-    const mpY=mps.map(m=>m.mp);
-    Plotly.react('chart1',[
-        {x:midX,y:mpY,type:'bar',marker:{color:['#3b82f6','#6366f1','#8b5cf6','#a855f7']},text:mpY.map(v=>v.toFixed(1)),textposition:'outside'}
-    ],Object.assign({},t,{title:{text:'Marginal Product is Diminishing',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Workers (midpoint of interval)',tickvals:midX,ticktext:['3→6','6→8','8→10','10→12']}),yaxis:Object.assign({},t.yaxis,{title:'Marginal Product (tons/worker)',range:[0,1.3]}),margin:{t:50,b:60,l:60,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawMalthus(){
-    const t=plotTheme();
-    const x=[];const fp=[];const fr=[];const fp2=[];
-    for(let i=0;i<=8.5;i+=0.05){x.push(i);fp.push(2.2*Math.sqrt(i));fr.push(i);fp2.push(2.6*Math.sqrt(i));}
-    Plotly.react('chart1',[
-        {x,y:fp,mode:'lines',line:{color:'#2563eb',width:3},name:'Food Produced'},
-        {x,y:fr,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'Food Required'},
-        {x,y:fp2,mode:'lines',line:{color:'#2563eb',width:2,dash:'dot'},name:'New Tech'},
-        {x:[2],y:[2.2*Math.sqrt(2)],mode:'markers',marker:{color:'#f59e0b',size:12},name:'P₁'},
-        {x:[4.84],y:[4.84],mode:'markers',marker:{color:'#16a34a',size:12},name:'P*'},
-        {x:[6.76],y:[6.76],mode:'markers',marker:{color:'#8b5cf6',size:12},name:'P**'}
-    ],Object.assign({},t,{title:{text:'Malthusian Trap',font:{size:16}},xaxis:Object.assign({},t.xaxis,{title:'Population'}),yaxis:Object.assign({},t.yaxis,{title:'Food'}),showlegend:true,legend:{x:0.02,y:0.98},margin:{t:50,b:50,l:50,r:20},
-    annotations:[
-        {x:2,y:2,ax:2,ay:2.2*Math.sqrt(2),text:'Surplus!',showarrow:true,arrowhead:2,arrowcolor:'#16a34a',font:{color:'#16a34a',size:12},xanchor:'left',xshift:10},
-        {x:4.84,y:4.84,text:'P* (equilibrium)',showarrow:true,arrowhead:2,ax:40,ay:-30,font:{size:11}},
-        {x:6.76,y:6.76,text:'P** (new eq.)',showarrow:true,arrowhead:2,ax:40,ay:-30,font:{size:11,color:'#8b5cf6'}}
-    ]}),{responsive:true,displayModeBar:false});
-}
-
-function drawMalthusP1(){
-    const t=plotTheme();
-    const x=[];const fp=[];const fr=[];
-    for(let i=0;i<=8.5;i+=0.05){x.push(i);fp.push(2.2*Math.sqrt(i));fr.push(i);}
-    Plotly.react('chart1',[
-        {x,y:fp,mode:'lines',line:{color:'#2563eb',width:3},name:'Food Produced'},
-        {x,y:fr,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'Food Required'},
-        {x:[2],y:[2.2*Math.sqrt(2)],mode:'markers',marker:{color:'#f59e0b',size:14},name:'Food Produced at P₁'},
-        {x:[2],y:[2],mode:'markers',marker:{color:'#ef4444',size:14,symbol:'diamond'},name:'Food Required at P₁'},
-    ],Object.assign({},t,{title:{text:'At Population P₁',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Population'}),yaxis:Object.assign({},t.yaxis,{title:'Food'}),showlegend:true,legend:{x:0.02,y:0.98},margin:{t:50,b:50,l:50,r:20},
-    shapes:[{type:'line',x0:2,x1:2,y0:2,y1:2.2*Math.sqrt(2),line:{color:'#9ca3af',width:2,dash:'dot'}}]
-    }),{responsive:true,displayModeBar:false});
-}
-
-function drawMalthusStable(){
-    const t=plotTheme();
-    const x=[];const fp=[];const fr=[];
-    for(let i=0;i<=8.5;i+=0.05){x.push(i);fp.push(2.2*Math.sqrt(i));fr.push(i);}
-    Plotly.react('chart1',[
-        {x,y:fp,mode:'lines',line:{color:'#2563eb',width:3},name:'Food Produced'},
-        {x,y:fr,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'Food Required'},
-        {x:[4.84],y:[4.84],mode:'markers',marker:{color:'#f59e0b',size:16,symbol:'star'},name:'P*'},
-    ],Object.assign({},t,{title:{text:'At Population P*',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Population'}),yaxis:Object.assign({},t.yaxis,{title:'Food'}),showlegend:true,legend:{x:0.02,y:0.98},margin:{t:50,b:50,l:50,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawMalthusTech(){
-    const t=plotTheme();
-    const x=[];const fp=[];const fr=[];const fp2=[];
-    for(let i=0;i<=8.5;i+=0.05){x.push(i);fp.push(2.2*Math.sqrt(i));fr.push(i);fp2.push(2.6*Math.sqrt(i));}
-    Plotly.react('chart1',[
-        {x,y:fp,mode:'lines',line:{color:'#93c5fd',width:2},name:'Old Tech'},
-        {x,y:fp2,mode:'lines',line:{color:'#2563eb',width:3},name:'New Tech'},
-        {x,y:fr,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'Food Required'},
-        {x:[4.84],y:[4.84],mode:'markers',marker:{color:'#9ca3af',size:12},name:'Old P*'},
-        {x:[4.84],y:[2.6*Math.sqrt(4.84)],mode:'markers',marker:{color:'#f59e0b',size:14},name:'Short run: surplus!'},
-        {x:[6.76],y:[6.76],mode:'markers',marker:{color:'#8b5cf6',size:14},name:'New P** (long run)'},
-    ],Object.assign({},t,{title:{text:'Technology Shift: Short Run vs Long Run',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Population'}),yaxis:Object.assign({},t.yaxis,{title:'Food'}),showlegend:true,legend:{x:0.02,y:0.98},margin:{t:50,b:50,l:50,r:20},
-    shapes:[{type:'line',x0:4.84,x1:4.84,y0:4.84,y1:2.6*Math.sqrt(4.84),line:{color:'#f59e0b',width:2,dash:'dot'}}],
-    annotations:[
-        {x:4.84,y:(4.84+2.6*Math.sqrt(4.84))/2,text:'Short-run<br>surplus',showarrow:false,xanchor:'left',xshift:8,font:{color:'#f59e0b',size:11}},
-        {x:5.8,y:5.3,text:'→ Pop grows →',showarrow:false,font:{color:'#8b5cf6',size:12}},
-        {x:6.76,y:7.2,text:'Back to<br>subsistence',showarrow:true,ay:-5,ax:30,arrowhead:0,font:{color:'#8b5cf6',size:11}}
-    ]}),{responsive:true,displayModeBar:false});
-}
-
-function drawIsocost(){
-    const t=plotTheme();
-    // England: w=10, p_e=5 → slope=-2; China: w=5, p_e=10 → slope=-0.5
-    // Tech A (Spinning Jenny): 1L, 6E; Tech B (Hand): 4L, 2E
-    const engCostA=1*10+6*5;// =40
-    const engCostB=4*10+2*5;// =50
-    const chinaCostA=1*5+6*10;// =65
-    const chinaCostB=4*5+2*10;// =40
-    // England isocost through Tech A: 40 = 10L+5E → E=8-2L
-    // China isocost through Tech B: 40 = 5L+10E → E=4-0.5L
-    Plotly.react('chart1',[
-        {x:[0,4],y:[8,0],mode:'lines',line:{color:'#2563eb',width:3},name:'England isocost (steep: w/p=2)'},
-        {x:[0,8],y:[4,0],mode:'lines',line:{color:'#ef4444',width:3},name:'China isocost (flat: w/p=0.5)'},
-        {x:[1],y:[6],mode:'markers+text',marker:{color:'#2563eb',size:14,symbol:'star'},text:['Tech A: Spinning Jenny'],textposition:'top right',name:'Tech A (capital-intensive)'},
-        {x:[4],y:[2],mode:'markers+text',marker:{color:'#ef4444',size:14,symbol:'star'},text:['Tech B: Hand Spinning'],textposition:'top right',name:'Tech B (labor-intensive)'},
-    ],Object.assign({},t,{title:{text:'Why England? Relative Factor Prices',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Labor',range:[0,9]}),yaxis:Object.assign({},t.yaxis,{title:'Energy',range:[0,9]}),showlegend:true,legend:{x:0.5,y:0.98},margin:{t:50,b:50,l:50,r:20},
-    annotations:[
-        {x:2,y:6,text:'England: cheap coal,<br>expensive labor<br>→ use machines!',showarrow:false,font:{color:'#2563eb',size:11},xanchor:'left'},
-        {x:5,y:3,text:'China: cheap labor,<br>expensive coal<br>→ use hand methods',showarrow:false,font:{color:'#ef4444',size:11},xanchor:'left'}
-    ]}),{responsive:true,displayModeBar:false});
-}
-
-function drawUtilityMax(){
-    const t=plotTheme();
-    // Budget: y=10-x; ICs: y=8/x, 16/x, 25/x
-    const bx=[0,10];const by=[10,0];
-    const ic1x=[];const ic1y=[];const ic2x=[];const ic2y=[];const ic3x=[];const ic3y=[];
-    for(let x=0.8;x<=9.8;x+=0.05){
-        if(8/x<=10.5){ic1x.push(x);ic1y.push(8/x);}
-        if(16/x<=10.5&&x>=1.5){ic2x.push(x);ic2y.push(16/x);}
-        if(25/x<=10.5&&x>=2.4){ic3x.push(x);ic3y.push(25/x);}
-    }
-    Plotly.react('chart1',[
-        {x:bx,y:by,mode:'lines',line:{color:'#1f2937',width:3},name:'Budget Constraint'},
-        {x:ic1x,y:ic1y,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'IC₁ (y=8/x)'},
-        {x:ic2x,y:ic2y,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'IC₂ (y=16/x)'},
-        {x:ic3x,y:ic3y,mode:'lines',line:{color:'#ef4444',width:2,dash:'dash'},name:'IC₃ (y=25/x)'},
-        {x:[8],y:[2],mode:'markers+text',marker:{color:'#000',size:12},text:['A'],textposition:'top left',name:'Point A',textfont:{size:16,color:isDark()?'#f3f4f6':'#1f2937'}},
-        {x:[5],y:[5],mode:'markers+text',marker:{color:'#000',size:12},text:['B'],textposition:'top right',name:'Point B',textfont:{size:16,color:isDark()?'#f3f4f6':'#1f2937'}},
-        {x:[2],y:[8],mode:'markers+text',marker:{color:'#000',size:12},text:['C'],textposition:'top right',name:'Point C',textfont:{size:16,color:isDark()?'#f3f4f6':'#1f2937'}},
-    ],Object.assign({},t,{title:{text:'Utility Maximization: Free Time vs Consumption',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Free Time (hours)',range:[0,11]}),yaxis:Object.assign({},t.yaxis,{title:'Consumption ($)',range:[0,11]}),showlegend:false,margin:{t:50,b:50,l:50,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawMRSvsMRT(){
-    const t=plotTheme();
-    const bx=[0,10];const by=[10,0];
-    const ic1x=[];const ic1y=[];const ic2x=[];const ic2y=[];const ic3x=[];const ic3y=[];
-    for(let x=0.8;x<=9.8;x+=0.05){
-        if(8/x<=10.5){ic1x.push(x);ic1y.push(8/x);}
-        if(16/x<=10.5&&x>=1.5){ic2x.push(x);ic2y.push(16/x);}
-        if(25/x<=10.5&&x>=2.4){ic3x.push(x);ic3y.push(25/x);}
-    }
-    Plotly.react('chart1',[
-        {x:bx,y:by,mode:'lines',line:{color:'#1f2937',width:3},name:'Budget'},
-        {x:ic1x,y:ic1y,mode:'lines',line:{color:'#9ca3af',width:2,dash:'dash'},name:'IC₁'},
-        {x:ic2x,y:ic2y,mode:'lines',line:{color:'#ef4444',width:3,dash:'dash'},name:'IC₂ (through A)'},
-        {x:ic3x,y:ic3y,mode:'lines',line:{color:'#8b5cf6',width:2,dash:'dash'},name:'IC₃'},
-        {x:[8],y:[2],mode:'markers+text',marker:{color:'#000',size:14},text:['A'],textposition:'top left',textfont:{size:16,color:isDark()?'#f3f4f6':'#1f2937'},showlegend:false},
-        {x:[5],y:[5],mode:'markers+text',marker:{color:'#000',size:14},text:['B'],textposition:'top right',textfont:{size:16,color:isDark()?'#f3f4f6':'#1f2937'},showlegend:false},
-    ],Object.assign({},t,{title:{text:'MRS vs MRT',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Free Time (hours)',range:[0,11]}),yaxis:Object.assign({},t.yaxis,{title:'Consumption ($)',range:[0,11]}),showlegend:true,legend:{x:0.02,y:0.98},margin:{t:50,b:50,l:50,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawBudget(){
-    const t=plotTheme();
-    // $60 budget: coffee $3, sandwiches $6
-    // Max coffee=20, max sand=10
-    Plotly.react('chart1',[
-        {x:[0,20],y:[10,0],mode:'lines+markers',line:{color:'#2563eb',width:3},marker:{size:8},name:'Budget: 3C + 6S = 60'},
-    ],Object.assign({},t,{title:{text:'Budget Constraint: $60',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Coffees ($3 each)',range:[0,22]}),yaxis:Object.assign({},t.yaxis,{title:'Sandwiches ($6 each)',range:[0,12]}),showlegend:false,margin:{t:50,b:50,l:50,r:20},
-    annotations:[
-        {x:20,y:0,text:'Max coffees: 20',showarrow:true,ay:-30,ax:-20,font:{size:11}},
-        {x:0,y:10,text:'Max sandwiches: 10',showarrow:true,ay:20,ax:40,font:{size:11}},
-        {x:10,y:5.5,text:'Slope = -10/20 = -1/2<br>OC of 1 coffee = ½ sandwich<br>OC of 1 sandwich = 2 coffees',showarrow:false,font:{size:11,color:'#2563eb'}}
-    ]}),{responsive:true,displayModeBar:false});
-}
-
-function drawBudgetShift(){
-    const t=plotTheme();
-    // Old: 3C+6S=60; New: 3C+3S=60 → max sand=20
-    Plotly.react('chart1',[
-        {x:[0,20],y:[10,0],mode:'lines',line:{color:'#9ca3af',width:2,dash:'dash'},name:'Old Budget (sand=$6)'},
-        {x:[0,20],y:[20,0],mode:'lines',line:{color:'#2563eb',width:3},name:'New Budget (sand=$3)'},
-    ],Object.assign({},t,{title:{text:'Price Drop: Sandwiches $6 → $3',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Coffees ($3 each)',range:[0,22]}),yaxis:Object.assign({},t.yaxis,{title:'Sandwiches',range:[0,22]}),showlegend:true,legend:{x:0.5,y:0.98},margin:{t:50,b:50,l:50,r:20},
-    annotations:[
-        {x:10,y:12,text:'Budget rotates out!<br>Can buy more sandwiches<br>→ real income ↑',showarrow:false,font:{size:12,color:'#2563eb'}},
-        {x:15,y:2,text:'New OC of sandwich = 1 coffee<br>(was 2 coffees)',showarrow:false,font:{size:10,color:'#6b7280'}}
-    ]}),{responsive:true,displayModeBar:false});
-}
-
-function drawIncSub(){
-    const t=plotTheme();
-    Plotly.react('chart1',[
-        {x:[0,20],y:[10,0],mode:'lines',line:{color:'#9ca3af',width:2,dash:'dash'},name:'Old Budget'},
-        {x:[0,20],y:[20,0],mode:'lines',line:{color:'#2563eb',width:3},name:'New Budget'},
-        // Hypothetical parallel to new budget but tangent to old IC
-        {x:[0,12],y:[12,0],mode:'lines',line:{color:'#f59e0b',width:2,dash:'dot'},name:'Hypothetical (sub. effect only)'},
-    ],Object.assign({},t,{title:{text:'Decomposing Income & Substitution Effects',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'Coffees',range:[0,22]}),yaxis:Object.assign({},t.yaxis,{title:'Sandwiches',range:[0,22]}),showlegend:true,legend:{x:0.4,y:0.98},margin:{t:50,b:50,l:50,r:20},
-    annotations:[
-        {x:6,y:3,text:'Substitution Effect:<br>Old → Hypothetical<br>(same utility, new prices)<br>→ More sandwiches, fewer coffees',showarrow:false,font:{size:10,color:'#f59e0b'}},
-        {x:14,y:14,text:'Income Effect:<br>Hypothetical → New<br>(higher real income)<br>→ More of both goods',showarrow:false,font:{size:10,color:'#2563eb'}}
-    ]}),{responsive:true,displayModeBar:false});
-}
-
-function drawPD(){
-    const t=plotTheme();
-    // Visualize payoff matrix as heatmap
-    Plotly.react('chart1',[{
-        z:[[6,2],[8,3]],
-        x:['Bailey Cleans','Bailey Doesn\'t'],
-        y:['Alex Cleans','Alex Doesn\'t'],
-        type:'heatmap',
-        colorscale:[[0,'#fef2f2'],[0.5,'#fef9c3'],[1,'#dcfce7']],
-        text:[['Alex: 6, Bailey: 6','Alex: 2, Bailey: 8'],['Alex: 8, Bailey: 2','Alex: 3, Bailey: 3']],
-        texttemplate:'%{text}',
-        hoverinfo:'skip',
-        showscale:false,
-        textfont:{size:14}
-    }],Object.assign({},t,{title:{text:'Cleaning Game (Prisoner\'s Dilemma)',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'',side:'top'}),yaxis:Object.assign({},t.yaxis,{title:'',autorange:'reversed'}),margin:{t:80,b:30,l:120,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawPDHighlight(){
-    const t=plotTheme();
-    Plotly.react('chart1',[{
-        z:[[1,0.3],[0.7,0.5]],
-        x:['Bailey Cleans','Bailey Doesn\'t'],
-        y:['Alex Cleans','Alex Doesn\'t'],
-        type:'heatmap',
-        colorscale:[[0,'#fef2f2'],[0.5,'#fef9c3'],[1,'#dcfce7']],
-        text:[['(6, 6) ← Pareto optimal!','(2, 8)'],['(8, 2)','(3, 3) ← Nash Eq.']],
-        texttemplate:'%{text}',
-        hoverinfo:'skip',
-        showscale:false,
-        textfont:{size:14}
-    }],Object.assign({},t,{title:{text:'Nash Equilibrium vs Pareto Optimum',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'',side:'top'}),yaxis:Object.assign({},t.yaxis,{title:'',autorange:'reversed'}),margin:{t:80,b:30,l:120,r:20},
-    annotations:[{x:1,y:1,text:'⭐ NE',showarrow:false,font:{size:20}},{x:0,y:0,text:'✅ Pareto',showarrow:false,font:{size:16}}]
-    }),{responsive:true,displayModeBar:false});
-}
-
-function drawSocialDilemma(){
-    const t=plotTheme();
-    // Simple illustration: individual vs collective outcome
-    Plotly.react('chart1',[
-        {x:['Individual Best','Collective Best'],y:[8,6],type:'bar',name:'Your Payoff',marker:{color:'#2563eb'}},
-        {x:['Individual Best','Collective Best'],y:[3,6],type:'bar',name:'Other\'s Payoff',marker:{color:'#ef4444'}},
-    ],Object.assign({},t,{title:{text:'Social Dilemma: Individual vs Collective Optimum',font:{size:15}},barmode:'group',xaxis:Object.assign({},t.xaxis,{title:''}),yaxis:Object.assign({},t.yaxis,{title:'Payoff'}),showlegend:true,margin:{t:50,b:50,l:50,r:20},
-    annotations:[{x:'Individual Best',y:8.5,text:'You do great...<br>but others suffer',showarrow:false,font:{size:11,color:'#ef4444'}},{x:'Collective Best',y:6.5,text:'Everyone does<br>pretty well!',showarrow:false,font:{size:11,color:'#16a34a'}}]
-    }),{responsive:true,displayModeBar:false});
-}
-
-function drawStagHunt(){
-    const t=plotTheme();
-    Plotly.react('chart1',[{
-        z:[[5,0],[3,3]],
-        x:['B: Stag','B: Hare'],
-        y:['A: Stag','A: Hare'],
-        type:'heatmap',
-        colorscale:[[0,'#fef2f2'],[0.5,'#fef9c3'],[1,'#dcfce7']],
-        text:[['A:5, B:5 ⭐ Payoff-dominant','A:0, B:3'],['A:3, B:0','A:3, B:3 🛡️ Risk-dominant']],
-        texttemplate:'%{text}',
-        hoverinfo:'skip',
-        showscale:false,
-        textfont:{size:13}
-    }],Object.assign({},t,{title:{text:'Stag Hunt: Two Nash Equilibria',font:{size:15}},xaxis:Object.assign({},t.xaxis,{title:'',side:'top'}),yaxis:Object.assign({},t.yaxis,{title:'',autorange:'reversed'}),margin:{t:80,b:30,l:80,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-function drawStagVsPD(){
-    const t=plotTheme();
-    Plotly.react('chart1',[
-        {x:['Dominant Strategy?','# Nash Equilibria','Cooperation is NE?','Core Problem'],y:[1,1,0,1],type:'bar',name:'Prisoner\'s Dilemma',marker:{color:'#ef4444'},text:['Yes (Defect)','1','No','Conflicting incentives'],textposition:'outside'},
-        {x:['Dominant Strategy?','# Nash Equilibria','Cooperation is NE?','Core Problem'],y:[0,2,1,1],type:'bar',name:'Stag Hunt',marker:{color:'#2563eb'},text:['No','2','Yes!','Trust / coordination'],textposition:'outside'},
-    ],Object.assign({},t,{title:{text:'Prisoner\'s Dilemma vs Stag Hunt',font:{size:15}},barmode:'group',xaxis:Object.assign({},t.xaxis,{title:''}),yaxis:Object.assign({},t.yaxis,{title:'',showticklabels:false,range:[0,3]}),showlegend:true,margin:{t:50,b:50,l:30,r:20}}),{responsive:true,displayModeBar:false});
-}
-
-
-// ─── SLIDES ───
-const slides = [
-// === SECTION 0: INTRO ===
-{section:0,title:'Welcome to Midterm Review!',draw:drawWelcome,
-content:`<p>This interactive review walks through <b>every concept</b> from the Spring 2026 Econ 201 Midterm.</p>
-<p>For each concept you'll see:</p>
-<ul>
-<li>Example problems to work through</li>
-<li>Key definitions and formulas</li>
-<li>Step-by-step explanations</li>
-<li>Practice quizzes to check your understanding</li>
-</ul>
-<div class="highlight-box"><b>Tip:</b> Try working through each problem yourself before revealing the answer!</div>
-<p><b>9 concepts</b> covering Units 1–4, worth <b>100 points</b> total.</p>`},
-
-// === SECTION 1: C1 CAPITALISM ===
-{section:1,title:'C1(a): Three Characteristics of Capitalism',noChart:true,
-content:`<p><b>Concept:</b> What are the three characteristics of capitalism? <i>(4 pts)</i></p>
-<p>Think about what makes capitalism different from other economic systems like feudalism...</p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>The three characteristics of capitalism are:</p>
-<ol>
-<li><b>Private property</b> — individuals and firms can own resources</li>
-<li><b>Firms</b> — organizations that produce goods using hired labor</li>
-<li><b>Markets</b> — goods and labor are exchanged through markets</li>
-</ol>
-</div>
-</div>`},
-
-{section:1,title:'C1(b): Why Specialization Increases Productivity',noChart:true,
-content:`<p><b>Concept:</b> Adam Smith observed that a pin factory with 10 workers, each specializing in one step, could produce far more pins than 10 workers each making pins independently. Give at least two reasons why. <i>(6 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>Smith's reasons why specialization increases productivity:</p>
-<ol>
-<li><b>Learning by doing</b> — workers who repeat one task become faster and more skilled at it</li>
-<li><b>Differences in ability</b> — workers can specialize in tasks they are naturally better at</li>
-<li><b>Economies of scale</b> — specialization allows production at a larger scale, reducing per-unit costs</li>
-</ol>
-<p><i>You need at least two of these three.</i></p>
-</div>
-</div>`},
-
-{section:1,title:'C1 Concept Check: Capitalism Characteristics',noChart:true,multiCorrect:true,
-content:`<p>Which of the following <b>ARE</b> the three characteristics of capitalism?</p>`,
-quiz:[
-{text:'Markets',correct:true},
-{text:'Government ownership of resources',correct:false},
-{text:'Private property',correct:true},
-{text:'Firms',correct:true},
-{text:'Profit-making',correct:false},
-{text:'Government non-intervention in the economy',correct:false},
-]},
-
-// === SECTION 2: C2 PRODUCTION FUNCTION ===
-{section:2,title:'C2: The Production Function',draw:drawProdFunction,
-content:`<p><b>Concept 2</b> uses a production function like this, showing output (tons) as a function of workers.</p>
-<p>Key data points from the graph:</p>
-<ul>
-<li>3 workers → 6 tons</li>
-<li>6 workers → 9 tons</li>
-<li>8 workers → 10.8 tons</li>
-<li>10 workers → 12 tons</li>
-<li>12 workers → 13.2 tons</li>
-</ul>
-<div class="highlight-box"><b>Key formulas:</b><br>
-Average Product (AP) = Output ÷ Workers<br>
-Marginal Product (MP) = ΔOutput ÷ ΔWorkers</div>`},
-
-{section:2,title:'C2(a): Average Product of Labor',draw:drawAPLine,
-content:`<p><b>Concept:</b> What is the average product of labor when there are 6 workers? Show your work. <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>AP = Output ÷ Workers = 9 ÷ 6 = 1.5 tons per worker</b></p>
-<p>Graphically, this is the <b>slope of a ray from the origin</b> to the point (6, 9) on the curve — shown in red on the graph.</p>
-</div>
-</div>`},
-
-{section:2,title:'C2(b): Marginal Product of 8th Worker',draw:drawMPLine,
-content:`<p><b>Concept:</b> What is the marginal product of the 8th worker (going from 7 to 8 workers)? Show your work. <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>MP = ΔOutput from one more worker = 10.8 − 9.9 = 0.9 tons</b></p>
-<p>The green dashed line shows the slope between the two consecutive points (7,9.9) and (8,10.8) — this slope IS the marginal product.</p>
-</div>
-</div>`},
-
-{section:2,title:'C2(c): Diminishing Marginal Returns',draw:drawProdFunction,
-content:`<p><b>Concept:</b> Is this production function exhibiting diminishing marginal returns? How can you tell from the graph? <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>Yes</b>, it exhibits diminishing marginal returns.</p>
-<p>You can tell because:</p>
-<ul>
-<li>The production function is <b>concave</b> (gets flatter as workers increase)</li>
-<li>Each additional worker adds <b>less output</b> than the previous one</li>
-<li>A ray from the origin gets <b>less steep</b> as we move right (AP is going down)</li>
-</ul>
-<p><i>Note: This is NOT because some workers are worse — it's because the amount of capital/land is fixed, so each worker has less to work with.</i></p>
-</div>
-</div>`},
-
-{section:2,title:'C2(d): Average Product Graphically',draw:drawAPLine,
-content:`<p><b>Concept:</b> On the graph, the average product of labor at any point can be found by taking the slope of a line from the ________ to the point on the curve. <i>(3 pts)</i></p>`,
-quiz:[
-{text:'Origin (0, 0)',correct:true,feedback:'Correct! The AP is the slope of a ray from the ORIGIN to the point on the curve. Slope = rise/run = Output/Workers = AP.'},
-{text:'The previous point on the curve',correct:false,feedback:'That would give you the marginal product, not the average product.'},
-{text:'The x-axis directly below',correct:false,feedback:'A vertical line has undefined slope and doesn\'t give AP.'},
-{text:'The y-axis directly left',correct:false,feedback:'A horizontal line doesn\'t give us the AP either.'},
-]},
-
-// === SECTION 3: C3 MALTHUS ===
-{section:3,title:'Q3: The Malthusian Model',noChart:true,
-content:`<p><b>Question 3</b> uses the Malthusian model to analyze population dynamics.</p>
-<div class="highlight-box">
-<b>Key assumptions of the Malthusian model:</b>
-<ul>
-<li>Food production has <b>diminishing marginal returns</b> (concave curve)</li>
-<li>Food required grows <b>linearly</b> with population</li>
-<li>If food > required → population <b>grows</b></li>
-<li>If food < required → population <b>falls</b> (starvation)</li>
-</ul>
-</div>`},
-
-{section:3,title:'The Malthusian Graph',draw:drawMalthus,
-content:`<p>Here is the Malthusian model graph you'll use for the following questions.</p>
-<p>Three key populations are marked: <b>P₁</b>, <b>P*</b>, and <b>P**</b>.</p>`},
-
-{section:3,title:'C3(a): What Happens at P₁?',draw:drawMalthusP1,
-content:`<p><b>Concept:</b> At population P₁, what is the relationship between food production and food required? What happens to the population?</p>`,
-quiz:[
-{text:'Food production < food required; population shrinks',correct:false,feedback:'Look at the graph: at P₁, the blue curve (food produced) is ABOVE the red line (food required), not below.'},
-{text:'Food production > food required; population grows',correct:true,feedback:'Correct! At P₁, the blue curve is above the red line, meaning there is surplus food. This surplus allows the population to grow toward P*.'},
-{text:'Food production = food required; population stays constant',correct:false,feedback:'At P₁, the two curves do NOT intersect. Food production is above food required.'},
-{text:'Food production > food required; population shrinks',correct:false,feedback:'You correctly identified the surplus, but think about what surplus food does. With more food, people can support more children, so population grows, not shrinks.'},
-]},
-
-{section:3,title:'C3(b): What is P*?',draw:drawMalthusStable,
-content:`<p><b>Concept:</b> What is special about P*? Is it a stable equilibrium, unstable equilibrium, or not an equilibrium?</p>`,
-quiz:[
-{text:'P* is a stable equilibrium',correct:true,feedback:'Correct! At P*, food produced = food required. If population deviates in either direction, it returns to P*. Below P* → surplus → grows back. Above P* → shortage → falls back. This makes it stable.'},
-{text:'P* is an unstable equilibrium',correct:false,feedback:'P* IS an equilibrium (food produced = food required), but it\'s STABLE, not unstable. When population deviates from P*, it always returns rather than moving further away.'},
-{text:'P* is not an equilibrium',correct:false,feedback:'P* IS an equilibrium because food produced equals food required at this point. The population has no tendency to change when at P*.'},
-{text:'P* is a point where population grows fastest',correct:false,feedback:'At P*, food produced = food required, so there\'s no surplus to fuel growth. Population stays constant at P*, it doesn\'t grow.'},
-]},
-
-{section:3,title:'C3(c): Short Run After Technology',draw:drawMalthusTech,
-content:`<p><b>Concept:</b> What happens in the <b>short run</b> after a one-time technological improvement? <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>In the <b>short run</b>:</p>
-<ul>
-<li>The food production curve shifts <b>up</b> (dashed blue curve)</li>
-<li>At the current population P*, food produced is now <b>greater than</b> food required</li>
-<li>There is a <b>surplus</b> → living standards improve temporarily</li>
-<li>Population begins to <b>grow</b></li>
-</ul>
-</div>
-</div>`},
-
-{section:3,title:'C3(d): Long Run After Technology',draw:drawMalthusTech,
-content:`<p><b>Concept:</b> What happens in the <b>long run</b>? Does the population end up with permanently higher wages? <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>In the <b>long run</b>:</p>
-<ul>
-<li>Population continues growing until it reaches <b>P**</b></li>
-<li>At P**, food produced once again <b>equals</b> food required</li>
-<li>The population is back at <b>subsistence-level</b> wages</li>
-</ul>
-<p><b>No</b>, the population does NOT end up with permanently higher wages. The only lasting effect is a <b>larger population</b> at the <b>same subsistence level</b>. This is the "trap" — technology leads to more people, not richer people.</p>
-</div>
-</div>`},
-
-{section:3,title:'Q3 Quiz: Malthusian Model',draw:drawMalthus,
-content:`<p>According to the Malthusian model, what is the long-run effect of a one-time technological improvement?</p>`,
-quiz:[
-{text:'Permanently higher wages for everyone',correct:false,feedback:'This is the "trap"! Higher food production leads to population growth, which pushes wages back to subsistence.'},
-{text:'A larger population at the same subsistence-level wages',correct:true,feedback:'Correct! The Malthusian trap means technology increases population, NOT living standards. The new equilibrium P** has more people but the same subsistence wages.'},
-{text:'No change at all',correct:false,feedback:'There IS a change — the population grows. But wages return to subsistence.'},
-{text:'Lower wages due to more workers',correct:false,feedback:'Wages return to subsistence, the same level as before — not lower.'},
-]},
-
-// === SECTION 4: C4 ISOCOST / WHY ENGLAND ===
-{section:4,title:'C4: Why England?',draw:drawIsocost,
-content:`<p><b>Concept:</b> According to the isocost line model, why did the Industrial Revolution happen in England and not in China? <i>(8 pts)</i></p>
-<div class="highlight-box"><b>Key concept:</b> An isocost line shows all combinations of inputs that cost the same. Its slope = −w/p (wage ÷ price of energy).</div>
-<p>Think about what was different about <b>relative prices</b> in England vs. China...</p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>The Industrial Revolution began in England because of <b>relative factor prices</b>:</p>
-<ul>
-<li>England had <b>cheap coal</b> (easily accessible surface deposits) and wages at subsistence levels similar to other countries</li>
-<li>This meant labor was <b>expensive relative to energy</b></li>
-<li>England's isocost line was <b>steep</b> (high w/p ratio), making <b>energy-intensive technologies</b> (like the Spinning Jenny) the cost-minimizing choice</li>
-</ul>
-<p>In China:</p>
-<ul>
-<li>Coal was <b>expensive</b> relative to labor</li>
-<li>Isocost lines were <b>flat</b> (low w/p ratio)</li>
-<li><b>Labor-intensive</b> hand methods were cost-minimizing</li>
-<li>There was <b>no economic incentive</b> to adopt machines — they would have <b>increased</b> costs</li>
-</ul>
-<p><b>Key insight:</b> It wasn't that England had better technology — the technology existed everywhere. Only in England did relative prices make the new technology <b>profitable to adopt</b>.</p>
-</div>
-</div>`},
-
-{section:4,title:'Q4 Quiz: Isocost Analysis',noChart:true,
-content:`<p>Why didn't China adopt the Spinning Jenny even though the technology was available?</p>`,
-quiz:[
-{text:'China didn\'t know about the technology',correct:false,feedback:'The question states the technology was available. It\'s about relative prices, not knowledge.'},
-{text:'Chinese workers were less skilled',correct:false,feedback:'This isn\'t about worker skill — it\'s about the relative cost of labor vs energy.'},
-{text:'With cheap labor and expensive coal, hand methods were cheaper',correct:true,feedback:'Correct! In China, the flat isocost line (low w/p) meant labor-intensive hand methods minimized costs. The Spinning Jenny would have INCREASED production costs.'},
-{text:'The Chinese government banned new technology',correct:false,feedback:'The model is about economic incentives (relative prices), not government policy.'},
-]},
-
-// === SECTION 5: C5 UTILITY MAX ===
-{section:5,title:'C5: Utility Maximization',draw:drawUtilityMax,
-content:`<p><b>Question 5</b> asks about utility maximization using this graph of a person choosing between free time and consumption.</p>
-<div class="highlight-box">
-<b>Key terms:</b>
-<ul>
-<li><b>MRT</b> (Marginal Rate of Transformation) = slope of budget constraint = opportunity cost</li>
-<li><b>MRS</b> (Marginal Rate of Substitution) = slope of indifference curve = willingness to trade</li>
-<li><b>Optimal:</b> MRS = MRT</li>
-</ul>
-</div>
-<p>Three points are labeled: A (8,2), B (5,5), C (2,8).</p>`},
-
-{section:5,title:'C5(a): What is the MRT?',draw:drawUtilityMax,
-content:`<p><b>Concept:</b> What is the MRT shown by the budget constraint? What does it tell us? <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>MRT = |slope| = 10/10 = 1</b></p>
-<p>The MRT tells us the <b>opportunity cost</b>: to get 1 more hour of free time, the person must give up <b>$1 of consumption</b> (and vice versa). It's the rate at which the market allows you to trade one good for another.</p>
-</div>
-</div>`},
-
-{section:5,title:'C5(b): Why Point A is Not Optimal',draw:drawMRSvsMRT,
-content:`<p><b>Concept:</b> Explain why Point A is not utility-maximizing. Use the terms <b>MRS</b> and <b>MRT</b>. <i>(4 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>At Point A (8 hours free time, $2 consumption):</p>
-<ul>
-<li>The <b>MRS</b> (slope of indifference curve) ≈ 0.125 — the person is willing to give up only $0.125 of consumption for one more hour of free time</li>
-<li>The <b>MRT</b> (slope of budget line) = 1 — each hour of free time actually costs $1</li>
-<li>Since <b>MRS < MRT</b>, the person values free time <b>less</b> than it costs</li>
-</ul>
-<p>They should <b>give up free time</b> for more consumption, moving along the budget line toward B, reaching a <b>higher indifference curve</b>.</p>
-</div>
-</div>`},
-
-{section:5,title:'C5(c): Which Point is Optimal?',draw:drawMRSvsMRT,
-content:`<p><b>Concept:</b> Which point is utility-maximizing? <i>(1 pt)</i></p>`,
-quiz:[
-{text:'Point A',correct:false,feedback:'Point A is on a lower indifference curve (IC₁). The person can reach a higher IC by moving along the budget line.'},
-{text:'Point B',correct:true,feedback:'Correct! Point B is on the highest indifference curve (IC₃) that still touches the budget constraint. This is the tangency point.'},
-{text:'Point C',correct:false,feedback:'Point C is also on IC₁, same as Point A. The person can do better by moving to Point B.'},
-]},
-
-{section:5,title:'C5(c): MRS = MRT Condition',draw:drawMRSvsMRT,
-content:`<p><b>Concept:</b> What is true about MRS and MRT at the utility-maximizing point B? <i>(1 pt)</i></p>`,
-quiz:[
-{text:'MRS > MRT',correct:false,feedback:'If MRS > MRT, the person values the good more than it costs, so they should consume more of it. This is not optimal.'},
-{text:'MRS < MRT',correct:false,feedback:'If MRS < MRT, the person values the good less than it costs, so they should consume less. This is not optimal.'},
-{text:'MRS = MRT',correct:true,feedback:'Correct! At the optimum, MRS = MRT. The rate the person is WILLING to trade equals the rate they CAN trade in the market. At B, both equal 1.'},
-{text:'MRS and MRT are unrelated',correct:false,feedback:'MRS and MRT must be equal at the optimum. This is the tangency condition for utility maximization.'},
-]},
-
-{section:5,title:'C5(c): Calculate the MRS at Point B',draw:drawMRSvsMRT,
-content:`<p><b>Concept:</b> What is the numerical value of the MRS at point B? <i>(1 pt)</i></p>`,
-quiz:[
-{text:'0.5',correct:false,feedback:'The slope of IC₃ at point B is steeper than this. Remember: y = 25/x, so dy/dx = -25/x². At (5,5), that\'s -25/25 = -1, so |MRS| = 1.'},
-{text:'1',correct:true,feedback:'Correct! At the optimum point B, MRS must equal MRT. Since we know MRT = 1 from the budget constraint, the MRS at the optimal point must also equal 1.'},
-{text:'2',correct:false,feedback:'That would be much steeper. At point B, the person is only willing to give up $1 of consumption for 1 more hour of free time (or vice versa), not $2.'},
-{text:'5',correct:false,feedback:'The indifference curve at B is much less steep than that. At the tangency point, MRS = MRT = 1.'},
-]},
-
-// === SECTION 6: C6 INCOME & SUBSTITUTION ===
-{section:6,title:'C6: Budget Constraint Setup',draw:drawBudget,
-content:`<p><b>Concept 6:</b> A student has $60/week for coffee ($2) and sandwiches ($4).</p>
-<div class="highlight-box">
-<b>Budget constraint:</b> 2C + 4S = 60<br>
-Max coffees (no sandwiches): 60/2 = <b>30</b><br>
-Max sandwiches (no coffee): 60/4 = <b>15</b><br>
-Slope = −15/30 = −1/2
-</div>`},
-
-{section:6,title:'C6(a)-(b): Intercepts & Opportunity Cost',draw:drawBudget,
-content:`<p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:12px;"><i>Setup: A student has $60/week for coffee ($2) and sandwiches ($4).</i></p>
-<p><b>(a)</b> Max coffees if no sandwiches? Max sandwiches if no coffee? <i>(2 pts)</i></p>
-<p><b>(b)</b> What is the opportunity cost of one sandwich in terms of coffees? <i>(2 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>(a)</b> Max coffees = $60 ÷ $2 = <b>30 coffees</b><br>
-Max sandwiches = $60 ÷ $4 = <b>15 sandwiches</b></p>
-<p><b>(b)</b> Opportunity cost of 1 sandwich = $4 ÷ $2 = <b>2 coffees</b></p>
-<p>Each sandwich costs twice as much as a coffee, so you must give up 2 coffees to get 1 sandwich.</p>
-</div>
-</div>`},
-
-{section:6,title:'C6(c): Ratio of Happiness',draw:drawBudget,
-content:`<p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:12px;"><i>Setup: A student has $60/week for coffee ($2) and sandwiches ($4).</i></p>
-<p><b>(c)</b> At the basket she ultimately chooses, what does our model predict about the ratio of happiness from one more coffee vs one more sandwich? <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>Since sandwiches cost <b>twice</b> as much as coffee, at the optimum the happiness from one more sandwich must be <b>exactly twice</b> the happiness from one more coffee. Otherwise she could rearrange her basket to be happier.</p>
-</div>
-</div>`},
-
-{section:6,title:'C6(d): Marginal Utility Expression',draw:drawBudget,
-content:`<p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:12px;"><i>Setup: A student has $60/week for coffee ($2) and sandwiches ($4).</i></p>
-<p><b>(d)</b> In class we called "the happiness gained from one more unit" the ________. Rewrite your answer as a mathematical expression. <i>(3 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>The term is <b>"marginal utility"</b>.</p>
-<p>The condition is:</p>
-<p style="text-align:center;font-size:1.1em"><b>MU<sub>sandwich</sub> / MU<sub>coffee</sub> = P<sub>sandwich</sub> / P<sub>coffee</sub> = 4/2 = 2</b></p>
-<p>Or equivalently: <b>MU<sub>coffee</sub>/P<sub>coffee</sub> = MU<sub>sandwich</sub>/P<sub>sandwich</sub></b><br>(marginal utility per dollar is equal across goods)</p>
-</div>
-</div>`},
-
-{section:6,title:'C6(e): New Opportunity Cost',noChart:true,revealDraw:drawBudgetShift,
-content:`<p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:12px;"><i>Setup: A student has $60/week for coffee ($2) and sandwiches ($4).</i></p>
-<p><b>(e)</b> Now sandwich price drops to $2. What is the new opportunity cost of a sandwich? Has the opportunity cost of coffee changed? <i>(2 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswerWithGraph(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>New opportunity cost of 1 sandwich = $2 ÷ $2 = <b>1 coffee</b> (was 2 coffees)</p>
-<p>Has OC of coffee changed? <b>Yes!</b> It was ½ sandwich, now it's <b>1 sandwich</b>. Coffee became relatively more expensive.</p>
-</div>
-</div>`},
-
-{section:6,title:'C6(f): Substitution Effect',draw:drawIncSub,
-content:`<p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:12px;"><i>Setup: A student has $60/week. Coffee $2, sandwiches were $4, now $2.</i></p>
-<p><b>(f)</b> Will the <b>substitution effect</b> cause her to buy more or fewer sandwiches? More or fewer coffees? <i>(2 pts)</i></p>
-<div class="highlight-box"><b>Substitution effect:</b> The effect of changing opportunity costs (MRT) while holding real income constant.</div>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>Sandwiches became <b>relatively cheaper</b> (OC dropped from 2 coffees to 1 coffee).</p>
-<p>The substitution effect causes her to:</p>
-<ul>
-<li>Buy <b>more sandwiches</b> (substitute toward the cheaper good)</li>
-<li>Buy <b>fewer coffees</b> (substitute away from the relatively more expensive good)</li>
-</ul>
-</div>
-</div>`},
-
-{section:6,title:'C6(g): Income Effect',draw:drawIncSub,
-content:`<p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:12px;"><i>Setup: A student has $60/week. Coffee $2, sandwiches were $4, now $2.</i></p>
-<p><b>(g)</b> Will the <b>income effect</b> cause her to buy more or fewer sandwiches? More or fewer coffees? <i>(2 pts)</i></p>
-<div class="highlight-box"><b>Income effect:</b> The effect of changing real income while holding opportunity cost constant.</div>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>The price drop increased her <b>real income</b> — her $60 can now buy more overall.</p>
-<p>Since both coffee and sandwiches are <b>normal goods</b>, the income effect causes her to:</p>
-<ul>
-<li>Buy <b>more sandwiches</b></li>
-<li>Buy <b>more coffees</b></li>
-</ul>
-<p><i>With higher real income, you buy more of both normal goods.</i></p>
-</div>
-</div>`},
-
-{section:6,title:'Q6 Quiz: Effects Summary',draw:drawIncSub,
-content:`<p>After the price of sandwiches drops, what is the <b>total effect</b> on sandwich purchases?</p>`,
-quiz:[
-{text:'Definitely buys more sandwiches',correct:true,feedback:'Correct! Both the substitution effect (sandwiches are relatively cheaper) AND the income effect (higher real income) push toward MORE sandwiches. The effects reinforce each other.'},
-{text:'Definitely buys fewer sandwiches',correct:false,feedback:'Both effects push toward more sandwiches — substitution (cheaper) and income (richer).'},
-{text:'Ambiguous — depends on which effect is stronger',correct:false,feedback:'That would be true for coffee (sub. says fewer, income says more), but for sandwiches both effects point in the SAME direction: more.'},
-{text:'No change',correct:false,feedback:'A price drop definitely changes the optimal basket.'},
-]},
-
-// === SECTION 7: C7 PRISONER'S DILEMMA ===
-{section:7,title:'C7: The Cleaning Game',noChart:true,
-content:`<p><b>Concept 7:</b> Two roommates decide whether to clean the apartment.</p>
-<table class="payoff-table">
-<tr><th></th><th>Bailey Cleans</th><th>Bailey Doesn't</th></tr>
-<tr><th>Alex Cleans</th><td style="text-align:right">A:6, B:6</td><td style="text-align:right">A:2, B:8</td></tr>
-<tr><th>Alex Doesn't</th><td style="text-align:right">A:8, B:2</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<div class="highlight-box"><b>Method:</b> For each player, find their best response to each of the other player's strategies. A dominant strategy is best regardless of what the other does.</div>`},
-
-{section:7,title:'C7(a)-(b): Alex\'s Best Responses',noChart:true,
-content:`<p><b>(a)</b> If Bailey cleans, what is Alex's best response? <i>(2 pts)</i></p>
-<p><b>(b)</b> If Bailey doesn't clean, what is Alex's best response? <i>(2 pts)</i></p>
-<p style="font-size:1rem;color:var(--text-muted);margin-bottom:12px;"><i>Start with the full payoff matrix:</i></p>
-<table class="payoff-table">
-<tr><th></th><th>Bailey Cleans</th><th>Bailey Doesn't</th></tr>
-<tr><th>Alex Cleans</th><td style="text-align:right">A:6, B:6</td><td style="text-align:right">A:2, B:8</td></tr>
-<tr><th>Alex Doesn't</th><td style="text-align:right">A:8, B:2</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<p style="font-size:1rem;color:var(--text-muted);margin-bottom:12px;"><i>Alex's best responses (only Alex's payoffs shown):</i></p>
-<table class="payoff-table">
-<tr><th></th><th>Bailey Cleans</th><th>Bailey Doesn't</th></tr>
-<tr><th>Alex Cleans</th><td style="text-align:right">A:<b>6</b></td><td style="text-align:right">A:<b>2</b></td></tr>
-<tr><th>Alex Doesn't</th><td style="text-align:right">A:<b>8</b> ✓</td><td style="text-align:right">A:<b>3</b> ✓</td></tr>
-</table>
-<div class="answer-box">
-<p><b>(a)</b> If Bailey cleans: Alex gets 6 (clean) vs <b>8 (don't clean)</b>. Best response: <b>Don't Clean</b>.</p>
-<p><b>(b)</b> If Bailey doesn't clean: Alex gets 2 (clean) vs <b>3 (don't clean)</b>. Best response: <b>Don't Clean</b>.</p>
-</div>
-</div>`},
-
-{section:7,title:'C7(c)-(d): Dominant Strategies',noChart:true,
-content:`<p><b>(c)</b> Does Alex have a dominant strategy? <i>(2 pts)</i></p>
-<p><b>(d)</b> Does Bailey have a dominant strategy? <i>(2 pts)</i></p>
-<table class="payoff-table">
-<tr><th></th><th>Bailey Cleans</th><th>Bailey Doesn't</th></tr>
-<tr><th>Alex Cleans</th><td style="text-align:right">A:6, B:6</td><td style="text-align:right">A:2, B:8</td></tr>
-<tr><th>Alex Doesn't</th><td style="text-align:right">A:8, B:2</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>(c)</b> <b>Yes</b>, Alex has a dominant strategy: <b>Don't Clean</b>. It gives a higher payoff no matter what Bailey does (8>6 and 3>2).</p>
-<p><b>(d)</b> <b>Yes</b>, Bailey has a dominant strategy: <b>Don't Clean</b>. By symmetry, the same logic applies (8>6 and 3>2).</p>
-</div>
-</div>`},
-
-{section:7,title:'C7(e)-(f): Nash Equilibrium & Efficiency',noChart:true,
-content:`<p><b>(e)</b> What is the Nash equilibrium? <i>(3 pts)</i></p>
-<p><b>(f)</b> Is it Pareto efficient? <i>(3 pts)</i></p>
-<table class="payoff-table">
-<tr><th></th><th>Bailey Cleans</th><th>Bailey Doesn't</th></tr>
-<tr><th>Alex Cleans</th><td style="text-align:right">A:6, B:6</td><td style="text-align:right">A:2, B:8</td></tr>
-<tr><th>Alex Doesn't</th><td style="text-align:right">A:8, B:2</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>(e)</b> Nash equilibrium: <b>(Don't Clean, Don't Clean)</b> with payoffs <b>(3, 3)</b>.</p>
-<p>Neither player would benefit from unilaterally changing their strategy.</p>
-<p><b>(f)</b> <b>No</b>, the Nash equilibrium is NOT Pareto efficient. Both players would be better off at <b>(Clean, Clean) = (6, 6)</b>. Since (6,6) makes both players better off than (3,3), the equilibrium is <b>Pareto dominated</b>.</p>
-</div>
-</div>`},
-
-{section:7,title:'C7(g): Which Game Is This?',noChart:true,
-content:`<p>This game is an example of which famous game theory scenario?</p>`,
-quiz:[
-{text:'Stag Hunt',correct:false,feedback:'In a Stag Hunt, there is no dominant strategy and TWO Nash equilibria. Here both players have a dominant strategy.'},
-{text:'Prisoner\'s Dilemma',correct:true,feedback:'Correct! This is the Prisoner\'s Dilemma: both players have a dominant strategy (Don\'t Clean/Defect), leading to a Nash equilibrium that is NOT Pareto efficient. Both would be better off cooperating but can\'t sustain it.'},
-{text:'Chicken',correct:false,feedback:'In Chicken, the worst outcome is mutual aggression (both Straight). Here the mutual defection isn\'t the worst possible outcome for either player.'},
-{text:'Battle of the Sexes',correct:false,feedback:'Battle of the Sexes is a coordination game with two equilibria where players prefer different ones. This game has one equilibrium with dominant strategies.'},
-]},
-
-// === SECTION 8: C8 SOCIAL DILEMMA ===
-{section:8,title:'C8(a): Social Dilemma',noChart:true,
-content:`<p><b>Concept:</b> What is a social dilemma? Give one real-world example and explain. What are possible solutions? <i>(4 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>A <b>social dilemma</b> is a situation where individually rational decisions lead to an outcome that makes <b>everyone worse off</b>.</p>
-<p><b>Example:</b> Climate change — each country benefits from cheap fossil fuels (individual payoff), but collectively this causes global warming that hurts everyone (collective outcome is worse).</p>
-<p><b>What makes it a social dilemma:</b> Each country has an incentive to pollute (it's individually rational), but when ALL countries do this, everyone suffers.</p>
-<p><b>Solutions:</b></p>
-<ul>
-<li>Government regulation (taxes, quotas)</li>
-<li>International agreements</li>
-<li>Property rights</li>
-<li>Community management / social norms</li>
-</ul>
-</div>
-</div>`},
-
-{section:8,title:'C8(b): Tragedy of the Commons',noChart:true,
-content:`<p><b>Concept:</b> What is the Tragedy of the Commons? How does it relate to game theory? <i>(4 pts)</i></p>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>The <b>Tragedy of the Commons</b> occurs when a shared resource is <b>overused</b> because individuals pursue their self-interest.</p>
-<p><b>Example:</b> Overfishing — each fisher benefits from catching more, but if everyone overfishes, the fish population collapses and everyone loses.</p>
-<p><b>Game theory connection:</b> It's a <b>multi-player Prisoner's Dilemma</b>:</p>
-<ul>
-<li>Each person's individually rational strategy (overuse) is the dominant strategy</li>
-<li>But when everyone follows this strategy, the collective outcome is worse for all</li>
-<li>The Nash equilibrium (everyone overuses) is not Pareto efficient (everyone restricting would be better)</li>
-</ul>
-<p><b>Solutions:</b> Property rights, government regulation, community self-management, tradable permits.</p>
-</div>
-</div>`},
-
-// === SECTION 9: C9 STAG HUNT ===
-{section:9,title:'C9: The Stag Hunt',noChart:true,
-content:`<p><b>Concept 9:</b> Two hunters choose Stag or Hare.</p>
-<table class="payoff-table">
-<tr><th></th><th>B: Stag</th><th>B: Hare</th></tr>
-<tr><th>A: Stag</th><td style="text-align:right">A:5, B:5</td><td style="text-align:right">A:0, B:3</td></tr>
-<tr><th>A: Hare</th><td style="text-align:right">A:3, B:0</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<div class="highlight-box">
-<b>Key difference from PD:</b> In the Stag Hunt, the best response DEPENDS on what the other player does — there is no dominant strategy!
-</div>`},
-
-{section:9,title:'C9(a): Dominant Strategy?',noChart:true,
-content:`<p><b>Concept:</b> Does Hunter A have a dominant strategy? Explain. <i>(2 pts)</i></p>
-<table class="payoff-table">
-<tr><th></th><th>B: Stag</th><th>B: Hare</th></tr>
-<tr><th>A: Stag</th><td style="text-align:right">A:5, B:5</td><td style="text-align:right">A:0, B:3</td></tr>
-<tr><th>A: Hare</th><td style="text-align:right">A:3, B:0</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p><b>No</b>, Hunter A does NOT have a dominant strategy.</p>
-<ul>
-<li>If B hunts <b>Stag</b>: A's best response is <b>Stag</b> (5 > 3)</li>
-<li>If B hunts <b>Hare</b>: A's best response is <b>Hare</b> (3 > 0)</li>
-</ul>
-<p>A's best response <b>changes</b> depending on what B does, so there is no single strategy that is always best.</p>
-</div>
-</div>`},
-
-{section:9,title:'C9(b): Nash Equilibria',noChart:true,
-content:`<p><b>Concept:</b> Find all Nash equilibria of this game. <i>(3 pts)</i></p>
-<table class="payoff-table">
-<tr><th></th><th>B: Stag</th><th>B: Hare</th></tr>
-<tr><th>A: Stag</th><td style="text-align:right">A:5, B:5</td><td style="text-align:right">A:0, B:3</td></tr>
-<tr><th>A: Hare</th><td style="text-align:right">A:3, B:0</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>There are <b>two</b> Nash equilibria:</p>
-<ol>
-<li><b>(Stag, Stag)</b> with payoffs (5, 5) — the <b>payoff-dominant</b> equilibrium (highest payoffs, but requires trust)</li>
-<li><b>(Hare, Hare)</b> with payoffs (3, 3) — the <b>risk-dominant</b> equilibrium (safer choice when uncertain about the other player)</li>
-</ol>
-<p>At each, neither player would benefit from unilaterally switching.</p>
-</div>
-</div>`},
-
-{section:9,title:'C9(c): Stag Hunt vs Prisoner\'s Dilemma',noChart:true,
-content:`<p><b>Concept:</b> How is this game different from the Prisoner's Dilemma? <i>(3 pts)</i></p>
-<table class="payoff-table">
-<tr><th></th><th>B: Stag</th><th>B: Hare</th></tr>
-<tr><th>A: Stag</th><td style="text-align:right">A:5, B:5</td><td style="text-align:right">A:0, B:3</td></tr>
-<tr><th>A: Hare</th><td style="text-align:right">A:3, B:0</td><td style="text-align:right">A:3, B:3</td></tr>
-</table>
-<button class="reveal-btn" onclick="revealAnswer(this)">Reveal Answer</button>
-<div class="hidden-answer">
-<div class="answer-box">
-<p>Key differences:</p>
-<ol>
-<li><b>No dominant strategy</b> — in PD, both players have a dominant strategy (Defect). In Stag Hunt, the best response depends on the other player.</li>
-<li><b>Two Nash equilibria</b> instead of one — PD has only one NE (Defect, Defect).</li>
-<li><b>Cooperation IS a Nash equilibrium</b> — (Stag, Stag) is a NE! In PD, the cooperative outcome is NOT a NE.</li>
-<li>The core problem is <b>trust and coordination</b>, not conflicting incentives. If you trust the other player, you can achieve the best outcome.</li>
-</ol>
-</div>
-</div>`},
-
-{section:9,title:'Final Quiz: Game Identification',noChart:true,
-content:`<p>A game has two Nash equilibria, one of which gives both players their best outcome, but requires trust. The other equilibrium is safer but gives lower payoffs. What type of game is this?</p>`,
-quiz:[
-{text:'Prisoner\'s Dilemma',correct:false,feedback:'PD has ONE Nash equilibrium and dominant strategies. The cooperative outcome is NOT a Nash equilibrium.'},
-{text:'Chicken',correct:false,feedback:'Chicken has two NE, but they are asymmetric (one player gets their best, the other gets their worst-but-not-terrible outcome).'},
-{text:'Stag Hunt',correct:true,feedback:'Correct! The Stag Hunt has two NE: a payoff-dominant one (requires trust) and a risk-dominant one (safe but worse). The key issue is coordination and trust.'},
-{text:'Battle of the Sexes',correct:false,feedback:'Battle of the Sexes is about coordinating when players have different preferences over which equilibrium to reach.'},
-]},
-
-// END
-{section:9,title:'You\'re Ready!',draw:drawWelcome,
-content:`<p><b>Great work reviewing all 9 midterm concepts!</b></p>
-<div class="highlight-box">
-<b>Key concepts to remember:</b>
-<ul>
-<li><b>Unit 1:</b> 3 characteristics of capitalism; specialization (learning by doing, differences in ability, economies of scale)</li>
-<li><b>Unit 2:</b> AP = Output/Workers; MP = ΔOutput/ΔWorkers; Malthusian trap; isocost lines and relative factor prices</li>
-<li><b>Unit 3:</b> MRS = MRT at optimum; marginal utility; income effect vs substitution effect</li>
-<li><b>Unit 4:</b> Dominant strategy; Nash equilibrium; Pareto efficiency; PD vs Stag Hunt differences</li>
-</ul>
-</div>
-<p>Go back and review any sections you're unsure about. Good luck on the midterm!</p>`},
-];
-
-// ─── NAVIGATION ───
-function renderStepper(){
-    const el=document.getElementById('stepper');
-    el.innerHTML='';
-    // Find which sections are completed
-    const sectionState=sections.map((_,i)=>{
-        const sSlides=slides.filter(s=>s.section===i);
-        const firstIdx=slides.indexOf(sSlides[0]);
-        const lastIdx=slides.indexOf(sSlides[sSlides.length-1]);
-        if(currentSlide>lastIdx)return'completed';
-        if(currentSlide>=firstIdx&&currentSlide<=lastIdx)return'active';
-        return'pending';
-    });
-    sections.forEach((sec,i)=>{
-        const wrap=document.createElement('div');
-        wrap.style.display='flex';wrap.style.flexDirection='column';wrap.style.alignItems='center';
-        const dot=document.createElement('div');
-        dot.className='step-dot'+(sectionState[i]==='active'?' active':'')+(sectionState[i]==='completed'?' completed':'');
-        dot.textContent=sectionState[i]==='completed'?'✓':(i);
-        dot.onclick=()=>{const first=slides.findIndex(s=>s.section===i);goToSlide(first);};
-        const label=document.createElement('div');
-        label.className='step-label';label.textContent=sec.name;
-        wrap.appendChild(dot);wrap.appendChild(label);
-        el.appendChild(wrap);
-    });
-}
-
-function goToSlide(n){
-    if(n<0||n>=slides.length)return;
-    currentSlide=n;
-    const s=slides[n];
-    document.getElementById('sectionLabel').textContent=sections[s.section].name;
-    document.getElementById('slideTitle').textContent=s.title;
-    document.getElementById('slideContent').innerHTML=s.content;
-    document.getElementById('quizFeedback').innerHTML='';
-    document.getElementById('quizFeedback').style.display='none';
-    // Quiz
-    const qa=document.getElementById('quizArea');
-    qa.innerHTML='';
-    if(s.quiz){
-        if(s.multiCorrect){
-            qa.innerHTML='<p style="font-size:1.05rem;color:var(--text-muted);margin-bottom:10px;"><i>Select all that apply:</i></p>';
-        }
-        // Randomize quiz order
-        const indices=[...Array(s.quiz.length).keys()];
-        for(let i=indices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[indices[i],indices[j]]=[indices[j],indices[i]];}
-        indices.forEach(i=>{
-            const btn=document.createElement('button');
-            btn.className='quiz-btn';
-            btn.textContent=s.quiz[i].text;
-            btn.dataset.quizIdx=i;
-            if(s.multiCorrect){
-                btn.onclick=()=>toggleMultiSelect(btn);
-            }else{
-                btn.onclick=()=>handleQuiz(n,i,btn);
+
+    <div class="main">
+        <div class="chart-panel">
+            <div id="chart1"></div>
+            <div id="chart2"></div>
+        </div>
+        <div class="content-panel">
+            <div class="slide-title" id="slide-title"></div>
+            <div class="slide-content" id="slide-content"></div>
+            <div id="quiz-container"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="nav-btn" id="prev-btn" onclick="prevSlide()">← Previous</button>
+        <div class="slide-counter" id="counter"></div>
+        <button class="nav-btn" id="next-btn" onclick="nextSlide()">Next →</button>
+    </div>
+
+    <script>
+        const sections = [
+            'Core Concepts',
+            'GDP Measurement',
+            'GDP Limitations',
+            'Keynesian Model',
+            'Multiplier Effects',
+            'Paradox of Thrift',
+            'Policy & Theory'
+        ];
+
+        const slides = [
+            // Section 0: Core Concepts
+            {
+                section: 0,
+                title: 'Welcome to the Midterm Review',
+                noChart: true,
+                content: `
+                    <p>This interactive review covers all major topics from the midterm exam:</p>
+                    <ul>
+                        <li><strong>Core macroeconomic concepts</strong> (fallacy of composition, paradox of thrift, circular flow)</li>
+                        <li><strong>GDP measurement</strong> (price indices, real GDP, real wages)</li>
+                        <li><strong>Keynesian economics</strong> (consumption functions, multipliers, equilibrium)</li>
+                        <li><strong>Economic policy</strong> (government intervention, unemployment theories)</li>
+                    </ul>
+                    <p>Use the stepper above to jump between sections, or navigate through slides sequentially.</p>
+                    <div class="highlight-box">
+                        <strong>Exam Policy:</strong> You may bring <strong>one half-page (1/2 page), one side only</strong> of notes to the midterm exam.
+                    </div>
+                    <div class="highlight-box">
+                        <strong>Tip:</strong> Work through each section carefully. The questions are similar to exam questions but with different numbers and scenarios to test your understanding of concepts.
+                    </div>
+                `
+            },
+            {
+                section: 0,
+                title: 'Fallacy of Composition',
+                noChart: true,
+                content: `
+                    <p>What is the <strong>fallacy of composition</strong>?</p>
+                `
+            },
+            {
+                section: 0,
+                title: 'Fallacy of Composition',
+                noChart: true,
+                content: `
+                    <div class="highlight-box">
+                        <strong>Fallacy of Composition:</strong> The mistaken belief that what is true for an individual is necessarily true for the group as a whole.
+                    </div>
+                    <p><strong>Example:</strong> If one person stands up at a concert, they can see better. But if everyone stands up, no one sees better than before — yet everyone is less comfortable.</p>
+                    <p><strong>Macroeconomic application:</strong> If one person saves more, they become wealthier. But if everyone tries to save more at the same time, aggregate demand falls, income falls, and total savings may actually decrease.</p>
+                `
+            },
+            {
+                section: 0,
+                title: 'Paradox of Thrift',
+                noChart: true,
+                content: `
+                    <p>What is the <strong>paradox of thrift</strong>?</p>
+                `
+            },
+            {
+                section: 0,
+                title: 'Paradox of Thrift',
+                noChart: true,
+                content: `
+                    <div class="highlight-box">
+                        <strong>Paradox of Thrift:</strong> The phenomenon where if everyone tries to save more simultaneously, total savings may decrease because the reduction in spending causes income to fall.
+                    </div>
+                    <p>This paradox occurs because:</p>
+                    <ul>
+                        <li>When households reduce consumption to save more, aggregate demand decreases</li>
+                        <li>Lower demand leads businesses to cut production and employment</li>
+                        <li>Falling income reduces the ability to save</li>
+                        <li>The end result: lower income and possibly lower total savings</li>
+                    </ul>
+                    <p><strong>Connection:</strong> The paradox of thrift is an example of the fallacy of composition!</p>
+                `
+            },
+            {
+                section: 0,
+                title: 'Circular Flow',
+                noChart: true,
+                content: `
+                    <p>Explain the concept of <strong>circular flow</strong> in macroeconomics.</p>
+                `
+            },
+            {
+                section: 0,
+                title: 'Circular Flow',
+                noChart: true,
+                content: `
+                    <div class="highlight-box">
+                        <strong>Circular Flow:</strong> A model showing how money, goods, and services flow through the economy between households and firms in a continuous loop.
+                    </div>
+                    <p><strong>Key flows:</strong></p>
+                    <ul>
+                        <li><strong>Households → Firms:</strong> Labor and other resources (factor markets)</li>
+                        <li><strong>Firms → Households:</strong> Wages, rent, interest, profits (income)</li>
+                        <li><strong>Households → Firms:</strong> Consumer spending (product markets)</li>
+                        <li><strong>Firms → Households:</strong> Goods and services</li>
+                    </ul>
+                    <p><strong>Insight:</strong> One person's spending is another person's income. Income creates spending, which creates more income — a circular flow.</p>
+                    <p><strong>Leakages:</strong> Savings, taxes, imports withdraw money from the flow.</p>
+                    <p><strong>Injections:</strong> Investment, government spending, exports add money to the flow.</p>
+                `
+            },
+
+            // Section 1: GDP Measurement
+            {
+                section: 1,
+                title: 'GDP Measurement: Overview',
+                noChart: true,
+                content: `
+                    <p>Now let's review how we measure economic activity using GDP and related concepts.</p>
+                    <p><strong>Key concepts we'll cover:</strong></p>
+                    <ul>
+                        <li>Price indices (measuring inflation)</li>
+                        <li>Real GDP (adjusting for price changes)</li>
+                        <li>Real wages (purchasing power)</li>
+                        <li>Value-added approach to GDP</li>
+                        <li>Components of GDP</li>
+                    </ul>
+                    <div class="highlight-box">
+                        <strong>Remember:</strong> The goal is to understand the <em>concepts</em> behind the calculations, not just memorize formulas.
+                    </div>
+                `
+            },
+            {
+                section: 1,
+                title: 'Price Index Calculation',
+                noChart: true,
+                content: `
+                    <p>Consider a simple economy with two goods:</p>
+                    <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th></th>
+                            <th colspan="2" style="text-align: center; padding: 8px;">Year 1 (Base)</th>
+                            <th colspan="2" style="text-align: center; padding: 8px;">Year 2</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <th style="padding: 8px;">Good</th>
+                            <th style="padding: 8px;">Price</th>
+                            <th style="padding: 8px;">Quantity</th>
+                            <th style="padding: 8px;">Price</th>
+                            <th style="padding: 8px;">Quantity</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Coffee</td>
+                            <td style="padding: 8px;">$5</td>
+                            <td style="padding: 8px;">200</td>
+                            <td style="padding: 8px;">$6</td>
+                            <td style="padding: 8px;">220</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Books</td>
+                            <td style="padding: 8px;">$15</td>
+                            <td style="padding: 8px;">80</td>
+                            <td style="padding: 8px;">$18</td>
+                            <td style="padding: 8px;">85</td>
+                        </tr>
+                    </table>
+                    <p>A typical consumer buys 3 coffees and 1 book per month.</p>
+                    <p><strong>Question:</strong> What is the price index for Year 2, using Year 1 as the base year?</p>
+                `
+            },
+            {
+                section: 1,
+                title: 'Price Index: Solution',
+                noChart: true,
+                content: `
+                    <p><strong>Step 1:</strong> Calculate the cost of the basket in Year 1 (base year)</p>
+                    <p style="margin-left: 20px;">Cost₁ = (3 × $5) + (1 × $15) = $15 + $15 = $30</p>
+
+                    <p><strong>Step 2:</strong> Calculate the cost of the same basket in Year 2</p>
+                    <p style="margin-left: 20px;">Cost₂ = (3 × $6) + (1 × $18) = $18 + $18 = $36</p>
+
+                    <p><strong>Step 3:</strong> Calculate the price index</p>
+                    <p style="margin-left: 20px;">Price Index = (Cost₂ / Cost₁) × 100 = ($36 / $30) × 100 = <strong>120</strong></p>
+
+                    <div class="highlight-box">
+                        <strong>Interpretation:</strong> Prices increased by 20% from Year 1 to Year 2. The basket that cost $30 in Year 1 now costs $36.
+                    </div>
+
+                    <p><strong>Key insight:</strong> We use the same quantities (the basket) in both years to isolate the effect of price changes.</p>
+                `
+            },
+            {
+                section: 1,
+                title: 'Real GDP Calculation',
+                noChart: true,
+                content: `
+                    <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th></th>
+                            <th colspan="2" style="text-align: center; padding: 8px;">Year 1 (Base)</th>
+                            <th colspan="2" style="text-align: center; padding: 8px;">Year 2</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <th style="padding: 8px;">Good</th>
+                            <th style="padding: 8px;">Price</th>
+                            <th style="padding: 8px;">Quantity</th>
+                            <th style="padding: 8px;">Price</th>
+                            <th style="padding: 8px;">Quantity</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Coffee</td>
+                            <td style="padding: 8px;">$5</td>
+                            <td style="padding: 8px;">200</td>
+                            <td style="padding: 8px;">$6</td>
+                            <td style="padding: 8px;">220</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Books</td>
+                            <td style="padding: 8px;">$15</td>
+                            <td style="padding: 8px;">80</td>
+                            <td style="padding: 8px;">$18</td>
+                            <td style="padding: 8px;">85</td>
+                        </tr>
+                    </table>
+                    <p>What is <strong>Real GDP</strong> for Year 2 (in Year 1 prices)?</p>
+                `
+            },
+            {
+                section: 1,
+                title: 'Real GDP: Solution',
+                noChart: true,
+                content: `
+                    <table style="border-collapse: collapse; width: 100%; margin: 10px 0;">
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th></th>
+                            <th colspan="2" style="text-align: center; padding: 6px; font-size: 1rem;">Year 1 (Base)</th>
+                            <th colspan="2" style="text-align: center; padding: 6px; font-size: 1rem;">Year 2</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <th style="padding: 6px; font-size: 1rem;">Good</th>
+                            <th style="padding: 6px; font-size: 1rem;">Price</th>
+                            <th style="padding: 6px; font-size: 1rem;">Qty</th>
+                            <th style="padding: 6px; font-size: 1rem;">Price</th>
+                            <th style="padding: 6px; font-size: 1rem;">Qty</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-size: 1rem;">Coffee</td>
+                            <td style="padding: 6px; font-size: 1rem;">$5</td>
+                            <td style="padding: 6px; font-size: 1rem;">200</td>
+                            <td style="padding: 6px; font-size: 1rem;">$6</td>
+                            <td style="padding: 6px; font-size: 1rem;">220</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-size: 1rem;">Books</td>
+                            <td style="padding: 6px; font-size: 1rem;">$15</td>
+                            <td style="padding: 6px; font-size: 1rem;">80</td>
+                            <td style="padding: 6px; font-size: 1rem;">$18</td>
+                            <td style="padding: 6px; font-size: 1rem;">85</td>
+                        </tr>
+                    </table>
+
+                    <p><strong>Nominal GDP Year 2</strong> (current prices, current quantities):</p>
+                    <p style="margin-left: 20px;">= (220 × $6) + (85 × $18) = $1,320 + $1,530 = $2,850</p>
+
+                    <p><strong>Real GDP Year 2</strong> (Year 1 prices, Year 2 quantities):</p>
+                    <p style="margin-left: 20px;">= (220 × $5) + (85 × $15) = $1,100 + $1,275 = <strong>$2,375</strong></p>
+
+                    <div class="highlight-box">
+                        <strong>Key concept:</strong> Real GDP uses base year prices to remove the effect of inflation. This allows us to see if the economy actually produced more goods and services, not just whether prices went up.
+                    </div>
+
+                    <p><strong>Alternative method:</strong> Real GDP = Nominal GDP / (Price Index / 100)</p>
+                    <p style="margin-left: 20px;">= $2,850 / 1.20 = $2,375 ✓</p>
+                `
+            },
+            {
+                section: 1,
+                title: 'Real Wage Calculation',
+                noChart: true,
+                content: `
+                    <table style="border-collapse: collapse; width: 100%; margin: 10px 0;">
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th></th>
+                            <th colspan="2" style="text-align: center; padding: 6px; font-size: 1rem;">Year 1 (Base)</th>
+                            <th colspan="2" style="text-align: center; padding: 6px; font-size: 1rem;">Year 2</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <th style="padding: 6px; font-size: 1rem;">Good</th>
+                            <th style="padding: 6px; font-size: 1rem;">Price</th>
+                            <th style="padding: 6px; font-size: 1rem;">Qty</th>
+                            <th style="padding: 6px; font-size: 1rem;">Price</th>
+                            <th style="padding: 6px; font-size: 1rem;">Qty</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-size: 1rem;">Coffee</td>
+                            <td style="padding: 6px; font-size: 1rem;">$5</td>
+                            <td style="padding: 6px; font-size: 1rem;">200</td>
+                            <td style="padding: 6px; font-size: 1rem;">$6</td>
+                            <td style="padding: 6px; font-size: 1rem;">220</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-size: 1rem;">Books</td>
+                            <td style="padding: 6px; font-size: 1rem;">$15</td>
+                            <td style="padding: 6px; font-size: 1rem;">80</td>
+                            <td style="padding: 6px; font-size: 1rem;">$18</td>
+                            <td style="padding: 6px; font-size: 1rem;">85</td>
+                        </tr>
+                    </table>
+                    <p>If a worker's nominal wage in Year 2 is <strong>$18 per hour</strong>, what is their real wage in Year 1 dollars?</p>
+                    <p>(Use the price index of 120 we calculated earlier.)</p>
+                `
+            },
+            {
+                section: 1,
+                title: 'Real Wage: Solution',
+                noChart: true,
+                content: `
+                    <p><strong>Real Wage formula:</strong></p>
+                    <p style="margin-left: 20px;">Real Wage = Nominal Wage / (Price Index / 100)</p>
+
+                    <p><strong>Calculation:</strong></p>
+                    <p style="margin-left: 20px;">Real Wage = $18 / (120 / 100) = $18 / 1.20 = <strong>$15</strong></p>
+
+                    <div class="highlight-box">
+                        <strong>Interpretation:</strong> Although the worker earns $18 per hour in Year 2, their purchasing power is only $15 in Year 1 dollars. Prices rose 20%, but their nominal wage rose only 20%, so their real wage stayed constant.
+                    </div>
+
+                    <p><strong>Real vs. Nominal:</strong></p>
+                    <ul>
+                        <li><strong>Nominal wage:</strong> The dollar amount on your paycheck</li>
+                        <li><strong>Real wage:</strong> What those dollars can actually buy (purchasing power)</li>
+                    </ul>
+                `
+            },
+            {
+                section: 1,
+                title: 'GDP and Final Goods',
+                noChart: true,
+                content: `
+                    <p>A bakery buys flour for $2, sugar for $1, and butter for $1. They bake and sell a cake for $25.</p>
+                    <p><strong>Question:</strong> How much does this cake add to GDP?</p>
+                `
+            },
+            {
+                section: 1,
+                title: 'GDP and Final Goods',
+                noChart: true,
+                content: `
+                    <p>A bakery buys flour for $2, sugar for $1, and butter for $1. They bake and sell a cake for $25.</p>
+                    <p><strong>How much does this cake add to GDP?</strong></p>
+                `,
+                quiz: [
+                    { text: '$25 (the final sale price)', correct: true, feedback: 'Correct! GDP counts the value of final goods and services. The cake sells for $25, so it adds $25 to GDP. The flour, sugar, and butter are intermediate goods — their value is already included in the $25 price of the cake.' },
+                    { text: '$21 (sale price minus cost of ingredients)', correct: false, feedback: 'Not quite. GDP counts the full value of the final good. The intermediate goods (flour, sugar, butter) are not counted separately — their value is already embedded in the final price.' },
+                    { text: '$29 (sum of all transactions)', correct: false, feedback: 'No — that would be double-counting. The ingredients are intermediate goods whose value is already included in the final cake price.' },
+                    { text: '$4 (just the cost of ingredients)', correct: false, feedback: 'No — the ingredients are intermediate goods. GDP counts the final good, not intermediate inputs.' }
+                ]
+            },
+            {
+                section: 1,
+                title: 'Components of GDP',
+                noChart: true,
+                content: `
+                    <p>GDP can be calculated by summing all expenditures in the economy. What are the main components?</p>
+                `
+            },
+            {
+                section: 1,
+                title: 'Components of GDP',
+                noChart: true,
+                content: `
+                    <p><strong>What are the main components of GDP using the expenditure approach?</strong></p>
+                `,
+                quiz: [
+                    { text: 'Consumption (C), Investment (I), Government spending (G), Net exports (NX)', correct: true, feedback: 'Correct! GDP = C + I + G + NX. This is the expenditure approach to measuring GDP.' },
+                    { text: 'Wages, Rent, Interest, Profit', correct: false, feedback: 'These are the components of the income approach, not the expenditure approach.' },
+                    { text: 'Savings, Consumption, Taxes, Imports', correct: false, feedback: 'Not quite. These include leakages (S, T, M) but not the expenditure components.' },
+                    { text: 'Agriculture, Manufacturing, Services, Technology', correct: false, feedback: 'These are economic sectors, not the components of GDP in the national accounts.' }
+                ]
+            },
+            {
+                section: 1,
+                title: 'Components of GDP Explained',
+                noChart: true,
+                content: `
+                    <div class="highlight-box">
+                        <strong>GDP = C + I + G + NX</strong>
+                    </div>
+                    <ul>
+                        <li><strong>Consumption (C):</strong> Household spending on goods and services (food, clothing, housing, healthcare, etc.). This is the largest component of GDP.</li>
+                        <li><strong>Investment (I):</strong> Business spending on capital goods (machinery, buildings, equipment), residential construction, and changes in inventories. This is NOT financial investment like buying stocks.</li>
+                        <li><strong>Government spending (G):</strong> Government purchases of goods and services (roads, defense, education). Does NOT include transfer payments (Social Security, unemployment benefits).</li>
+                        <li><strong>Net exports (NX):</strong> Exports minus imports (NX = X - M). Positive when we export more than we import.</li>
+                    </ul>
+                `
+            },
+
+            // Section 2: GDP Limitations
+            {
+                section: 2,
+                title: 'Limitations of GDP',
+                noChart: true,
+                content: `
+                    <p>GDP is a useful measure of economic activity, but it has important limitations as a measure of well-being.</p>
+                    <p><strong>Test your knowledge:</strong> Which of the following are legitimate limitations of GDP? (Select all that apply)</p>
+                `,
+                quiz: [
+                    { text: 'GDP does not account for non-market activities (e.g., unpaid household work, volunteer work)', correct: true, feedback: 'Correct! If you mow your own lawn, it is not counted. If you hire someone, it is.' },
+                    { text: 'GDP does not measure income distribution or inequality', correct: true, feedback: 'Correct! A country can have high GDP but extreme inequality.' },
+                    { text: 'GDP includes environmental degradation and resource depletion as positive contributions', correct: true, feedback: 'Correct! Cleanup after pollution adds to GDP, but the original pollution is not subtracted.' },
+                    { text: 'GDP counts leisure time as economic output', correct: false, feedback: 'Actually, this is backwards — GDP does NOT count leisure time, which is a limitation since leisure contributes to well-being.' }
+                ],
+                multiCorrect: true
+            },
+
+            // Section 3: Keynesian Model Basics
+            {
+                section: 3,
+                title: 'The Keynesian Cross Model',
+                draw: drawKeynesian1,
+                content: `
+                    <p>The <strong>Keynesian Cross</strong> model shows how equilibrium output is determined by aggregate demand.</p>
+                    <p><strong>Key components:</strong></p>
+                    <ul>
+                        <li><strong>Aggregate Expenditure (AE):</strong> C + I + G + NX</li>
+                        <li><strong>Consumption function:</strong> C = C₀ + MPC × Y</li>
+                        <li><strong>Equilibrium:</strong> Y = AE (output equals aggregate demand)</li>
+                    </ul>
+                    <div class="highlight-box">
+                        The 45° line represents all points where Y = AE. Equilibrium occurs where the AE line crosses the 45° line.
+                    </div>
+                `
+            },
+            {
+                section: 3,
+                title: 'Consumption Function',
+                noChart: true,
+                content: `
+                    <p>Consider this consumption function:</p>
+                    <div class="highlight-box">
+                        C = 80 + 0.75Y
+                    </div>
+                    <p>Where:</p>
+                    <ul>
+                        <li><strong>C₀ = 80:</strong> Autonomous consumption (consumption when income is zero)</li>
+                        <li><strong>MPC = 0.75:</strong> Marginal propensity to consume (how much consumption increases when income increases by $1)</li>
+                    </ul>
+                    <p><strong>Question:</strong> What is the savings function?</p>
+                `
+            },
+            {
+                section: 3,
+                title: 'Deriving the Savings Function',
+                noChart: true,
+                content: `
+                    <p><strong>Remember:</strong> Y = C + S (in a simple economy without government or trade)</p>
+                    <p><strong>Therefore:</strong> S = Y - C</p>
+
+                    <p><strong>Substitute the consumption function:</strong></p>
+                    <p style="margin-left: 20px;">S = Y - (80 + 0.75Y)</p>
+                    <p style="margin-left: 20px;">S = Y - 80 - 0.75Y</p>
+                    <p style="margin-left: 20px;"><strong>S = -80 + 0.25Y</strong></p>
+
+                    <div class="highlight-box">
+                        <strong>Interpretation:</strong>
+                        <ul>
+                            <li><strong>-80:</strong> Autonomous saving (negative = dissaving when Y = 0)</li>
+                            <li><strong>0.25:</strong> MPS (marginal propensity to save)</li>
+                        </ul>
+                        <p>Note: MPC + MPS = 0.75 + 0.25 = 1 ✓</p>
+                    </div>
+                `
+            },
+            {
+                section: 3,
+                title: 'Equilibrium Income',
+                noChart: true,
+                content: `
+                    <p>Using C = 80 + 0.75Y and I = 40, solve for equilibrium Y.</p>
+                    <p><strong>At equilibrium:</strong> Y = C + I</p>
+                `
+            },
+            {
+                section: 3,
+                title: 'Equilibrium Income: Solution',
+                noChart: true,
+                revealSteps: true,
+                content: `
+                    <div class="reveal-step">
+                        <p><strong>Step 1:</strong> Set up the equilibrium condition</p>
+                        <p style="margin-left: 20px;">Y = C + I</p>
+                    </div>
+
+                    <div class="reveal-step">
+                        <p><strong>Step 2:</strong> Substitute the consumption function</p>
+                        <p style="margin-left: 20px;">Y = (80 + 0.75Y) + 40</p>
+                        <p style="margin-left: 20px;">Y = 120 + 0.75Y</p>
+                    </div>
+
+                    <div class="reveal-step">
+                        <p><strong>Step 3:</strong> Solve for Y</p>
+                        <p style="margin-left: 20px;">Y - 0.75Y = 120</p>
+                        <p style="margin-left: 20px;">0.25Y = 120</p>
+                        <p style="margin-left: 20px;"><strong>Y = 480</strong></p>
+                    </div>
+
+                    <div class="reveal-step">
+                        <div class="highlight-box">
+                            <strong>Check:</strong> At Y = 480, C = 80 + 0.75(480) = 440. <br>
+                            Total spending = C + I = 440 + 40 = 480 = Y ✓
+                        </div>
+                    </div>
+                `
+            },
+
+            // Section 4: Multiplier Effects
+            {
+                section: 4,
+                title: 'The Multiplier',
+                noChart: true,
+                content: `
+                    <p>The <strong>multiplier</strong> tells us how much equilibrium income changes when autonomous spending changes.</p>
+                    <div class="highlight-box">
+                        <strong>Multiplier formula:</strong> k = 1 / (1 - MPC) = 1 / MPS
+                    </div>
+                    <p><strong>Question:</strong> What is the multiplier in our model where MPC = 0.75?</p>
+                `
+            },
+            {
+                section: 4,
+                title: 'The Multiplier',
+                noChart: true,
+                content: `
+                    <p>In our model where MPC = 0.75, <strong>what is the multiplier?</strong></p>
+                    <div class="highlight-box">
+                        Multiplier formula: k = 1 / (1 - MPC) = 1 / MPS
+                    </div>
+                `,
+                quiz: [
+                    { text: 'k = 2', correct: false, feedback: 'Not quite. With MPC = 0.75, MPS = 0.25, so k = 1/0.25 = 4.' },
+                    { text: 'k = 3', correct: false, feedback: 'Close, but not quite. Remember k = 1/(1 - MPC) = 1/MPS.' },
+                    { text: 'k = 4', correct: true, feedback: 'Correct! k = 1/(1 - 0.75) = 1/0.25 = 4. This means a $1 increase in autonomous spending leads to a $4 increase in equilibrium income.' },
+                    { text: 'k = 0.75', correct: false, feedback: 'No — that is the MPC. The multiplier is always greater than 1 (when MPC is positive).' }
+                ]
+            },
+            {
+                section: 4,
+                title: 'Multiplier in Action',
+                draw: drawMultiplier,
+                content: `
+                    <p>The graph shows how an increase in autonomous spending (from investment, government spending, or autonomous consumption) shifts the AE line upward.</p>
+                    <p>The <strong>initial increase</strong> is magnified by the multiplier effect:</p>
+                    <ol>
+                        <li>Increased spending becomes someone's income</li>
+                        <li>They spend MPC of that income (75%)</li>
+                        <li>That spending becomes someone else's income</li>
+                        <li>The cycle continues...</li>
+                    </ol>
+                    <div class="highlight-box">
+                        Total impact = Initial change × Multiplier<br>
+                        ΔY = ΔA × k
+                    </div>
+                `
+            },
+            {
+                section: 4,
+                title: 'Calculating Savings at Equilibrium',
+                noChart: true,
+                content: `
+                    <p>At our equilibrium Y = 480, what is the level of savings?</p>
+                    <p><strong>Remember:</strong> S = -80 + 0.25Y</p>
+                `
+            },
+            {
+                section: 4,
+                title: 'Savings at Equilibrium',
+                noChart: true,
+                content: `
+                    <p><strong>Calculation:</strong></p>
+                    <p style="margin-left: 20px;">S = -80 + 0.25(480) = -80 + 120 = <strong>40</strong></p>
+
+                    <div class="highlight-box">
+                        <strong>Important:</strong> Notice that S = I at equilibrium (both equal 40). This is always true in a simple economy without government or trade.
+                    </div>
+
+                    <p><strong>Why S = I?</strong></p>
+                    <p>At equilibrium: Y = C + I</p>
+                    <p>Also: Y = C + S (income is either consumed or saved)</p>
+                    <p>Therefore: C + I = C + S, which means <strong>I = S</strong></p>
+                `
+            },
+
+            // Section 5: Paradox of Thrift Application
+            {
+                section: 5,
+                title: 'Paradox of Thrift in the Model',
+                draw: drawParadoxShift,
+                content: `
+                    <p>The graphs show <strong>AD</strong> (top) and <strong>S &amp; I</strong> (bottom) at the original equilibrium Y = 480.</p>
+                    <p><strong>Scenario:</strong> Households decide to save more. C₀ decreases by 20 (from 80 to 60).</p>
+                    <ul>
+                        <li><strong>Old:</strong> C = 80 + 0.75Y, S = -80 + 0.25Y</li>
+                        <li><strong>New:</strong> C = 60 + 0.75Y, S = -60 + 0.25Y</li>
+                    </ul>
+                    <button id="paradox-shift-btn" class="reveal-btn" onclick="showParadoxShiftEffect()">Show effect of increased saving →</button>
+                `
+            },
+            {
+                section: 5,
+                title: 'New Equilibrium After Saving Increase',
+                noChart: true,
+                content: `
+                    <p>Calculate the new equilibrium Y after C₀ decreases by 20.</p>
+                    <p><strong>Method 1:</strong> Solve Y = C + I directly</p>
+                    <p><strong>Method 2:</strong> Use the multiplier (ΔY = ΔC₀ × k)</p>
+                `
+            },
+            {
+                section: 5,
+                title: 'New Equilibrium: Solution',
+                noChart: true,
+                content: `
+                    <p><strong>Method 1 (Direct calculation):</strong></p>
+                    <p style="margin-left: 20px;">Y = C + I</p>
+                    <p style="margin-left: 20px;">Y = (60 + 0.75Y) + 40</p>
+                    <p style="margin-left: 20px;">Y = 100 + 0.75Y</p>
+                    <p style="margin-left: 20px;">0.25Y = 100</p>
+                    <p style="margin-left: 20px;"><strong>Y = 400</strong></p>
+
+                    <p><strong>Method 2 (Using multiplier):</strong></p>
+                    <p style="margin-left: 20px;">ΔY = ΔC₀ × k = -20 × 4 = -80</p>
+                    <p style="margin-left: 20px;">New Y = 480 - 80 = <strong>400</strong> ✓</p>
+
+                    <div class="highlight-box">
+                        Income decreased from 480 to 400. The attempt to save more led to lower income!
+                    </div>
+                `
+            },
+            {
+                section: 5,
+                title: 'What Happened to Savings?',
+                noChart: true,
+                content: `
+                    <p>Calculate the new level of savings at Y = 400.</p>
+                    <p><strong>New savings function:</strong> S = Y - C = Y - (60 + 0.75Y) = -60 + 0.25Y</p>
+                    <p>What is S at the new equilibrium?</p>
+                `
+            },
+            {
+                section: 5,
+                title: 'The Paradox Revealed',
+                draw: drawParadoxResult,
+                content: `
+                    <p><strong>New savings:</strong></p>
+                    <p style="margin-left: 20px;">S = -60 + 0.25(400) = -60 + 100 = <strong>40</strong></p>
+
+                    <div class="highlight-box" style="background: #fee2e2; border-color: #ef4444;">
+                        <strong>The Paradox:</strong><br>
+                        • People tried to save more (reduced C₀ by 20)<br>
+                        • Income fell from 480 to 400<br>
+                        • But savings stayed the same: S = 40 before and after!<br>
+                        <br>
+                        <strong>Why?</strong> At equilibrium, S must equal I. Since I didn't change, S can't change either. The attempt to save more just reduced income.
+                    </div>
+
+                    <p>This is a perfect illustration of the <strong>fallacy of composition</strong> and the <strong>paradox of thrift</strong>!</p>
+                `
+            },
+            {
+                section: 5,
+                title: 'Government Intervention',
+                noChart: true,
+                content: `
+                    <p>Suppose the government wants to restore GDP to its original level of 480.</p>
+                    <p>By how much does government spending (G) need to increase?</p>
+                    <p><strong>Hint:</strong> Use the multiplier!</p>
+                `
+            },
+            {
+                section: 5,
+                title: 'Government Spending Solution',
+                draw: drawGovernmentSpending,
+                content: `
+                    <p><strong>We need:</strong> ΔY = +80 (to go from 400 back to 480)</p>
+
+                    <p><strong>Using the multiplier:</strong></p>
+                    <p style="margin-left: 20px;">ΔY = ΔG × k</p>
+                    <p style="margin-left: 20px;">80 = ΔG × 4</p>
+                    <p style="margin-left: 20px;"><strong>ΔG = 20</strong></p>
+
+                    <div class="highlight-box">
+                        <strong>Result:</strong> An increase in government spending of just 20 can restore GDP to 480, because of the multiplier effect (20 × 4 = 80).
+                    </div>
+
+                    <p>The graph shows the AE line shifting back up to the original equilibrium when G = 20 is added.</p>
+                `
+            },
+
+            // Section 6: Policy & Theory
+            {
+                section: 6,
+                title: 'Keynesian Policy Recommendations',
+                noChart: true,
+                content: `
+                    <p>What did Keynes advocate the government should do during a recession?</p>
+                `
+            },
+            {
+                section: 6,
+                title: 'Keynesian Policy Recommendations',
+                noChart: true,
+                content: `
+                    <p><strong>Keynes' main recommendations:</strong></p>
+                    <ol>
+                        <li><strong>Increase government spending</strong> to boost aggregate demand directly</li>
+                        <li><strong>Cut taxes</strong> to increase disposable income and consumption</li>
+                        <li><strong>Run budget deficits</strong> during recessions (save the surpluses for booms)</li>
+                        <li><strong>Use monetary policy</strong> to lower interest rates and encourage investment</li>
+                    </ol>
+
+                    <div class="highlight-box">
+                        <strong>Core insight:</strong> In a recession, the problem is insufficient aggregate demand, not supply-side issues. The government should act as "spender of last resort" to stabilize the economy.
+                    </div>
+
+                    <p><strong>Why this works:</strong> The multiplier effect means government spending has a magnified impact. If k = 4, then $100 billion in government spending increases GDP by $400 billion.</p>
+                `
+            },
+            {
+                section: 6,
+                title: 'Injections and Leakages',
+                noChart: true,
+                content: `
+                    <p><strong>Injections</strong> add to the circular flow of income:</p>
+                    <ul>
+                        <li>Investment (I)</li>
+                        <li>Government spending (G)</li>
+                        <li>Exports (X)</li>
+                    </ul>
+
+                    <p><strong>Leakages</strong> withdraw from the circular flow:</p>
+                    <ul>
+                        <li>Savings (S)</li>
+                        <li>Taxes (T)</li>
+                        <li>Imports (M)</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <strong>Equilibrium condition:</strong> Injections = Leakages<br>
+                        I + G + X = S + T + M
+                    </div>
+                `
+            },
+            {
+                section: 6,
+                title: 'When Does S = I?',
+                noChart: true,
+                content: `
+                    <p>In a simple economy (no government, no trade), when does planned investment equal savings?</p>
+                `
+            },
+            {
+                section: 6,
+                title: 'When Does S = I?',
+                noChart: true,
+                content: `
+                    <p>In a simple economy (no government, no trade), <strong>when does planned investment equal savings?</strong></p>
+                `,
+                quiz: [
+                    { text: 'Only at equilibrium output', correct: true, feedback: 'Correct! Planned I = S only at equilibrium. At other income levels, actual I still equals S, but unplanned inventory changes make up the difference. When output is too high, unsold goods pile up (unplanned inventory investment); when too low, inventories are drawn down.' },
+                    { text: 'At all levels of income', correct: false, feedback: 'Actual (total) investment always equals savings, but that includes unplanned inventory changes. Planned I = S only at equilibrium.' },
+                    { text: 'Only when interest rates are zero', correct: false, feedback: 'No — S = I at equilibrium regardless of the interest rate (though interest rates affect where equilibrium is).' },
+                    { text: 'Never, because savings and investment are independent', correct: false, feedback: 'No — in equilibrium, the amount households want to save must equal the amount firms want to invest.' }
+                ]
+            },
+            {
+                section: 6,
+                title: 'When Does S = I? Explained',
+                noChart: true,
+                content: `
+                    <p><strong>Planned investment equals savings only at equilibrium output.</strong></p>
+
+                    <p>In a simple economy (no G, no trade), the equilibrium condition is:</p>
+                    <div class="highlight-box">
+                        <strong>S = I (planned)</strong>
+                    </div>
+
+                    <p><strong>What about non-equilibrium?</strong></p>
+                    <ul>
+                        <li>If Y is too high: firms produce more than people buy, so <strong>inventories pile up</strong> (unplanned investment). Actual I (planned + unplanned) = S, but planned I &lt; S.</li>
+                        <li>If Y is too low: firms sell more than they produce, so <strong>inventories fall</strong> (negative unplanned investment). Actual I = S, but planned I &gt; S.</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <strong>Key distinction:</strong><br>
+                        Actual I (including inventory changes) <em>always</em> equals S.<br>
+                        Planned I equals S <em>only at equilibrium</em>.
+                    </div>
+                `
+            },
+            {
+                section: 6,
+                title: 'Neoclassical vs. Keynesian Views',
+                noChart: true,
+                content: `
+                    <p><strong>How do Neoclassical and Keynesian economists differ on S = I?</strong></p>
+
+                    <p><strong>Neoclassical view:</strong></p>
+                    <ul>
+                        <li>Interest rates adjust to make S = I</li>
+                        <li>If people want to save more, interest rates fall</li>
+                        <li>Lower rates encourage investment, so S = I is restored</li>
+                        <li>The economy self-corrects to full employment</li>
+                    </ul>
+
+                    <p><strong>Keynesian view:</strong></p>
+                    <ul>
+                        <li>Income adjusts to make S = I</li>
+                        <li>If people want to save more, consumption falls</li>
+                        <li>Lower consumption reduces income (paradox of thrift)</li>
+                        <li>Income falls until S equals the unchanged I</li>
+                        <li>No guarantee of full employment!</li>
+                    </ul>
+                `
+            },
+            {
+                section: 6,
+                title: 'Keynes vs. Neoclassical on Unemployment',
+                noChart: true,
+                content: `
+                    <p><strong>Neoclassical theory:</strong> Unemployment is caused by wages being too high. If wages fall, firms will hire more workers and unemployment will disappear.</p>
+                    <p><strong>Question:</strong> Why did Keynes disagree with this view?</p>
+                `
+            },
+            {
+                section: 6,
+                title: 'Keynesian Critique',
+                noChart: true,
+                content: `
+                    <p><strong>Keynes' arguments against wage cuts as a solution:</strong></p>
+
+                    <ol>
+                        <li><strong>Fallacy of composition:</strong> If one firm cuts wages, it can hire more workers. But if all firms cut wages, total income falls, aggregate demand falls, and unemployment may worsen.</li>
+
+                        <li><strong>Wages are income:</strong> Workers spend their wages. Lower wages mean lower consumption, which means lower demand for goods, which means firms need fewer workers!</li>
+
+                        <li><strong>Rising real interest rates:</strong> Falling wages lead to falling prices, which raises real interest rates. This causes bankruptcies. Example: A firm borrows money expecting future sales revenue to repay the loan. When prices on those goods fall, the firm cannot generate enough revenue to repay, leading to default.</li>
+                    </ol>
+
+                    <div class="highlight-box">
+                        <strong>Keynes' solution:</strong> Increase aggregate demand (through government spending, tax cuts, or monetary policy), not reduce wages.
+                    </div>
+                `
+            },
+            {
+                section: 6,
+                title: 'Review Complete!',
+                noChart: true,
+                content: `
+                    <p>Congratulations! You've reviewed all major topics for the midterm:</p>
+
+                    <ul>
+                        <li>✓ Core concepts (fallacy of composition, paradox of thrift, circular flow)</li>
+                        <li>✓ GDP measurement (price indices, real GDP, real wages)</li>
+                        <li>✓ GDP limitations</li>
+                        <li>✓ Keynesian model (consumption, savings, equilibrium)</li>
+                        <li>✓ Multiplier effects</li>
+                        <li>✓ Paradox of thrift in action</li>
+                        <li>✓ Policy debates (Keynesian vs. Neoclassical)</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <strong>Study tips:</strong>
+                        <ul>
+                            <li>Practice the calculations with different numbers</li>
+                            <li>Understand the concepts, not just the formulas</li>
+                            <li>Be able to explain the paradox of thrift and why it matters</li>
+                            <li>Know the differences between Keynesian and Neoclassical views</li>
+                        </ul>
+                    </div>
+
+                    <p style="text-align: center; font-size: 1.5rem; margin-top: 40px;"><strong>Good luck on your exam! 📚</strong></p>
+                `
             }
-            qa.appendChild(btn);
-        });
-        if(s.multiCorrect){
-            const submitBtn=document.createElement('button');
-            submitBtn.className='reveal-btn';
-            submitBtn.textContent='Submit Answer';
-            submitBtn.style.width='100%';
-            submitBtn.style.marginTop='16px';
-            submitBtn.onclick=()=>handleMultiQuiz(n);
-            qa.appendChild(submitBtn);
+        ];
+
+        let currentSlide = 0;
+        let quizAnswered = false;
+        let selectedAnswers = new Set();
+
+        function isDark() {
+            return document.documentElement.getAttribute('data-theme') === 'dark';
         }
-    }
-    // Nav buttons
-    document.getElementById('prevBtn').disabled=n===0;
-    const nextBtn=document.getElementById('nextBtn');
-    nextBtn.disabled=s.quiz&&!quizAnswered[n];
-    nextBtn.style.display='inline-block';
-    // Layout: full-width for text-only slides
-    const mainEl=document.querySelector('.main');
-    if(s.noChart){mainEl.classList.add('full-width');}
-    else{mainEl.classList.remove('full-width');if(s.draw)s.draw();}
-    renderStepper();
-}
 
-function handleQuiz(slideIdx,optIdx,btn){
-    const s=slides[slideIdx];
-    const opt=s.quiz[optIdx];
-    const fb=document.getElementById('quizFeedback');
-    fb.style.display='block';
-    fb.textContent=opt.feedback;
-    if(opt.correct){
-        btn.classList.add('correct');
-        fb.style.background='#dcfce7';fb.style.color='#166534';
-        if(isDark()){fb.style.background='#14532d';fb.style.color='#bbf7d0';}
-        quizAnswered[slideIdx]=true;
-        document.getElementById('nextBtn').disabled=false;
-        document.querySelectorAll('.quiz-btn').forEach(b=>b.disabled=true);
-    } else {
-        btn.classList.add('incorrect');
-        fb.style.background='#fef2f2';fb.style.color='#991b1b';
-        if(isDark()){fb.style.background='#7f1d1d';fb.style.color='#fecaca';}
-        setTimeout(()=>{btn.classList.remove('incorrect');btn.disabled=false;fb.style.display='none';},1800);
-        btn.disabled=true;
-    }
-}
+        function plotTheme() {
+            const dark = isDark();
+            return {
+                paper_bgcolor: dark ? '#1f2937' : '#ffffff',
+                plot_bgcolor: dark ? '#1f2937' : '#ffffff',
+                font: { color: dark ? '#e5e7eb' : '#1f2937', size: 14 },
+                gridcolor: dark ? '#4b5563' : '#e5e7eb',
+                zerolinecolor: dark ? '#6b7280' : '#d1d5db',
+            };
+        }
 
-function toggleMultiSelect(btn){
-    btn.classList.toggle('selected');
-    if(btn.classList.contains('selected')){
-        btn.style.background='var(--primary-light)';
-        btn.style.borderColor='var(--primary)';
-        btn.style.borderWidth='3px';
-    }else{
-        btn.style.background='var(--card-bg)';
-        btn.style.borderColor='var(--border)';
-        btn.style.borderWidth='2px';
-    }
-}
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('midterm-review-theme', newTheme);
 
-function handleMultiQuiz(slideIdx){
-    const s=slides[slideIdx];
-    const selected=Array.from(document.querySelectorAll('.quiz-btn.selected')).map(b=>parseInt(b.dataset.quizIdx));
-    const correct=s.quiz.map((q,i)=>q.correct?i:-1).filter(i=>i>=0);
-    const isCorrect=selected.length===correct.length&&selected.every(i=>correct.includes(i));
-    const fb=document.getElementById('quizFeedback');
-    fb.style.display='block';
-    if(isCorrect){
-        fb.textContent='Correct! The three characteristics of capitalism are: private property, firms, and markets.';
-        fb.style.background='#dcfce7';fb.style.color='#166534';
-        if(isDark()){fb.style.background='#14532d';fb.style.color='#bbf7d0';}
-        quizAnswered[slideIdx]=true;
-        document.getElementById('nextBtn').disabled=false;
-        document.querySelectorAll('.quiz-btn').forEach(b=>{b.disabled=true;if(s.quiz[parseInt(b.dataset.quizIdx)].correct)b.classList.add('correct');});
-    }else{
-        const correctTexts=correct.map(i=>s.quiz[i].text).join(', ');
-        fb.textContent=`Not quite. The three correct answers are: ${correctTexts}`;
-        fb.style.background='#fef2f2';fb.style.color='#991b1b';
-        if(isDark()){fb.style.background='#7f1d1d';fb.style.color='#fecaca';}
-        setTimeout(()=>{
-            document.querySelectorAll('.quiz-btn').forEach(b=>{
-                b.classList.remove('selected');
-                b.style.background='var(--card-bg)';
-                b.style.borderColor='var(--border)';
-                b.style.borderWidth='2px';
-            });
-            fb.style.display='none';
-        },2500);
-    }
-}
+            const slide = slides[currentSlide];
+            if (slide.draw) slide.draw();
+        }
 
-function navigate(dir){goToSlide(currentSlide+dir);}
+        function renderStepper() {
+            const stepper = document.getElementById('stepper');
+            const currentSection = slides[currentSlide].section;
 
-function revealAnswer(btn){
-    const ans=btn.nextElementSibling;
-    if(ans){ans.classList.toggle('show');btn.textContent=ans.classList.contains('show')?'Hide Answer':'Reveal Answer';}
-}
+            stepper.innerHTML = sections.map((name, i) => {
+                let className = 'step';
+                let content = i + 1;
 
-function revealAnswerWithGraph(btn){
-    const ans=btn.nextElementSibling;
-    if(ans){
-        const isShowing=ans.classList.toggle('show');
-        btn.textContent=isShowing?'Hide Answer':'Reveal Answer';
-        if(isShowing){
-            const s=slides[currentSlide];
-            if(s.revealDraw){
-                const mainEl=document.querySelector('.main');
+                const sectionSlides = slides.filter(s => s.section === i);
+                const allAnswered = sectionSlides.every((s, idx) => {
+                    const slideIdx = slides.indexOf(s);
+                    return !s.quiz || slideIdx < currentSlide;
+                });
+
+                if (i < currentSection || (i === currentSection && allAnswered && currentSlide > slides.findIndex(s => s.section === i))) {
+                    className += ' completed';
+                    content = '✓';
+                } else if (i === currentSection) {
+                    className += ' current';
+                }
+
+                return `<div class="${className}" onclick="goToSection(${i})" title="${name}">${content}</div>`;
+            }).join('');
+        }
+
+        function goToSection(sectionIndex) {
+            const firstSlide = slides.findIndex(s => s.section === sectionIndex);
+            if (firstSlide !== -1) {
+                currentSlide = firstSlide;
+                goToSlide(currentSlide);
+            }
+        }
+
+        let revealIndex = 0;
+
+        function goToSlide(n) {
+            currentSlide = n;
+            quizAnswered = false;
+            selectedAnswers.clear();
+            revealIndex = 0;
+
+            const slide = slides[currentSlide];
+            const mainEl = document.querySelector('.main');
+
+            document.getElementById('slide-title').textContent = slide.title;
+            document.getElementById('slide-content').innerHTML = slide.content;
+            document.getElementById('counter').textContent = `Slide ${currentSlide + 1} of ${slides.length}`;
+
+            // Reset chart heights to default
+            document.getElementById('chart1').style.minHeight = '400px';
+            document.getElementById('chart2').style.minHeight = '';
+
+            if (slide.noChart) {
+                mainEl.classList.add('full-width');
+                document.getElementById('chart1').innerHTML = '';
+                document.getElementById('chart2').innerHTML = '';
+            } else {
                 mainEl.classList.remove('full-width');
-                s.revealDraw();
+                if (slide.draw) {
+                    setTimeout(() => {
+                        slide.draw();
+                        setTimeout(() => {
+                            Plotly.Plots.resize('chart1');
+                            var c2 = document.getElementById('chart2');
+                            if (c2 && c2.data) Plotly.Plots.resize('chart2');
+                        }, 150);
+                    }, 100);
+                }
             }
-        }else{
-            document.querySelector('.main').classList.add('full-width');
+
+            // Handle step-by-step reveal
+            const revealBtnOld = document.getElementById('reveal-btn');
+            if (revealBtnOld) revealBtnOld.remove();
+
+            if (slide.revealSteps) {
+                const steps = document.querySelectorAll('#slide-content .reveal-step');
+                if (steps.length > 0) {
+                    steps[0].classList.add('visible');
+                    revealIndex = 1;
+                    if (steps.length > 1) {
+                        const btn = document.createElement('button');
+                        btn.id = 'reveal-btn';
+                        btn.className = 'reveal-btn';
+                        btn.textContent = 'Next Step →';
+                        btn.onclick = function() {
+                            if (revealIndex < steps.length) {
+                                steps[revealIndex].classList.add('visible');
+                                revealIndex++;
+                                if (revealIndex >= steps.length) {
+                                    btn.remove();
+                                }
+                            }
+                        };
+                        document.getElementById('slide-content').appendChild(btn);
+                    }
+                }
+            }
+
+            const quizContainer = document.getElementById('quiz-container');
+            if (slide.quiz) {
+                renderQuiz(slide);
+            } else {
+                quizContainer.innerHTML = '';
+            }
+
+            document.getElementById('prev-btn').disabled = currentSlide === 0;
+            document.getElementById('next-btn').style.display = slide.quiz ? 'none' : 'block';
+
+            renderStepper();
         }
-    }
-}
 
-// Keyboard nav
-document.addEventListener('keydown',e=>{
-    if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();navigate(1);}
-    if(e.key==='ArrowLeft'){e.preventDefault();navigate(-1);}
-});
+        function renderQuiz(slide) {
+            const container = document.getElementById('quiz-container');
 
-// Init
-goToSlide(0);
-</script>
+            // Randomize quiz options
+            const shuffled = [...slide.quiz].sort(() => Math.random() - 0.5);
+
+            let html = '';
+
+            if (slide.multiCorrect) {
+                html += '<div class="multi-correct-hint">Select all that apply:</div>';
+            }
+
+            html += '<div class="quiz-options">';
+            shuffled.forEach((option, i) => {
+                html += `<button class="quiz-btn" onclick="handleQuizClick(${i}, ${slide.multiCorrect || false})" data-correct="${option.correct}" data-feedback="${option.feedback}">${option.text}</button>`;
+            });
+            html += '</div>';
+
+            if (slide.multiCorrect) {
+                html += '<button class="submit-btn" onclick="submitMultiCorrect()" id="submit-quiz">Submit Answer</button>';
+            }
+
+            html += '<div id="feedback"></div>';
+
+            container.innerHTML = html;
+        }
+
+        function handleQuizClick(index, isMultiCorrect) {
+            if (quizAnswered) return;
+
+            const buttons = document.querySelectorAll('.quiz-btn');
+            const button = buttons[index];
+
+            if (isMultiCorrect) {
+                // Toggle selection
+                if (selectedAnswers.has(index)) {
+                    selectedAnswers.delete(index);
+                    button.classList.remove('selected');
+                } else {
+                    selectedAnswers.add(index);
+                    button.classList.add('selected');
+                }
+            } else {
+                // Single correct - immediate feedback
+                const correct = button.getAttribute('data-correct') === 'true';
+                const feedback = button.getAttribute('data-feedback');
+
+                buttons.forEach(btn => btn.disabled = true);
+                button.classList.add(correct ? 'correct' : 'wrong');
+
+                const feedbackDiv = document.getElementById('feedback');
+                feedbackDiv.className = `feedback ${correct ? 'correct' : 'wrong'}`;
+                feedbackDiv.textContent = feedback;
+
+                if (correct) {
+                    quizAnswered = true;
+                    document.getElementById('next-btn').style.display = 'block';
+                } else {
+                    setTimeout(() => {
+                        buttons.forEach(btn => {
+                            btn.disabled = false;
+                            btn.classList.remove('wrong');
+                        });
+                        feedbackDiv.innerHTML = '';
+                    }, 1800);
+                }
+            }
+        }
+
+        function submitMultiCorrect() {
+            if (quizAnswered) return;
+
+            const buttons = document.querySelectorAll('.quiz-btn');
+            const correctIndices = new Set();
+
+            buttons.forEach((btn, i) => {
+                if (btn.getAttribute('data-correct') === 'true') {
+                    correctIndices.add(i);
+                }
+            });
+
+            const isCorrect = correctIndices.size === selectedAnswers.size &&
+                             [...correctIndices].every(i => selectedAnswers.has(i));
+
+            const feedbackDiv = document.getElementById('feedback');
+
+            if (isCorrect) {
+                feedbackDiv.className = 'feedback correct';
+                feedbackDiv.textContent = 'Correct! You selected all the right answers.';
+                quizAnswered = true;
+                document.getElementById('next-btn').style.display = 'block';
+                document.getElementById('submit-quiz').disabled = true;
+                buttons.forEach(btn => btn.disabled = true);
+            } else {
+                feedbackDiv.className = 'feedback wrong';
+                const correctAnswers = Array.from(buttons)
+                    .filter((_, i) => correctIndices.has(i))
+                    .map(btn => btn.textContent);
+                feedbackDiv.innerHTML = `Not quite. The correct answers are:<br>• ${correctAnswers.join('<br>• ')}`;
+
+                setTimeout(() => {
+                    selectedAnswers.clear();
+                    buttons.forEach(btn => btn.classList.remove('selected'));
+                    feedbackDiv.innerHTML = '';
+                }, 2500);
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                goToSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                goToSlide(currentSlide - 1);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' && !document.getElementById('next-btn').disabled) nextSlide();
+            if (e.key === 'ArrowLeft' && !document.getElementById('prev-btn').disabled) prevSlide();
+        });
+
+        // Drawing functions
+        function drawKeynesian1() {
+            const Y = Array.from({length: 100}, (_, i) => i * 8);
+            const AE = Y.map(y => 120 + 0.75 * y);
+            const line45 = Y;
+
+            const theme = plotTheme();
+
+            const data = [
+                {
+                    x: Y,
+                    y: line45,
+                    mode: 'lines',
+                    name: '45° line (Y = AE)',
+                    line: { color: '#6b7280', width: 2, dash: 'dash' }
+                },
+                {
+                    x: Y,
+                    y: AE,
+                    mode: 'lines',
+                    name: 'AE = C + I',
+                    line: { color: getComputedStyle(document.documentElement).getPropertyValue('--demand-blue'), width: 3 }
+                },
+                {
+                    x: [480],
+                    y: [480],
+                    mode: 'markers',
+                    name: 'Equilibrium',
+                    marker: { color: getComputedStyle(document.documentElement).getPropertyValue('--equilibrium-red'), size: 12 }
+                }
+            ];
+
+            const layout = {
+                ...theme,
+                title: { text: 'Keynesian Cross: C = 80 + 0.75Y, I = 40', font: { size: 16 } },
+                xaxis: { title: 'Income (Y)', range: [0, 800] },
+                yaxis: { title: 'Aggregate Expenditure (AE)', range: [0, 800] },
+                showlegend: true,
+                legend: { x: 0.05, y: 0.95 },
+                margin: { l: 60, r: 40, t: 60, b: 60 }
+            };
+
+            Plotly.react('chart1', data, layout, { responsive: true, displayModeBar: false });
+            document.getElementById('chart2').innerHTML = '';
+        }
+
+        function drawMultiplier() {
+            const Y = Array.from({length: 100}, (_, i) => i * 8);
+            const AE1 = Y.map(y => 120 + 0.75 * y);
+            const AE2 = Y.map(y => 140 + 0.75 * y);
+            const line45 = Y;
+
+            const theme = plotTheme();
+
+            const data = [
+                {
+                    x: Y,
+                    y: line45,
+                    mode: 'lines',
+                    name: '45° line',
+                    line: { color: '#6b7280', width: 2, dash: 'dash' }
+                },
+                {
+                    x: Y,
+                    y: AE1,
+                    mode: 'lines',
+                    name: 'AE₁ (original)',
+                    line: { color: getComputedStyle(document.documentElement).getPropertyValue('--demand-blue'), width: 3 }
+                },
+                {
+                    x: Y,
+                    y: AE2,
+                    mode: 'lines',
+                    name: 'AE₂ (after ΔA = 20)',
+                    line: { color: getComputedStyle(document.documentElement).getPropertyValue('--shift-purple'), width: 3 }
+                },
+                {
+                    x: [480, 560],
+                    y: [480, 560],
+                    mode: 'markers',
+                    name: 'Equilibria',
+                    marker: { color: getComputedStyle(document.documentElement).getPropertyValue('--equilibrium-red'), size: 12 }
+                }
+            ];
+
+            const layout = {
+                ...theme,
+                title: { text: 'Multiplier Effect: ΔY = 80 when ΔA = 20 (k = 4)', font: { size: 16 } },
+                xaxis: { title: 'Income (Y)', range: [0, 800] },
+                yaxis: { title: 'Aggregate Expenditure (AE)', range: [0, 800] },
+                showlegend: true,
+                legend: { x: 0.05, y: 0.95 },
+                margin: { l: 60, r: 40, t: 60, b: 60 },
+                annotations: [
+                    {
+                        x: 520, y: 200,
+                        text: 'ΔY = 80',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 0, ay: 40,
+                        font: { size: 14, color: getComputedStyle(document.documentElement).getPropertyValue('--equilibrium-red') }
+                    }
+                ]
+            };
+
+            Plotly.react('chart1', data, layout, { responsive: true, displayModeBar: false });
+            document.getElementById('chart2').innerHTML = '';
+        }
+
+        function drawParadoxShift() {
+            const c1 = document.getElementById('chart1');
+            const c2 = document.getElementById('chart2');
+            c1.style.minHeight = '220px';
+            c2.style.minHeight = '220px';
+
+            const Y = Array.from({length: 100}, (_, i) => i * 8);
+            const AE1 = Y.map(y => 120 + 0.75 * y);
+            const S1 = Y.map(y => -80 + 0.25 * y);
+            const I_line = Y.map(() => 40);
+            const line45 = Y;
+
+            const theme = plotTheme();
+            const styles = getComputedStyle(document.documentElement);
+            const blue = styles.getPropertyValue('--demand-blue');
+            const red = styles.getPropertyValue('--equilibrium-red');
+            const sm = { l: 50, r: 20, t: 35, b: 35 };
+
+            Plotly.react('chart1', [
+                { x: Y, y: line45, mode: 'lines', name: '45° line', line: { color: '#6b7280', width: 2, dash: 'dash' } },
+                { x: Y, y: AE1, mode: 'lines', name: 'AE₁ = 120 + 0.75Y', line: { color: blue, width: 3 } },
+                { x: [480], y: [480], mode: 'markers', name: 'Equilibrium', marker: { color: red, size: 10 } }
+            ], {
+                ...theme, title: { text: 'Aggregate Demand (Keynesian Cross)', font: { size: 13 } },
+                xaxis: { title: 'Y', range: [0, 800] }, yaxis: { title: 'AE', range: [0, 800] },
+                showlegend: true, legend: { x: 0.02, y: 0.98, font: { size: 10 } }, margin: sm
+            }, { responsive: true, displayModeBar: false });
+
+            Plotly.react('chart2', [
+                { x: Y, y: I_line, mode: 'lines', name: 'I = 40', line: { color: '#6b7280', width: 2, dash: 'dash' } },
+                { x: Y, y: S1, mode: 'lines', name: 'S₁ = -80 + 0.25Y', line: { color: blue, width: 3 } },
+                { x: [480], y: [40], mode: 'markers', name: 'Equilibrium', marker: { color: red, size: 10 } }
+            ], {
+                ...theme, title: { text: 'Savings & Investment', font: { size: 13 } },
+                xaxis: { title: 'Y', range: [0, 800] }, yaxis: { title: 'S, I', range: [-100, 150] },
+                showlegend: true, legend: { x: 0.02, y: 0.98, font: { size: 10 } }, margin: sm
+            }, { responsive: true, displayModeBar: false });
+
+            window.showParadoxShiftEffect = function() {
+                const AE2 = Y.map(y => 100 + 0.75 * y);
+                const S2 = Y.map(y => -60 + 0.25 * y);
+                const purple = styles.getPropertyValue('--shift-purple');
+
+                Plotly.react('chart1', [
+                    { x: Y, y: line45, mode: 'lines', name: '45° line', line: { color: '#6b7280', width: 2, dash: 'dash' } },
+                    { x: Y, y: AE1, mode: 'lines', name: 'AE₁ (original)', line: { color: blue, width: 2, dash: 'dot' } },
+                    { x: Y, y: AE2, mode: 'lines', name: 'AE₂ (after shift)', line: { color: purple, width: 3 } },
+                    { x: [480, 400], y: [480, 400], mode: 'markers', name: 'Equilibria', marker: { color: red, size: 10 } }
+                ], {
+                    ...theme, title: { text: 'AD shifts down: Y falls from 480 to 400', font: { size: 13 } },
+                    xaxis: { title: 'Y', range: [0, 800] }, yaxis: { title: 'AE', range: [0, 800] },
+                    showlegend: true, legend: { x: 0.02, y: 0.98, font: { size: 10 } }, margin: sm,
+                    annotations: [{ x: 440, y: 440, text: 'Y: 480 → 400', showarrow: true, arrowhead: 2, ax: 50, ay: -25, font: { size: 12, color: red } }]
+                }, { responsive: true, displayModeBar: false });
+
+                Plotly.react('chart2', [
+                    { x: Y, y: I_line, mode: 'lines', name: 'I = 40', line: { color: '#6b7280', width: 2, dash: 'dash' } },
+                    { x: Y, y: S1, mode: 'lines', name: 'S₁ (original)', line: { color: blue, width: 2, dash: 'dot' } },
+                    { x: Y, y: S2, mode: 'lines', name: 'S₂ (shifted up)', line: { color: purple, width: 3 } },
+                    { x: [480, 400], y: [40, 40], mode: 'markers', name: 'Equilibria', marker: { color: red, size: 10 } }
+                ], {
+                    ...theme, title: { text: 'S shifts up, but equilibrium S stays at 40!', font: { size: 13 } },
+                    xaxis: { title: 'Y', range: [0, 800] }, yaxis: { title: 'S, I', range: [-100, 150] },
+                    showlegend: true, legend: { x: 0.02, y: 0.98, font: { size: 10 } }, margin: sm,
+                    annotations: [{ x: 440, y: 55, text: 'S still = 40!', showarrow: true, arrowhead: 2, ax: 40, ay: -25, font: { size: 12, color: red } }]
+                }, { responsive: true, displayModeBar: false });
+
+                var btn = document.getElementById('paradox-shift-btn');
+                if (btn) btn.style.display = 'none';
+            };
+        }
+
+        function drawParadoxResult() {
+            var c1 = document.getElementById('chart1');
+            var c2 = document.getElementById('chart2');
+            c1.style.minHeight = '220px';
+            c2.style.minHeight = '220px';
+
+            var Y = Array.from({length: 100}, (_, i) => i * 8);
+            var AE1 = Y.map(y => 120 + 0.75 * y);
+            var AE2 = Y.map(y => 100 + 0.75 * y);
+            var S1 = Y.map(y => -80 + 0.25 * y);
+            var S2 = Y.map(y => -60 + 0.25 * y);
+            var I_line = Y.map(() => 40);
+            var line45 = Y;
+
+            var theme = plotTheme();
+            var styles = getComputedStyle(document.documentElement);
+            var blue = styles.getPropertyValue('--demand-blue');
+            var red = styles.getPropertyValue('--equilibrium-red');
+            var purple = styles.getPropertyValue('--shift-purple');
+            var sm = { l: 50, r: 20, t: 35, b: 35 };
+
+            Plotly.react('chart1', [
+                { x: Y, y: line45, mode: 'lines', name: '45° line', line: { color: '#6b7280', width: 2, dash: 'dash' } },
+                { x: Y, y: AE1, mode: 'lines', name: 'AE₁ (original)', line: { color: blue, width: 2, dash: 'dot' } },
+                { x: Y, y: AE2, mode: 'lines', name: 'AE₂ (after shift)', line: { color: purple, width: 3 } },
+                { x: [480, 400], y: [480, 400], mode: 'markers', name: 'Equilibria', marker: { color: red, size: 10 } }
+            ], {
+                ...theme, title: { text: 'AD shifts down: Y falls from 480 to 400', font: { size: 13 } },
+                xaxis: { title: 'Y', range: [0, 800] }, yaxis: { title: 'AE', range: [0, 800] },
+                showlegend: true, legend: { x: 0.02, y: 0.98, font: { size: 10 } }, margin: sm
+            }, { responsive: true, displayModeBar: false });
+
+            Plotly.react('chart2', [
+                { x: Y, y: I_line, mode: 'lines', name: 'I = 40', line: { color: '#6b7280', width: 2, dash: 'dash' } },
+                { x: Y, y: S1, mode: 'lines', name: 'S₁ (original)', line: { color: blue, width: 2, dash: 'dot' } },
+                { x: Y, y: S2, mode: 'lines', name: 'S₂ (shifted up)', line: { color: purple, width: 3 } },
+                { x: [480, 400], y: [40, 40], mode: 'markers', name: 'Equilibria', marker: { color: red, size: 10 } }
+            ], {
+                ...theme, title: { text: 'S shifts up, but equilibrium S stays at 40!', font: { size: 13 } },
+                xaxis: { title: 'Y', range: [0, 800] }, yaxis: { title: 'S, I', range: [-100, 150] },
+                showlegend: true, legend: { x: 0.02, y: 0.98, font: { size: 10 } }, margin: sm,
+                annotations: [{ x: 440, y: 55, text: 'S still = 40!', showarrow: true, arrowhead: 2, ax: 40, ay: -25, font: { size: 12, color: red } }]
+            }, { responsive: true, displayModeBar: false });
+        }
+
+        function drawGovernmentSpending() {
+            const Y = Array.from({length: 100}, (_, i) => i * 8);
+            const AE1 = Y.map(y => 100 + 0.75 * y);
+            const AE2 = Y.map(y => 120 + 0.75 * y);
+            const line45 = Y;
+
+            const theme = plotTheme();
+
+            const data = [
+                {
+                    x: Y,
+                    y: line45,
+                    mode: 'lines',
+                    name: '45° line',
+                    line: { color: '#6b7280', width: 2, dash: 'dash' }
+                },
+                {
+                    x: Y,
+                    y: AE1,
+                    mode: 'lines',
+                    name: 'AE before G',
+                    line: { color: getComputedStyle(document.documentElement).getPropertyValue('--equilibrium-red'), width: 3, dash: 'dot' }
+                },
+                {
+                    x: Y,
+                    y: AE2,
+                    mode: 'lines',
+                    name: 'AE after G = 20',
+                    line: { color: getComputedStyle(document.documentElement).getPropertyValue('--supply-green'), width: 3 }
+                },
+                {
+                    x: [400, 480],
+                    y: [400, 480],
+                    mode: 'markers',
+                    name: 'Equilibria',
+                    marker: { color: getComputedStyle(document.documentElement).getPropertyValue('--equilibrium-red'), size: 12 }
+                }
+            ];
+
+            const layout = {
+                ...theme,
+                title: { text: 'Government Spending Restores GDP: ΔG = 20 → ΔY = 80', font: { size: 16 } },
+                xaxis: { title: 'Income (Y)', range: [0, 800] },
+                yaxis: { title: 'Aggregate Expenditure (AE)', range: [0, 800] },
+                showlegend: true,
+                legend: { x: 0.05, y: 0.95 },
+                margin: { l: 60, r: 40, t: 60, b: 60 },
+                annotations: [
+                    {
+                        x: 440, y: 250,
+                        text: 'ΔY = ΔG × k<br>= 20 × 4 = 80',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 40, ay: -50,
+                        font: { size: 13, color: getComputedStyle(document.documentElement).getPropertyValue('--supply-green') }
+                    }
+                ]
+            };
+
+            Plotly.react('chart1', data, layout, { responsive: true, displayModeBar: false });
+            document.getElementById('chart2').innerHTML = '';
+        }
+
+        // Initialize
+        const savedTheme = localStorage.getItem('midterm-review-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+        goToSlide(0);
+    </script>
 </body>
 </html>
